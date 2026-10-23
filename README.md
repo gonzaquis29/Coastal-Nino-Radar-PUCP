@@ -31,22 +31,35 @@ En el dashboard se pega un titular o un enlace de video y se muestra el párrafo
 | 4 | Tópicos | LDA contra BERTopic, por mes y región; sentimiento por tópico. |
 | 5 | Sentimiento y emociones | Polaridad y emociones con modelos preentrenados en español (pysentimiento); acuerdo entre métodos con kappa. |
 | 6 | Red de enlaces y citas | Grafo noticias → fuentes oficiales con `networkx` (centralidad, PageRank). Combina hipervínculos y **menciones en texto** ("según el ENFEN"), porque no todos los medios enlazan. Es análisis de estructura web. |
-| 7 | Red social (YouTube) | Red canal–canal por comentaristas compartidos (proyección de la red bipartita usuario–video, usuarios seudonimizados): centralidad y comunidades, reportadas por tipo de canal (medio, institución, creador independiente). **Respaldo** si no hay volumen de comentarios: red de co-mención de actores en noticias (lista fija de instituciones + NER solo para personas). |
+| 7 | Red social (YouTube) | Red canal–canal por comentaristas compartidos (proyección de la red bipartita usuario–video, usuarios seudonimizados): centralidad y comunidades, reportadas por tipo de canal (oficial, medio, otros; ver "Tipo de canal"). **Respaldo** si no hay volumen de comentarios: red de co-mención de actores en noticias (lista fija de instituciones + NER solo para personas). |
 | 8 | Índice de discrepancia | Distancia semántica al comunicado o aviso vigente + regla que detecta magnitud distinta de la oficial (p. ej. "fuerte" vs. "moderada"). Se aplica a notas y a título/descripción de videos. |
-| 9 | Efecto comunicado | Series de tiempo del volumen de noticias y videos y de las emociones alrededor de cada comunicado. |
+| 9 | Efecto comunicado | Estudio de eventos: cada comunicado del ENFEN es un evento; ventana corta de −3 a +7 días comparada contra días sin evento en volumen de notas y videos, emociones, interés en Trends y engagement. Ventanas cortas porque hay un comunicado cada ~2 semanas. Los avisos rojos del Senamhi se suman como eventos cuando se defina su filtro. |
 | 10 | Analítica web | KPIs de engagement en YouTube (vistas, likes, comentarios, tasa de engagement) frente al índice de discrepancia; interés de búsqueda por departamento (Trends) alrededor de cada comunicado; registro propio de eventos del dashboard (web usage mining); indicadores secundarios de los medios (volumen, sección, tiempo de reacción tras un comunicado). |
-| 11 | Recomendador híbrido | **Basado en conocimiento:** reglas con región, aviso vigente del Senamhi y estado del ENFEN filtran qué información corresponde. **Basado en contenido:** similitud de embeddings ordena comunicados, avisos y notas alineadas. Entrada: un contenido (nota o video) y un perfil (región, interés). |
-| 12 | Agente extractivo | Consulta en lenguaje natural; recupera el párrafo oficial más relevante con ChromaDB (`PersistentClient`) y lo muestra textualmente con su fecha, filtrando por fecha vigente. |
-| 13 | Dashboard | Streamlit: línea de tiempo del estado oficial vs. volumen de noticias y videos, tópicos por región, emociones por mes, redes, KPIs de engagement e interés, semáforo y recomendaciones. |
+| 11 | Modelo de engagement | Modelo propio entrenado con los datos minados: predice la tasa de engagement de un video ((likes + comentarios) / vistas) a partir del índice de discrepancia, emociones, tópicos y rasgos del título (mayúsculas, exclamaciones, emojis), con los suscriptores del canal como control. Regresión lineal y gradient boosting contra una línea base; importancia de variables. Muestra con varios términos de búsqueda, orden por fecha y tramos de tiempo para reducir el sesgo del ranking de YouTube; likes ocultos como dato faltante. |
+| 12 | Recomendador híbrido | **Basado en conocimiento:** reglas con región, aviso vigente del Senamhi y estado del ENFEN filtran qué información corresponde. **Basado en contenido:** similitud de embeddings ordena comunicados, avisos y notas alineadas. Entrada: un contenido (nota o video) y un perfil (región, interés). |
+| 13 | Agente con herramientas | Decide qué herramienta usar según la consulta: `buscar_oficial` (párrafos de comunicados y avisos con ChromaDB `PersistentClient`, filtrando por fecha vigente), `estado_vigente(fecha, región)`, `medir_discrepancia(texto)` y `recomendar(perfil)`. Un LLM solo elige la herramienta y extrae parámetros (uso declarado); la respuesta se arma con plantillas y citas textuales, y un control verifica que cada cita exista literalmente en la fuente. Respaldo sin LLM: enrutador por similitud de embeddings entre la consulta y la descripción de cada herramienta. |
+| 14 | Dashboard | Streamlit: línea de tiempo del estado oficial vs. volumen de noticias y videos, tópicos por región, emociones por mes, redes, KPIs de engagement e interés, semáforo y recomendaciones. |
 
-**Opcionales (primeros en recortarse):** transcripciones de YouTube (la API oficial no las entrega para videos ajenos) y un clasificador del estado oficial a partir del texto, con separación entrenamiento/prueba por fecha.
+**Opcional (primero en recortarse):** transcripciones de YouTube (la API oficial no las entrega para videos ajenos).
+
+**Descartado:** clasificador del estado oficial a partir del texto. Su etiqueta sale de la fecha, así que aprendería la época y no el contenido, y con partición temporal faltarían clases en la prueba.
+
+## Tipo de canal
+Sin listas editables por terceros (Wikipedia) ni etiquetado manual: cada canal se clasifica por enlaces verificables desde el sitio oficial de su organización. No existe un registro oficial y completo de medios en el Perú (las licencias del MTC salen en resoluciones sueltas y no cubren medios digitales).
+
+1. **Oficial:** el canal está enlazado desde un sitio `.gob.pe` (dominio reservado al sector público; confirmar en la norma de NIC.pe).
+2. **Medio:** el canal enlaza a un sitio web, ese sitio enlaza de vuelta al canal y publica notas con metadatos de noticia (`NewsArticle`/`datePublished`) o tiene sitemap de noticias.
+3. **Otros:** todo lo demás.
+
+Verificado el 23-oct-2026: Senamhi, Indeci, ENFEN, IGP, RPP, Andina, La República e Infobae enlazan su canal desde su sitio. Errores posibles (medio que no enlaza su canal → "otros"; blog con metadatos de noticia → se descarta exigiendo el enlace de vuelta) se revisan cualitativamente con ejemplos y se declaran.
 
 ## Evaluación sin etiquetado manual
 | Componente | Cómo se valida |
 |------------|----------------|
 | Índice de discrepancia | Control positivo (notas de Andina que enlazan al PDF del comunicado → distancia baja) y negativo (otros temas → distancia alta); separación de ambas distribuciones. |
 | Extractor de magnitud | Contraste contra los comunicados oficiales. |
-| Recuperador / agente | Preguntas generadas desde secciones de los comunicados; recall@k, TF-IDF vs. embeddings. |
+| Recuperador / agente | Preguntas generadas desde secciones de los comunicados; recall@k, TF-IDF vs. embeddings. Preguntas generadas por plantillas con herramienta correcta conocida: % de herramienta bien elegida; 100 % de citas literales. |
+| Modelo de engagement | Partición temporal (entrenar con meses anteriores, probar con los últimos); MAE y R² contra línea base; importancia de variables. |
 | Recomendador | Evaluación offline: la "respuesta correcta" es el comunicado/aviso vigente en la fecha y región del contenido; precision@k, cobertura y diversidad. Notas que enlazan a un comunicado como control positivo. |
 | Tópicos | Coherencia c_v y comparación del número de tópicos. |
 | Sentimiento | Acuerdo (kappa de Cohen) entre pysentimiento, zero-shot y TF-IDF + regresión logística. |
@@ -54,7 +67,7 @@ En el dashboard se pega un titular o un enlace de video y se muestra el párrafo
 | Red social | Modularidad de las comunidades y comparación contra una red aleatoria con los mismos grados. |
 | Analítica web | Correlación (Spearman) entre discrepancia y engagement; descriptivo, sin causalidad. |
 
-**Limitaciones declaradas:** no hay métrica de exactitud para "detectar alarmismo"; el producto mide cercanía a lo oficial. El recomendador se evalúa solo offline (sin usuarios reales). Google Trends da interés relativo (0-100) y puede no tener datos en departamentos pequeños.
+**Limitaciones declaradas:** no hay métrica de exactitud para "detectar alarmismo"; el producto mide cercanía a lo oficial. El recomendador se evalúa solo offline (sin usuarios reales). El modelo de engagement muestra asociación, no causalidad. Google Trends da interés relativo (0-100) y puede no tener datos en departamentos pequeños.
 
 ## Plan de 4 semanas
 Las horas son una estimación orientativa, no un límite; el alcance agregado (YouTube, recomendador, analítica web, red social) puede tomar más tiempo.
@@ -63,19 +76,31 @@ Las horas son una estimación orientativa, no un límite; el alcance agregado (Y
 |--------|-------------------|---------------------|------------|
 | 1 | Scrapers de ENFEN, Senamhi y 3-4 medios; extraer enlaces y citas; recolector de YouTube por API | Preprocesamiento y TF-IDF | Dataset limpio con fechas, enlaces y videos |
 | 2 | Red de enlaces y citas; red social de YouTube; exportar Trends | Embeddings, tópicos, emociones | Notebooks con resultados |
-| 3 | Índice de discrepancia, efecto comunicado, KPIs de analítica web | Recomendador híbrido; evaluación (recall@k, precision@k, coherencia) | Métricas validadas |
-| 4 | Dashboard con registro de eventos | Agente extractivo | Producto, informe y presentación |
+| 3 | Índice de discrepancia, estudio de eventos, KPIs de analítica web, tipo de canal | Modelo de engagement, recomendador híbrido; evaluación (recall@k, precision@k, MAE, coherencia) | Métricas validadas |
+| 4 | Dashboard con registro de eventos | Agente con herramientas | Producto, informe y presentación |
 
-Los roles A/B no están asignados y pueden intercambiarse. El informe sigue **CRISP-ML(Q)**.
+Los roles A/B no están asignados y pueden intercambiarse.
+
+## Informe: CRISP-ML(Q)
+El informe se organiza por las seis fases de Studer et al. (2021), cada una con su control de calidad:
+
+| Fase | Contenido | Control de calidad |
+|------|-----------|--------------------|
+| 1. Comprensión del negocio y de los datos | Problema, preguntas, fuentes, pruebas de viabilidad | Criterios de pasa / no pasa |
+| 2. Preparación de datos | Recolección, limpieza, seudonimización, reglas por sitio. Incluye una sección de **protocolos web** con casos propios: códigos HTTP (403 de Expreso, 404 del `robots.txt` de Andina), reglas por user-agent (RPP), sitemaps y RSS, JSON-LD, API REST con cuotas y verificación de identidad por enlace sitio–canal | Conteos, duplicados, fechas válidas |
+| 3. Ingeniería del modelo | Vectores, tópicos, emociones, modelo de engagement, recomendador, agente | Líneas base y comparación de métodos |
+| 4. Evaluación | Tabla de evaluación | Controles positivo y negativo, partición temporal |
+| 5. Despliegue | Dashboard y agente | Registro de uso de la app |
+| 6. Monitoreo y mantenimiento | Re-descarga cada 30 días (regla de YouTube); rendimiento en semanas nuevas (simulación, declarada) | Cambios en discrepancia y error en el tiempo |
 
 ## Recortes, en orden
-1. Clasificador opcional y transcripciones de YouTube.
-2. Efecto comunicado simplificado.
+1. Transcripciones de YouTube.
+2. Efecto comunicado solo con volumen (sin emociones ni engagement).
 3. Indicadores secundarios de los medios.
-4. Agente solo extractivo.
+4. Agente sin LLM (enrutador por embeddings); en último caso, solo extractivo.
 5. Bajar de 4 a 3 medios.
 
-**Núcleo que no se recorta:** scraping (incluido YouTube), vectores (TF-IDF y embeddings), tópicos, emociones, recomendador, analítica web, red social (o su respaldo de co-mención) y dashboard.
+**Núcleo que no se recorta:** scraping (incluido YouTube), vectores (TF-IDF y embeddings), tópicos, emociones, modelo de engagement, recomendador, analítica web, red social (o su respaldo de co-mención), estudio de eventos, agente con herramientas (o su respaldo) y dashboard.
 
 ## Primera noche: pruebas de viabilidad
 - [x] Verificar que las notas traigan enlaces a fuentes oficiales en el HTML. *Andina enlaza al PDF del comunicado; Infobae solo cita en texto → se agregan menciones en texto.*
@@ -88,14 +113,26 @@ Los roles A/B no están asignados y pueden intercambiarse. El informe sigue **CR
 - [ ] Extraer avisos del Senamhi (fecha, nivel, departamentos).
 - [ ] Probar pysentimiento (polaridad y emociones) sobre ~20 titulares.
 
-Con eso se decide qué entra al alcance. Plan B si fallan datos o validez: reseñas de servicios digitales (Google Play, con estrellas como etiqueta externa).
+### Criterios de pasa / no pasa
+Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
+
+| Prueba | Pasa si… | Si no pasa |
+|--------|----------|------------|
+| Videos de YouTube | ≥ 300 videos del período que mencionan El Niño | YouTube deja de ser central; evaluar plan B |
+| Comentarios | ≥ 100 videos con ≥ 30 comentarios | Engagement sin comentarios; red social con respaldo de co-mención |
+| Red de audiencias | La red canal–canal tiene un componente conectado de ≥ 30 canales | Respaldo de co-mención |
+| Tipo de canal | ≥ 70 % de los canales de la muestra se clasifican sin ambigüedad | Revisar las reglas de "Tipo de canal" |
+| Google Trends | ≥ 3 de los 4 departamentos objetivo con datos en ≥ 50 % de las semanas | Trends solo a nivel nacional |
+| pysentimiento | Emociones coherentes en la revisión cualitativa de ~20 titulares | Solo polaridad, aplicada al cuerpo de la nota |
+
+**Plan B** (reseñas de servicios digitales en Google Play, con estrellas como etiqueta externa): solo si fallan a la vez la prueba de videos y el contraste medios–YouTube.
 
 ## Datos y fuentes
 - Comunicados oficiales: https://enfen.imarpe.gob.pe/comunicados/ (ENFEN lo integran IMARPE, Senamhi, IGP y otras instituciones).
 - Avisos meteorológicos por departamento: https://www.senamhi.gob.pe/?p=aviso-meteorologico
 - Estado visto al 22-oct-2026: "Alerta de El Niño Costero", comunicados hasta N.° 18-2026. Confirmar en la fuente antes de citar.
-- YouTube Data API v3: cuota por defecto de 10 000 unidades/día; leer comentarios cuesta 1 unidad por petición y buscar videos 100.
-- Google Trends: `pytrends` está archivado y el API oficial está en alfa cerrado; se usa la exportación CSV de la web.
+- YouTube Data API v3 (página oficial de cuotas, 23-oct-2026): 10 000 unidades/día; `commentThreads.list`, `videos.list` y `channels.list` cuestan 1 unidad; `search.list` tiene un límite propio de 100 llamadas/día (hasta 50 resultados cada una).
+- Google Trends: `pytrends` está archivado (confirmado en GitHub) y el API oficial está en alfa cerrado; se usa la exportación CSV de la web.
 - **No verificado aún:** volumen de comentarios de YouTube, datos de Trends por departamento, términos de uso de los medios y calidad de las emociones de pysentimiento en titulares.
 
 ## Reglas por sitio (revisado el 22-oct-2026)
@@ -123,7 +160,7 @@ Las opciones para recomendación, analítica web y red social son la mejor alter
 data/raw/        comunicados (PDF/HTML), avisos, HTML crawleado, respuestas de la API (no se versiona)
 data/processed/  párrafos, enlaces, citas, textos limpios y agregados (no se versiona)
 notebooks/       exploración y análisis
-src/             crawler, recolector YouTube, redes, recuperación, sentimiento, tópicos, recomendador, agente, dashboard
+src/             crawler, recolector YouTube, redes, recuperación, sentimiento, tópicos, modelo de engagement, recomendador, agente, dashboard
 results/         figuras y métricas
 docs/            bibliografía, notas y registro de prompts
 ```
