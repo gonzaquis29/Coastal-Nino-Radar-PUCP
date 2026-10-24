@@ -5,44 +5,83 @@
 **Autores:** Gonzalo Sebastián Quispe Ordoñez y Joseph Celso Aparicio Bohorquez.
 
 ## Qué es
-Una herramienta que compara lo que circula sobre el Fenómeno El Niño Costero (noticias y videos de YouTube) con la información oficial vigente en cada fecha: comunicados del ENFEN (nivel nacional) y avisos del Senamhi (nivel departamental). No decide qué es verdad: **mide cercanía a lo oficial**, la presenta como indicador y **recomienda la fuente oficial** que corresponde, sin señalar medios ni canales individuales.
+Una herramienta que compara lo que circula sobre el Fenómeno El Niño Costero (noticias y videos de YouTube) con la información oficial vigente en cada fecha: comunicados del ENFEN y avisos del Senamhi, ambos expresados por macro-región (costa norte, costa centro, etc.). No decide qué es verdad: **mide cercanía a lo oficial**, la presenta como indicador y **recomienda la fuente oficial** que corresponde, sin señalar medios ni canales individuales.
 
 **Por qué este tema.** Hay una temporada de lluvias por delante y la información oficial es técnica y está dispersa. El corpus oficial es pequeño y ordenado (~20 comunicados en 2026), lo que lo hace factible. Una muestra inicial indica que los medios tradicionales tienden a reproducir al ENFEN, mientras que en YouTube circulan títulos claramente exagerados: el contraste interesante está entre ambos.
 
 ## Preguntas que responde
-1. ¿Qué tan alineadas están las noticias y los videos con la información oficial vigente en su fecha y región?
+1. ¿Qué tan alineadas están las noticias y los videos con la información oficial vigente en su fecha y macro-región?
 2. ¿Qué fuentes enlazan o citan a ENFEN, Senamhi e Indeci, y cuáles no? (red de enlaces y citas)
-3. ¿Qué temas y emociones dominan por región (Piura, Tumbes, Lambayeque, Lima) y mes?
+3. ¿Qué temas y emociones dominan por macro-región (costa norte, costa centro, Lima) y mes?
 4. ¿Reacciona el discurso público a cada comunicado nuevo? (efecto comunicado)
 5. ¿El contenido más alejado de lo oficial tiene más engagement? ¿Cómo varía el interés del público por departamento? (analítica web)
 6. ¿Las audiencias de los canales más alejados de lo oficial se cruzan con las de los medios? (red social)
-7. Dado un contenido dudoso, ¿qué fuente oficial y qué notas alineadas le corresponden a una persona según su región? (recomendación)
+7. Dado un contenido dudoso, ¿qué fuente oficial y qué notas alineadas le corresponden a una persona según su macro-región e interés? (recomendación)
 8. ¿Puede un agente responder solo con texto oficial?
 
-## Producto estrella: semáforo de alineación
-En el dashboard se pega un titular o un enlace de video y se muestra el párrafo oficial más cercano, la distancia semántica, el estado vigente del ENFEN y el aviso del Senamhi en esa fecha, junto con las fuentes oficiales y notas alineadas recomendadas para la región elegida.
+## Producto
+**Usuario principal:** el ciudadano de la costa que quiere entender las alertas. **Usuario secundario:** el analista o periodista que quiere ver el panorama. El dashboard tiene dos pestañas:
+
+- **Consulta (ciudadano):** se pega un titular o un enlace de video y se elige macro-región e interés. Muestra el **semáforo de alineación** (producto estrella): el párrafo oficial más cercano, la distancia semántica, el estado vigente del ENFEN y el aviso del Senamhi en esa fecha, más las fuentes oficiales y notas alineadas recomendadas. Incluye el agente.
+- **Panorama (analista):** tópicos, emociones, redes, KPIs de engagement e interés, y estudio de eventos.
+
+**Umbrales del semáforo**, calibrados con los controles de evaluación y **por separado para títulos cortos y cuerpos de nota** (sus distancias no son comparables):
+- 🟢 Verde: distancia por debajo del percentil 75 del control positivo.
+- 🔴 Rojo: distancia por encima del percentil 25 del control negativo, o magnitud distinta de la oficial según la regla de magnitud.
+- 🟡 Amarillo: el resto.
+- Si la separación entre controles es pobre (AUC < 0,8), se muestra solo la distancia, sin colores.
+
+**Categorías de interés**, tomadas solo de temas presentes en los textos oficiales (los comunicados no tratan agricultura ni salud): Pesca y mar · Lluvias, ríos y huaicos · Calor · Prevención y emergencias. Los tópicos de las noticias se usan para confirmar que también aparecen en lo que circula.
+
+**Validación con usuarios:** solo offline más el uso registrado durante la presentación; se declara como limitación.
 
 ## Pipeline
 | # | Etapa | Detalle |
 |---|-------|---------|
-| 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (página HTML y PDF de cada uno) y avisos meteorológicos del Senamhi (nivel y departamento). **Noticias:** 3-4 medios (Andina, RPP, Infobae Perú, La República) vía sitemaps/RSS y HTML: título, cuerpo, `datePublished`, sección e hipervínculos. **YouTube (API oficial):** título, descripción, canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés por departamento y semana, exportado manualmente en CSV. Respeta `robots.txt` y limita la tasa de peticiones. |
-| 2 | Preprocesamiento | Limpieza, tokenización, stopwords, lematización en español (spaCy / NLTK). |
+| 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (página HTML y PDF de cada uno) y avisos meteorológicos del Senamhi (tipo, nivel, macro-región, vigencia), filtrados según "Alcance de datos". **Noticias:** 5 medios (ver "Alcance de datos") vía sitemaps/RSS y HTML: título, cuerpo, `datePublished`, sección e hipervínculos; los textos se guardan solo localmente. **YouTube (API oficial):** título, descripción, canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés por departamento y semana, exportado manualmente en CSV. Respeta `robots.txt` y limita la tasa de peticiones. |
+| 2 | Preprocesamiento | Limpieza, tokenización, stopwords, lematización en español (spaCy / NLTK). Asignación de macro-región (ver "Alcance de datos"). |
 | 3 | Representación | TF-IDF (línea base) contra embeddings multilingües livianos (MiniLM / e5-small) con similitud coseno. |
-| 4 | Tópicos | LDA contra BERTopic, por mes y región; sentimiento por tópico. |
+| 4 | Tópicos | LDA contra BERTopic, por mes y macro-región; sentimiento por tópico. Los tópicos se nombran con sus palabras clave (c-TF-IDF), sin LLM. |
 | 5 | Sentimiento y emociones | Polaridad y emociones con modelos preentrenados en español (pysentimiento); acuerdo entre métodos con kappa. |
 | 6 | Red de enlaces y citas | Grafo noticias → fuentes oficiales con `networkx` (centralidad, PageRank). Combina hipervínculos y **menciones en texto** ("según el ENFEN"), porque no todos los medios enlazan. Es análisis de estructura web. |
-| 7 | Red social (YouTube) | Red canal–canal por comentaristas compartidos (proyección de la red bipartita usuario–video, usuarios seudonimizados): centralidad y comunidades, reportadas por tipo de canal (oficial, medio, otros; ver "Tipo de canal"). **Respaldo** si no hay volumen de comentarios: red de co-mención de actores en noticias (lista fija de instituciones + NER solo para personas). |
+| 7 | Red social (YouTube) | Red canal–canal por comentaristas compartidos (proyección de la red bipartita usuario–video, usuarios seudonimizados): centralidad y comunidades, reportadas por tipo de canal (oficial, medio, otros; ver "Tipo de canal"). **Respaldo** si no hay volumen de comentarios: red de co-mención de actores en noticias (lista de actores en "Alcance de datos"). |
 | 8 | Índice de discrepancia | Distancia semántica al comunicado o aviso vigente + regla que detecta magnitud distinta de la oficial (p. ej. "fuerte" vs. "moderada"). Se aplica a notas y a título/descripción de videos. |
-| 9 | Efecto comunicado | Estudio de eventos: cada comunicado del ENFEN es un evento; ventana corta de −3 a +7 días comparada contra días sin evento en volumen de notas y videos, emociones, interés en Trends y engagement. Ventanas cortas porque hay un comunicado cada ~2 semanas. Los avisos rojos del Senamhi se suman como eventos cuando se defina su filtro. |
+| 9 | Efecto comunicado | Estudio de eventos: cada comunicado del ENFEN es un evento; ventana corta de −3 a +7 días comparada contra días sin evento en volumen de notas y videos, emociones, interés en Trends y engagement. Ventanas cortas porque hay un comunicado cada ~2-4 semanas. Los avisos del Senamhi **no** son eventos (más de 400 en 2026): sirven como contexto regional. |
 | 10 | Analítica web | KPIs de engagement en YouTube (vistas, likes, comentarios, tasa de engagement) frente al índice de discrepancia; interés de búsqueda por departamento (Trends) alrededor de cada comunicado; registro propio de eventos del dashboard (web usage mining); indicadores secundarios de los medios (volumen, sección, tiempo de reacción tras un comunicado). |
 | 11 | Modelo de engagement | Modelo propio entrenado con los datos minados: predice la tasa de engagement de un video ((likes + comentarios) / vistas) a partir del índice de discrepancia, emociones, tópicos y rasgos del título (mayúsculas, exclamaciones, emojis), con los suscriptores del canal como control. Regresión lineal y gradient boosting contra una línea base; importancia de variables. Muestra con varios términos de búsqueda, orden por fecha y tramos de tiempo para reducir el sesgo del ranking de YouTube; likes ocultos como dato faltante. |
-| 12 | Recomendador híbrido | **Basado en conocimiento:** reglas con región, aviso vigente del Senamhi y estado del ENFEN filtran qué información corresponde. **Basado en contenido:** similitud de embeddings ordena comunicados, avisos y notas alineadas. Entrada: un contenido (nota o video) y un perfil (región, interés). |
-| 13 | Agente con herramientas | Decide qué herramienta usar según la consulta: `buscar_oficial` (párrafos de comunicados y avisos con ChromaDB `PersistentClient`, filtrando por fecha vigente), `estado_vigente(fecha, región)`, `medir_discrepancia(texto)` y `recomendar(perfil)`. Un LLM solo elige la herramienta y extrae parámetros (uso declarado); la respuesta se arma con plantillas y citas textuales, y un control verifica que cada cita exista literalmente en la fuente. Respaldo sin LLM: enrutador por similitud de embeddings entre la consulta y la descripción de cada herramienta. |
-| 14 | Dashboard | Streamlit: línea de tiempo del estado oficial vs. volumen de noticias y videos, tópicos por región, emociones por mes, redes, KPIs de engagement e interés, semáforo y recomendaciones. |
+| 12 | Recomendador híbrido | **Basado en conocimiento:** reglas con macro-región, aviso vigente del Senamhi y estado del ENFEN filtran qué información corresponde. **Basado en contenido:** similitud de embeddings ordena comunicados, avisos y notas alineadas. Entrada: un contenido (nota o video) y un perfil (macro-región, categoría de interés). |
+| 13 | Agente con herramientas | Decide qué herramienta usar según la consulta: `buscar_oficial` (párrafos de comunicados y avisos con ChromaDB `PersistentClient`, filtrando por fecha vigente), `estado_vigente(fecha, región)`, `medir_discrepancia(texto)` y `recomendar(perfil)`. Un LLM por API solo elige la herramienta y extrae parámetros (uso declarado); la respuesta se arma con plantillas y citas textuales, y un control verifica que cada cita exista literalmente en la fuente. Respaldo sin LLM: enrutador por similitud de embeddings entre la consulta y la descripción de cada herramienta. |
+| 14 | Dashboard | Streamlit con las pestañas Consulta y Panorama (ver "Producto" y "Despliegue"). |
 
 **Opcional (primero en recortarse):** transcripciones de YouTube (la API oficial no las entrega para videos ajenos).
 
 **Descartado:** clasificador del estado oficial a partir del texto. Su etiqueta sale de la fecha, así que aprendería la época y no el contenido, y con partición temporal faltarían clases en la prueba.
+
+## Alcance de datos
+**Período.** Análisis principal del 1-ene-2026 (comunicado N.° 01) al 31-oct-2026. El modelo de engagement entrena con enero–agosto y prueba con septiembre–octubre. Del 1-nov-2026 a la presentación se recolecta para el monitoreo (fase 6 de CRISP-ML(Q)).
+
+**Medios.**
+- **Andina** (agencia estatal): control positivo; se reporta aparte de los medios privados.
+- **RPP, Infobae Perú, La República:** medios privados nacionales.
+- **El Tiempo (Piura):** medio regional de la costa norte, la zona más afectada; los otros cuatro son de Lima.
+
+**Videos de YouTube.** `search.list` con 5 términos ("fenómeno El Niño", "Niño costero", "ENFEN", "El Niño Perú", "lluvias costa norte"), `regionCode=PE`, idioma español, mes a mes, orden por fecha y por relevancia: 5 × 10 × 2 = 100 búsquedas (el límite diario). Se conserva un video solo si su título o descripción menciona El Niño y además menciona Perú o una región peruana, o su canal es de Perú.
+
+**Región.** Lista de lugares con los 25 departamentos y las provincias de los departamentos costeros (ubigeos del INEI), agrupados en macro-regiones según el uso del Senamhi:
+- Costa norte: Tumbes, Piura, Lambayeque, La Libertad.
+- Costa centro: Áncash, Ica.
+- Lima: aparte (los boletines la tratan de forma inconsistente y dominaría por volumen).
+- Sin mención de lugar: "nacional".
+
+Se ignora el encabezado de lugar de las notas ("LIMA (ANDINA)") y se excluyen provincias con nombres ambiguos (p. ej. "Santa"). No hay una definición oficial publicada de estas macro-regiones: la agrupación es un supuesto declarado.
+
+**Avisos del Senamhi.** Entran solo precipitaciones e incremento de temperatura en costa norte y costa centro; quedan fuera friaje, nevadas, selva y sierra sur. Se presentan como "aviso vigente en tu zona", **nunca como causados por El Niño**.
+
+**Actores (red de co-mención).**
+- ENFEN: IMARPE (preside), SENAMHI, DHN, IGP, ANA, INDECI y CENEPRED (según informe técnico del IMARPE).
+- Gestión del riesgo: PCM.
+- Gobiernos regionales de las macro-regiones analizadas, verificados en gob.pe.
+- Personas: NER, solo las que aparecen con frecuencia.
 
 ## Tipo de canal
 Sin listas editables por terceros (Wikipedia) ni etiquetado manual: cada canal se clasifica por enlaces verificables desde el sitio oficial de su organización. No existe un registro oficial y completo de medios en el Perú (las licencias del MTC salen en resoluciones sueltas y no cubren medios digitales).
@@ -56,28 +95,35 @@ Verificado el 23-oct-2026: Senamhi, Indeci, ENFEN, IGP, RPP, Andina, La Repúbli
 ## Evaluación sin etiquetado manual
 | Componente | Cómo se valida |
 |------------|----------------|
-| Índice de discrepancia | Control positivo (notas de Andina que enlazan al PDF del comunicado → distancia baja) y negativo (otros temas → distancia alta); separación de ambas distribuciones. |
+| Índice de discrepancia | Control positivo (notas de Andina que enlazan al PDF del comunicado → distancia baja) y negativo (otros temas → distancia alta); separación de ambas distribuciones (AUC). |
 | Extractor de magnitud | Contraste contra los comunicados oficiales. |
 | Recuperador / agente | Preguntas generadas desde secciones de los comunicados; recall@k, TF-IDF vs. embeddings. Preguntas generadas por plantillas con herramienta correcta conocida: % de herramienta bien elegida; 100 % de citas literales. |
 | Modelo de engagement | Partición temporal (entrenar con meses anteriores, probar con los últimos); MAE y R² contra línea base; importancia de variables. |
-| Recomendador | Evaluación offline: la "respuesta correcta" es el comunicado/aviso vigente en la fecha y región del contenido; precision@k, cobertura y diversidad. Notas que enlazan a un comunicado como control positivo. |
+| Recomendador | Evaluación offline: la "respuesta correcta" es el comunicado/aviso vigente en la fecha y macro-región del contenido; precision@k, cobertura y diversidad. Notas que enlazan a un comunicado como control positivo. |
 | Tópicos | Coherencia c_v y comparación del número de tópicos. |
 | Sentimiento | Acuerdo (kappa de Cohen) entre pysentimiento, zero-shot y TF-IDF + regresión logística. |
 | Emociones | Revisión cualitativa con ejemplos; sin cifra de exactitud. |
 | Red social | Modularidad de las comunidades y comparación contra una red aleatoria con los mismos grados. |
 | Analítica web | Correlación (Spearman) entre discrepancia y engagement; descriptivo, sin causalidad. |
 
-**Limitaciones declaradas:** no hay métrica de exactitud para "detectar alarmismo"; el producto mide cercanía a lo oficial. El recomendador se evalúa solo offline (sin usuarios reales). El modelo de engagement muestra asociación, no causalidad. Google Trends da interés relativo (0-100) y puede no tener datos en departamentos pequeños.
+**Limitaciones declaradas:** no hay métrica de exactitud para "detectar alarmismo"; el producto mide cercanía a lo oficial. El recomendador se evalúa solo offline (sin usuarios reales). El modelo de engagement muestra asociación, no causalidad. Google Trends da interés relativo (0-100) y puede no tener datos en departamentos pequeños. Las macro-regiones son una agrupación supuesta.
+
+## Despliegue
+- **Streamlit Community Cloud**, app pública sin datos personales.
+- Los modelos pesados (BERTopic, embeddings, modelo de engagement) se ejecutan offline; la app solo carga resultados precalculados.
+- El registro de uso va a un almacenamiento externo: el sistema de archivos de Community Cloud se borra en cada reinicio.
+- La app no usa la clave de YouTube (datos precalculados); la clave del LLM va en los *secrets* de la plataforma.
+- **Derecho de autor:** de las notas solo se muestra titular, extracto breve, enlace y fuente, nunca el texto completo (D. Leg. 822: art. 9 excluye "las noticias del día" y los textos oficiales; art. 44 permite la cita breve con fuente; confirmar en el texto oficial). Los comunicados y avisos, como textos oficiales, se pueden mostrar completos.
 
 ## Plan de 4 semanas
-Las horas son una estimación orientativa, no un límite; el alcance agregado (YouTube, recomendador, analítica web, red social) puede tomar más tiempo.
+Las horas son una estimación orientativa, no un límite; el alcance agregado puede tomar más tiempo.
 
 | Semana | Persona A (datos) | Persona B (modelos) | Entregable |
 |--------|-------------------|---------------------|------------|
-| 1 | Scrapers de ENFEN, Senamhi y 3-4 medios; extraer enlaces y citas; recolector de YouTube por API | Preprocesamiento y TF-IDF | Dataset limpio con fechas, enlaces y videos |
+| 1 | Scrapers de ENFEN, Senamhi y 5 medios; extraer enlaces y citas; recolector de YouTube por API | Preprocesamiento, asignación de región y TF-IDF | Dataset limpio con fechas, regiones, enlaces y videos |
 | 2 | Red de enlaces y citas; red social de YouTube; exportar Trends | Embeddings, tópicos, emociones | Notebooks con resultados |
 | 3 | Índice de discrepancia, estudio de eventos, KPIs de analítica web, tipo de canal | Modelo de engagement, recomendador híbrido; evaluación (recall@k, precision@k, MAE, coherencia) | Métricas validadas |
-| 4 | Dashboard con registro de eventos | Agente con herramientas | Producto, informe y presentación |
+| 4 | Dashboard con registro de eventos y despliegue | Agente con herramientas | Producto, informe y presentación |
 
 Los roles A/B no están asignados y pueden intercambiarse.
 
@@ -91,14 +137,14 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 | 3. Ingeniería del modelo | Vectores, tópicos, emociones, modelo de engagement, recomendador, agente | Líneas base y comparación de métodos |
 | 4. Evaluación | Tabla de evaluación | Controles positivo y negativo, partición temporal |
 | 5. Despliegue | Dashboard y agente | Registro de uso de la app |
-| 6. Monitoreo y mantenimiento | Re-descarga cada 30 días (regla de YouTube); rendimiento en semanas nuevas (simulación, declarada) | Cambios en discrepancia y error en el tiempo |
+| 6. Monitoreo y mantenimiento | Re-descarga cada 30 días (regla de YouTube); rendimiento en datos de noviembre (simulación, declarada) | Cambios en discrepancia y error en el tiempo |
 
 ## Recortes, en orden
 1. Transcripciones de YouTube.
 2. Efecto comunicado solo con volumen (sin emociones ni engagement).
 3. Indicadores secundarios de los medios.
 4. Agente sin LLM (enrutador por embeddings); en último caso, solo extractivo.
-5. Bajar de 4 a 3 medios.
+5. Bajar de 4 a 3 medios nacionales (El Tiempo se mantiene).
 
 **Núcleo que no se recorta:** scraping (incluido YouTube), vectores (TF-IDF y embeddings), tópicos, emociones, modelo de engagement, recomendador, analítica web, red social (o su respaldo de co-mención), estudio de eventos, agente con herramientas (o su respaldo) y dashboard.
 
@@ -106,11 +152,12 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [x] Verificar que las notas traigan enlaces a fuentes oficiales en el HTML. *Andina enlaza al PDF del comunicado; Infobae solo cita en texto → se agregan menciones en texto.*
 - [x] Revisar `robots.txt` de esos medios. *Ver "Reglas por sitio".*
 - [x] Verificar fechas de publicación. *Las notas traen `datePublished` separado de `dateModified`.*
+- [x] Revisar estructura de comunicados y avisos. *Usan macro-regiones, no departamentos; más de 400 avisos en 2026.*
 - [ ] Contar comentarios de ~30 videos de YouTube sobre El Niño **con la API oficial**. Decide si la red social usa YouTube o el respaldo de co-mención.
-- [ ] Revisar en Google Trends si hay datos por departamento (en especial Tumbes) para "El Niño".
-- [ ] Revisar términos de uso de los medios.
+- [ ] Revisar en Google Trends si hay datos por departamento de la costa norte (en especial Tumbes) para "El Niño".
+- [ ] Revisar términos de uso de Andina, Infobae, La República y El Tiempo (RPP: revisado).
 - [ ] Descargar los comunicados ENFEN y probar la extracción de fecha, estado y magnitud con reglas.
-- [ ] Extraer avisos del Senamhi (fecha, nivel, departamentos).
+- [ ] Extraer avisos del Senamhi (fecha, tipo, nivel, macro-región) y aplicar el filtro.
 - [ ] Probar pysentimiento (polaridad y emociones) sobre ~20 titulares.
 
 ### Criterios de pasa / no pasa
@@ -122,26 +169,27 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 | Comentarios | ≥ 100 videos con ≥ 30 comentarios | Engagement sin comentarios; red social con respaldo de co-mención |
 | Red de audiencias | La red canal–canal tiene un componente conectado de ≥ 30 canales | Respaldo de co-mención |
 | Tipo de canal | ≥ 70 % de los canales de la muestra se clasifican sin ambigüedad | Revisar las reglas de "Tipo de canal" |
-| Google Trends | ≥ 3 de los 4 departamentos objetivo con datos en ≥ 50 % de las semanas | Trends solo a nivel nacional |
+| Google Trends | ≥ 3 de los 4 departamentos de la costa norte con datos en ≥ 50 % de las semanas | Trends solo a nivel nacional |
 | pysentimiento | Emociones coherentes en la revisión cualitativa de ~20 titulares | Solo polaridad, aplicada al cuerpo de la nota |
 
 **Plan B** (reseñas de servicios digitales en Google Play, con estrellas como etiqueta externa): solo si fallan a la vez la prueba de videos y el contraste medios–YouTube.
 
 ## Datos y fuentes
-- Comunicados oficiales: https://enfen.imarpe.gob.pe/comunicados/ (ENFEN lo integran IMARPE, Senamhi, IGP y otras instituciones).
-- Avisos meteorológicos por departamento: https://www.senamhi.gob.pe/?p=aviso-meteorologico
+- Comunicados oficiales: https://enfen.imarpe.gob.pe/comunicados/ (ENFEN: IMARPE, SENAMHI, DHN, IGP, ANA, INDECI y CENEPRED).
+- Avisos meteorológicos: https://www.senamhi.gob.pe/?p=aviso-meteorologico
 - Estado visto al 22-oct-2026: "Alerta de El Niño Costero", comunicados hasta N.° 18-2026. Confirmar en la fuente antes de citar.
 - YouTube Data API v3 (página oficial de cuotas, 23-oct-2026): 10 000 unidades/día; `commentThreads.list`, `videos.list` y `channels.list` cuestan 1 unidad; `search.list` tiene un límite propio de 100 llamadas/día (hasta 50 resultados cada una).
 - Google Trends: `pytrends` está archivado (confirmado en GitHub) y el API oficial está en alfa cerrado; se usa la exportación CSV de la web.
-- **No verificado aún:** volumen de comentarios de YouTube, datos de Trends por departamento, términos de uso de los medios y calidad de las emociones de pysentimiento en titulares.
+- **No verificado aún:** volumen de comentarios de YouTube, datos de Trends por departamento, términos de uso de cuatro medios, texto oficial del art. 9 del D. Leg. 822, límites actuales de Streamlit Community Cloud, acceso al listado oficial de ubigeos del INEI y calidad de las emociones de pysentimiento en titulares.
 
-## Reglas por sitio (revisado el 22-oct-2026)
+## Reglas por sitio (revisado el 22 y 23-oct-2026)
 | Sitio | Regla |
 |-------|-------|
 | Andina | Sin `robots.txt`; usar sitemap. |
-| RPP | Bloquea por completo a Scrapy y bots de IA; usar `requests` con un user-agent honesto, nunca suplantando otro. |
+| RPP | Bloquea por completo a Scrapy y bots de IA; usar `requests` con un user-agent honesto, nunca suplantando otro. Sus términos prohíben reproducir contenido sin autorización: solo análisis local y citas breves. |
 | La República | Prohíbe `/archivo/`; recolectar solo desde sitemaps/RSS. |
 | Infobae Perú | Usar el sitemap de noticias de la categoría Perú. |
+| El Tiempo (Piura) | Permite el acceso salvo `/wp-admin/`; usar sus sitemaps. |
 | Expreso | Responde 403: **excluido**. |
 | YouTube | Solo la API oficial; `robots.txt` prohíbe `/results`. Borrar o refrescar datos crudos a los 30 días (políticas de la API); guardar agregados y seudónimos. |
 
@@ -149,11 +197,12 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 - **Cero etiquetado manual.** Toda validación usa una referencia externa.
 - **Ética de scraping:** `robots.txt`, términos de uso, rate limiting, propósito declarado; sin eludir bloqueos. `requests` + `BeautifulSoup`; Playwright solo si es imprescindible.
 - **Privacidad:** seudonimizar; no guardar nombres de usuario ni identificadores personales.
-- **IA generativa:** se declara su uso y se conserva un registro de prompts en `docs/prompts.md`. Los modelos preentrenados de NLP (embeddings, emociones) se usan como herramientas de minería de texto.
+- **Derecho de autor:** los textos de las notas no se versionan ni se publican completos.
+- **IA generativa:** se declara su uso y se conserva un registro de prompts en `docs/prompts.md`. En el producto, un LLM solo se usa dentro del agente para elegir herramientas. Los modelos preentrenados de NLP (embeddings, emociones) se usan como herramientas de minería de texto.
 - **Comunicación de resultados:** el índice de discrepancia no es un "detector de desinformación" y no se señalan medios ni canales individuales; se reporta por tipo de fuente.
 
 ## Decisiones abiertas
-Las opciones para recomendación, analítica web y red social son la mejor alternativa evaluada al 22-oct-2026 y pueden cambiar según las pruebas de viabilidad o la opinión del profesor.
+Las definiciones de este README son la mejor alternativa evaluada al 23-oct-2026 y pueden cambiar según las pruebas de viabilidad o la opinión del profesor.
 
 ## Estructura del repo
 ```

@@ -26,3 +26,12 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 4. Aprobar las definiciones y escribirlas sin hacer push.
 
 **Resultado:** se definieron el modelo de engagement (se descarta el clasificador del estado oficial), el agente con herramientas, el estudio de eventos, la estructura del informe por CRISP-ML(Q) con sección de protocolos web, el tipo de canal por enlaces verificables desde sitios oficiales (sin Wikipedia) y los criterios de pasa / no pasa. La IA verificó los enlaces sitio–canal de 8 organizaciones, la cuota oficial de la API de YouTube y el estado archivado de `pytrends`.
+
+## 2026-10-23 · Definiciones de producto, datos y uso de LLM (Claude Code, Claude Opus 5.5)
+**Propósito:** definir usuario, semáforo, categorías, despliegue, período, medios, videos, regiones, avisos, actores y uso de LLM.
+
+**Prompts (resumen fiel, en orden):**
+1. Continuar con las definiciones de producto y datos, con análisis crítico.
+2. Hacer commit local mientras tanto y continuar.
+
+**Resultado:** la IA revisó un comunicado del ENFEN, la lista de avisos del Senamhi, los términos de RPP, el D. Leg. 822 (versión de terceros), la documentación de Streamlit y el `robots.txt` de El Tiempo. Se cambió la unidad regional a macro-región, los avisos del Senamhi pasaron de eventos a contexto, se agregaron reglas de derecho de autor y despliegue, y El Tiempo (Piura) entró como medio regional.
