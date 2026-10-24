@@ -14,6 +14,7 @@ MESES = {
     )
 }
 MESES["septiembre"] = 9
+MESES_CORTOS = {nombre[:3].capitalize(): numero for nombre, numero in MESES.items()}  # Ene, Feb, …, Set, Sep, …
 _MES = "|".join(MESES)
 
 

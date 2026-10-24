@@ -3,14 +3,17 @@
 import datetime as dt
 import logging
 import re
+from typing import NamedTuple
 
-from lxml import etree, html
+from lxml import html
 
 from radar import config
-from radar.comun.archivos import escribir_atomico, leer_csv, ruta_segura, sha256
+from radar.comun.archivos import escribir_atomico, ruta_segura, sha256
 from radar.comun.http import Rechazado
 from radar.comun.regiones import regiones_mencionadas
-from radar.comun.texto import clave, fecha_es, norm, sha1_corto
+from radar.comun.registro import describir
+from radar.comun.texto import MESES_CORTOS, clave, fecha_es, norm, sha1_corto
+from radar.comun.xml import NS_SITEMAP, leer_xml
 from radar.oficial import enfen_pdf
 from radar.oficial.vocabulario import (
     CALOR,
@@ -22,17 +25,15 @@ from radar.oficial.vocabulario import (
     REGION_CENTRAL,
     REGION_COSTERA,
 )
+from radar.recoleccion.urls import filas_de_notas
 
 log = logging.getLogger(__name__)
 
-HOST = "enfen.imarpe.gob.pe"
-BASE = f"https://{HOST}"
+BASE = config.URL_ENFEN
 DIR = config.DIR_RAW_OFICIAL / "enfen"
 SEMILLAS = ["comunicado-oficial-enfen-n13-2025"]  # vigente del 1 al 14-ene-2026 (No Activo)
 SLUG = re.compile(r"^comunicado-(oficial|extraordinario)-enfen-[a-z0-9-]+$")
 SLUG_NUMERO = re.compile(r"n-?(\d{1,2})-(\d{4})$")
-NS = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
-PARSER_XML = etree.XMLParser(resolve_entities=False, no_network=True)
 NUMERO = re.compile(r"COMUNICADO (OFICIAL|EXTRAORDINARIO) ENFEN\s*N\s*°\s*0?(\d{1,2})\s*[-–]\s*(\d{4})")
 PROXIMO = re.compile(r"próximo Comunicado Oficial[^.]*?(\d{1,2}\s+de\s+\w+\s+del?\s+\d{4})", re.I)
 VENTANA_FECHA, VENTANA_ESTADO = 80, 120  # caracteres tras el número donde están la fecha y el estado
@@ -43,30 +44,22 @@ SECCIONES_TEXTO = ("titular", "resumen", "cuerpo")
 
 
 def _slugs_de_urls():
-    slugs = []
-    for ruta in sorted(config.DIR_URLS.glob("*.csv")):
-        if not re.match(r"^\d{4}-\d{2}-\d{2}_[a-z]+\.csv$", ruta.name):
-            continue
-        for fila in leer_csv(ruta):
-            if (
-                fila["medio"] == "enfen" and "/download/" in fila["url"] and SLUG.match(fila["id"])
-            ):  # no las entradas del blog
-                slugs.append(fila["id"])
-    return slugs
+    """Comunicados que vio el recolector diario (solo /download/: las entradas del blog no son el documento)."""
+    return [f["id"] for f in filas_de_notas("enfen") if "/download/" in f["url"] and SLUG.match(f["id"])]
 
 
 def documentos(cliente):
     """Slugs de comunicados (data/urls + semillas + sitemap), su lastmod y avisos para el reporte."""
     slugs, avisos, lastmod = _slugs_de_urls(), [], {}
     try:
-        raiz = etree.fromstring(cliente.get(BASE + "/wpdmpro-sitemap.xml").content, PARSER_XML)
-        for u in raiz.findall("s:url", NS):
-            m = re.match(BASE + r"/download/([^/]+)/?$", (u.findtext("s:loc", namespaces=NS) or "").strip())
+        raiz = leer_xml(cliente.get(BASE + "/wpdmpro-sitemap.xml").content)
+        for u in raiz.findall("s:url", NS_SITEMAP):
+            m = re.match(BASE + r"/download/([^/]+)/?$", (u.findtext("s:loc", namespaces=NS_SITEMAP) or "").strip())
             if m and SLUG.match(m.group(1)):
-                lastmod[m.group(1)] = (u.findtext("s:lastmod", namespaces=NS) or "").strip()
+                lastmod[m.group(1)] = (u.findtext("s:lastmod", namespaces=NS_SITEMAP) or "").strip()
     except Exception as e:  # sin sitemap se trabaja con data/urls y lo ya descargado
         log.debug("sitemap del ENFEN", exc_info=True)
-        avisos.append(f"sitemap del ENFEN no disponible: {type(e).__name__} {e}"[:200])
+        avisos.append(f"sitemap del ENFEN no disponible: {describir(e)}")
     for slug, mod in lastmod.items():
         if mod[:10] >= config.INICIO.isoformat() and slug not in slugs:
             slugs.append(slug)
@@ -107,17 +100,24 @@ def proximo_anunciado(texto):
 
 def campos(texto):
     """Tipo, número, año, fecha de emisión, estado y próximo comunicado anunciado."""
-    c = {"tipo": None, "numero": None, "anio": None, "fecha_emision": None, "estado": None, "proximo_anunciado": None}
+    datos = {
+        "tipo": None,
+        "numero": None,
+        "anio": None,
+        "fecha_emision": None,
+        "estado": None,
+        "proximo_anunciado": None,
+    }
     m = NUMERO.search(texto)
     if not m:
-        return c
-    c["tipo"], c["numero"], c["anio"] = m.group(1).lower(), int(m.group(2)), int(m.group(3))
-    c["fecha_emision"] = fecha_es(texto[m.end() : m.end() + VENTANA_FECHA])
+        return datos
+    datos["tipo"], datos["numero"], datos["anio"] = m.group(1).lower(), int(m.group(2)), int(m.group(3))
+    datos["fecha_emision"] = fecha_es(texto[m.end() : m.end() + VENTANA_FECHA])
     cabecera = texto[m.end() : m.end() + VENTANA_ESTADO]
     estados = [e for e in ESTADOS_ENFEN if re.search(re.escape(e).replace(r"\ ", r"\s+"), cabecera, re.I)]
-    c["estado"] = estados[0] if len(estados) == 1 else None
-    c["proximo_anunciado"] = proximo_anunciado(texto)
-    return c
+    datos["estado"] = estados[0] if len(estados) == 1 else None
+    datos["proximo_anunciado"] = proximo_anunciado(texto)
+    return datos
 
 
 TERMINO = re.compile(r"\b(débil(?:es)?|moderad[ao]s?|muy fuertes?|fuertes?|extraordinari[ao]s?)\b", re.I)
@@ -241,21 +241,6 @@ def temas(texto):
 
 # ---------------------------------------------------------------- página de descarga (referencia para validar)
 
-MES_CORTO = {
-    "Ene": 1,
-    "Feb": 2,
-    "Mar": 3,
-    "Abr": 4,
-    "May": 5,
-    "Jun": 6,
-    "Jul": 7,
-    "Ago": 8,
-    "Set": 9,
-    "Sep": 9,
-    "Oct": 10,
-    "Nov": 11,
-    "Dic": 12,
-}
 LARGO_MINIMO_WEB = 30
 
 
@@ -273,8 +258,8 @@ def pagina(ruta_html, anio):
     texto = norm(articulo[0].text_content())
     m = re.match(r"(\d{1,2}) (\w{3})", texto)
     fecha = (
-        dt.date(anio, MES_CORTO[m.group(2)], int(m.group(1))).isoformat()
-        if m and m.group(2) in MES_CORTO and anio
+        dt.date(anio, MESES_CORTOS[m.group(2)], int(m.group(1))).isoformat()
+        if m and m.group(2) in MESES_CORTOS and anio
         else None
     )
     estado = re.search(r"Estado de sistema de alerta:\s*([^0-9]+?)\d", texto)
@@ -288,12 +273,20 @@ def pagina(ruta_html, anio):
 # ---------------------------------------------------------------- construcción de filas
 
 
+class Lectura(NamedTuple):
+    fuente: str  # "pdf" o "html" (respaldo)
+    parrafos: list
+    tablas: list
+    texto: str
+    campos: dict
+
+
 def _leer_pdf(slug):
     parrafos, tablas, texto = enfen_pdf.extraer(DIR / f"{slug}.pdf")
-    c = campos(texto)
-    if not (c["numero"] and c["fecha_emision"] and c["estado"]):
+    datos = campos(texto)
+    if not (datos["numero"] and datos["fecha_emision"] and datos["estado"]):
         raise ValueError("faltan número, fecha o estado en el PDF")
-    return "pdf", parrafos, tablas, texto, c
+    return Lectura("pdf", parrafos, tablas, texto, datos)
 
 
 def _leer_html(slug):
@@ -303,7 +296,7 @@ def _leer_html(slug):
     if not (m and web["fecha_web"] and web["estado_web"] and web["parrafos_web"]):
         raise ValueError("ni el PDF ni la página de descarga tienen los campos")
     texto = " ".join(web["parrafos_web"])
-    c = {
+    datos = {
         "tipo": "extraordinario" if "extraordinario" in slug else "oficial",
         "numero": int(m.group(1)),
         "anio": int(m.group(2)),
@@ -311,66 +304,69 @@ def _leer_html(slug):
         "estado": web["estado_web"],
         "proximo_anunciado": proximo_anunciado(texto),
     }
-    return "html", [{"seccion": "cuerpo", "texto": t} for t in web["parrafos_web"]], [], texto, c
+    return Lectura("html", [{"seccion": "cuerpo", "texto": t} for t in web["parrafos_web"]], [], texto, datos)
 
 
-def identificador(c):
-    return f"enfen-{'ext-' if c['tipo'] == 'extraordinario' else ''}{c['anio']}-{c['numero']:02d}"
+def identificador(datos):
+    prefijo = "ext-" if datos["tipo"] == "extraordinario" else ""
+    return f"enfen-{prefijo}{datos['anio']}-{datos['numero']:02d}"
 
 
-def _filas_documento(slug, estado):
+def _leer(slug):
     try:
-        fuente, parrafos, tablas, texto, c = _leer_pdf(slug)
+        return _leer_pdf(slug)
     except Exception:
         log.warning("ENFEN · %s: el PDF no se pudo leer, se usa la página de descarga", slug)
         log.debug("detalle", exc_info=True)
-        fuente, parrafos, tablas, texto, c = _leer_html(slug)
-    ident = identificador(c)
-    web = pagina(DIR / f"{slug}.html", c["anio"])
-    textos = [p["texto"] for p in parrafos if p["seccion"] in SECCIONES_TEXTO]
+        return _leer_html(slug)
+
+
+def _fila_comunicado(slug, lectura, ident, web, textos, estado):
+    datos = lectura.campos
     maxima, mencionadas = magnitud(textos)
     previo = estado.get(slug)
-    comunicado = {
+    return {
         "id": ident,
-        "tipo": c["tipo"],
-        "numero": c["numero"],
-        "anio": c["anio"],
-        "fecha_emision": c["fecha_emision"],
+        "tipo": datos["tipo"],
+        "numero": datos["numero"],
+        "anio": datos["anio"],
+        "fecha_emision": datos["fecha_emision"],
         "fecha_web": web["fecha_web"],
-        "estado": c["estado"],
+        "estado": datos["estado"],
         "magnitud_max_prevista": maxima,
         "magnitudes_mencionadas": mencionadas,
         "plazo": plazo(textos),
-        "proximo_anunciado": c["proximo_anunciado"],
-        "titular": next((p["texto"] for p in parrafos if p["seccion"] == "titular"), ""),
+        "proximo_anunciado": datos["proximo_anunciado"],
+        "titular": next((p["texto"] for p in lectura.parrafos if p["seccion"] == "titular"), ""),
         "slug": slug,
         "url": f"{BASE}/download/{slug}/",
         "lastmod": previo.get("lastmod", ""),
         "sha256_pdf": previo.get("sha256", ""),
-        "fuente_texto": fuente,
-        "n_parrafos": len(parrafos),
+        "fuente_texto": lectura.fuente,
+        "n_parrafos": len(lectura.parrafos),
     }
-    probs = [{"comunicado_id": ident, **r} for r in probabilidades(tablas)]
-    filas_parrafos = []
-    for i, p in enumerate(parrafos, start=1):
-        dup = p.get("duplicado_de")
-        filas_parrafos.append(
+
+
+def _filas_parrafos(lectura, ident):
+    filas = []
+    for orden, parrafo in enumerate(lectura.parrafos, start=1):
+        duplicado = parrafo.get("duplicado_de")
+        filas.append(
             {
-                "id": f"{ident}-p{i:02d}",
+                "id": f"{ident}-p{orden:02d}",
                 "doc_id": ident,
                 "fuente": "enfen",
-                "orden": i,
-                "seccion": p["seccion"],
-                "texto": p["texto"],
-                "fecha_doc": c["fecha_emision"],
-                "macroregiones": regiones_mencionadas(p["texto"]),
-                "temas": temas(p["texto"]) if p["seccion"] != "definicion" else set(),
-                "duplicado_de": f"{ident}-p{dup + 1:02d}" if dup is not None else "",
-                "sha1": sha1_corto(p["texto"]),
+                "orden": orden,
+                "seccion": parrafo["seccion"],
+                "texto": parrafo["texto"],
+                "fecha_doc": lectura.campos["fecha_emision"],
+                "macroregiones": regiones_mencionadas(parrafo["texto"]),
+                "temas": temas(parrafo["texto"]) if parrafo["seccion"] != "definicion" else set(),
+                "duplicado_de": f"{ident}-p{duplicado + 1:02d}" if duplicado is not None else "",
+                "sha1": sha1_corto(parrafo["texto"]),
             }
         )
-    control = {"slug": slug, "texto": texto, "parrafos": textos, "tablas": tablas, "web": web, "campos": c}
-    return comunicado, probs, filas_parrafos, control
+    return filas
 
 
 def _agregar_vigencia(comunicados, parrafos):
@@ -378,9 +374,8 @@ def _agregar_vigencia(comunicados, parrafos):
     comunicados.sort(key=lambda c: (c["fecha_emision"] or "", c["tipo"], c["numero"]))
     for actual, siguiente in zip(comunicados, [*comunicados[1:], None], strict=True):
         actual["vigente_desde"] = actual["fecha_emision"]
-        actual["vigente_hasta"] = (
-            (dt.date.fromisoformat(siguiente["fecha_emision"]) - dt.timedelta(days=1)).isoformat() if siguiente else ""
-        )
+        hasta = dt.date.fromisoformat(siguiente["fecha_emision"]) - dt.timedelta(days=1) if siguiente else None
+        actual["vigente_hasta"] = hasta.isoformat() if hasta else ""
     vigencia = {c["id"]: (c["vigente_desde"], c["vigente_hasta"]) for c in comunicados}
     for p in parrafos:
         p["vigente_desde"], p["vigente_hasta"] = vigencia.get(p["doc_id"], ("", ""))
@@ -389,21 +384,31 @@ def _agregar_vigencia(comunicados, parrafos):
 def construir(slugs, estado):
     """Filas de comunicados, probabilidades y párrafos desde data/raw (determinista).
 
-    Un documento que falla no detiene al resto: queda en `errores`.
+    Un documento que falla no detiene al resto: queda en `errores`. `control` guarda lo que usa la validación.
     """
     comunicados, probs, parrafos, control, errores = [], [], [], {}, {}
     for slug in slugs:
         if not (DIR / f"{slug}.pdf").exists():
             continue
         try:
-            com, pr, pa, ctrl = _filas_documento(slug, estado)
+            lectura = _leer(slug)
+            ident = identificador(lectura.campos)
+            web = pagina(DIR / f"{slug}.html", lectura.campos["anio"])
+            textos = [p["texto"] for p in lectura.parrafos if p["seccion"] in SECCIONES_TEXTO]
+            comunicado = _fila_comunicado(slug, lectura, ident, web, textos, estado)
         except Exception as e:
             log.debug("ENFEN · %s", slug, exc_info=True)
-            errores[slug] = f"{type(e).__name__}: {e}"[:200]
+            errores[slug] = describir(e)
             continue
-        comunicados.append(com)
-        probs += pr
-        parrafos += pa
-        control[com["id"]] = ctrl
+        comunicados.append(comunicado)
+        probs += [{"comunicado_id": ident, **fila} for fila in probabilidades(lectura.tablas)]
+        parrafos += _filas_parrafos(lectura, ident)
+        control[ident] = {
+            "slug": slug,
+            "texto": lectura.texto,
+            "parrafos": textos,
+            "tablas": lectura.tablas,
+            "web": web,
+        }
     _agregar_vigencia(comunicados, parrafos)
     return comunicados, probs, parrafos, control, errores

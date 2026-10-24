@@ -113,55 +113,56 @@ class Cliente:
         self.fallos = {}  # host -> fallos seguidos
         self.robots = {}  # host -> (reglas, sitemaps declarados)
 
-    def _esperar(self, host):
+    def _respetar_ritmo(self, host):
         falta = config.PAUSA_POR_HOST - (self.reloj() - self.ultimo.get(host, -1e9))
         if falta > 0:
             self.dormir(falta)
         self.ultimo[host] = self.reloj()
 
-    def _espera(self, intento, respuesta=None):
+    def _segundos_antes_de_reintentar(self, intento, respuesta):
         if respuesta is not None:
-            s = segundos_retry_after(respuesta.headers.get("Retry-After"))
-            if s is not None:
-                return s
+            indicado = segundos_retry_after(respuesta.headers.get("Retry-After"))
+            if indicado is not None:
+                return indicado
         return min(config.ESPERA_BASE * 2**intento + random.uniform(0, 1), config.ESPERA_MAXIMA)
 
-    def _fallo(self, host):
+    def _registrar_fallo(self, host):
         self.fallos[host] = self.fallos.get(host, 0) + 1
         if self.fallos[host] == config.FALLOS_SEGUIDOS_POR_HOST:
             log.warning("%s falló %d veces seguidas: se suspende en esta ejecución", host, self.fallos[host])
 
-    def _pedir(self, url, **kw):
-        """GET con reintentos ante errores de red y respuestas 429/5xx; devuelve la última respuesta."""
+    def _get_completo(self, url, **opciones):
+        """GET que trata como error de red una respuesta más corta que su Content-Length."""
+        respuesta = self.sesion.get(url, **opciones)
+        largo = respuesta.headers.get("Content-Length", "")
+        comprimida = "Content-Encoding" in respuesta.headers
+        if largo.isdigit() and not comprimida and int(largo) != len(respuesta.content):
+            raise requests.exceptions.ChunkedEncodingError(f"{len(respuesta.content)} de {largo} bytes")
+        return respuesta
+
+    def _pedir(self, url, **opciones):
+        """GET con reintentos ante errores de red y 429/5xx; agotados, lanza el error o devuelve la respuesta."""
         host = urlsplit(url).netloc
         if self.fallos.get(host, 0) >= config.FALLOS_SEGUIDOS_POR_HOST:
             raise HostSuspendido(host)
-        kw.setdefault("timeout", (config.TIEMPO_CONEXION, config.TIEMPO_LECTURA))
+        opciones.setdefault("timeout", (config.TIEMPO_CONEXION, config.TIEMPO_LECTURA))
         for intento in range(config.REINTENTOS + 1):
-            self._esperar(host)
-            ultimo = intento == config.REINTENTOS
+            self._respetar_ritmo(host)
+            respuesta, error = None, None
             try:
-                r = self.sesion.get(url, **kw)
-                largo = r.headers.get("Content-Length", "")
-                if largo.isdigit() and "Content-Encoding" not in r.headers and int(largo) != len(r.content):
-                    raise requests.exceptions.ChunkedEncodingError(f"{len(r.content)} de {largo} bytes")
+                respuesta = self._get_completo(url, **opciones)
             except ERRORES_TRANSITORIOS as e:
-                log.debug("intento %d de %s: %s", intento + 1, url, e)
-                if ultimo:
-                    self._fallo(host)
-                    raise
-                self.dormir(self._espera(intento))
-                continue
-            if r.status_code in ESTADOS_TRANSITORIOS and not ultimo:
-                log.debug("intento %d de %s: HTTP %d", intento + 1, url, r.status_code)
-                self.dormir(self._espera(intento, r))
-                continue
-            if r.status_code in ESTADOS_TRANSITORIOS:
-                self._fallo(host)
-            else:
+                error = e
+            if error is None and respuesta.status_code not in ESTADOS_TRANSITORIOS:
                 self.fallos[host] = 0
-            return r
-        raise AssertionError("inalcanzable")
+                return respuesta
+            log.debug("intento %d de %s: %s", intento + 1, url, error or f"HTTP {respuesta.status_code}")
+            if intento < config.REINTENTOS:
+                self.dormir(self._segundos_antes_de_reintentar(intento, respuesta))
+        self._registrar_fallo(host)
+        if error is not None:
+            raise error
+        return respuesta
 
     def robots_de(self, host):
         if host not in self.robots:
@@ -173,7 +174,7 @@ class Cliente:
             self.robots[host] = (reglas_para(parsear_robots(texto)), sitemaps)
         return self.robots[host]
 
-    def get(self, url, pdf=False, **kw):
+    def get(self, url, pdf=False, **opciones):
         """GET respetando robots.txt; con hosts permitidos, controla redirecciones, tamaño y (si pdf) el tipo."""
         partes = urlsplit(url)
         if self.hosts is not None and partes.netloc not in self.hosts:
@@ -181,7 +182,7 @@ class Cliente:
         ruta = partes.path + ("?" + partes.query if partes.query else "")
         if not permitido(self.robots_de(partes.netloc)[0], ruta):
             raise Bloqueado(f"robots.txt no permite {url}")
-        r = self._pedir(url, **kw)
+        r = self._pedir(url, **opciones)
         if r.status_code == 403:
             raise Bloqueado(f"403 en {url} (no se eluden bloqueos)")
         r.raise_for_status()

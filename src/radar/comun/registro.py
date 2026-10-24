@@ -7,6 +7,13 @@ import sys
 from radar import config
 from radar.comun.texto import ahora
 
+LARGO_MENSAJE = 200
+
+
+def describir(error):
+    """'Tipo: mensaje' de una excepción, recortado para el resumen en pantalla."""
+    return f"{type(error).__name__}: {error}"[:LARGO_MENSAJE]
+
 
 def configurar(nombre):
     """Pantalla: INFO sin trazas. Archivo data/registros/<nombre>-AAAAMMDD-HHMMSS.log: DEBUG con trazas."""
@@ -14,8 +21,8 @@ def configurar(nombre):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     raiz = logging.getLogger()
     raiz.setLevel(logging.DEBUG)
-    for h in list(raiz.handlers):
-        raiz.removeHandler(h)
+    for anterior in list(raiz.handlers):
+        raiz.removeHandler(anterior)
     pantalla = logging.StreamHandler(sys.stdout)
     pantalla.setLevel(logging.INFO)
     pantalla.setFormatter(logging.Formatter("%(message)s"))

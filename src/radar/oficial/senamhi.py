@@ -4,17 +4,19 @@ import datetime as dt
 import json
 import logging
 import re
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 from radar import config
 from radar.comun.archivos import guardar_gz, leer_gz, ruta_segura
 from radar.comun.geo import punto_en_geometria
 from radar.comun.regiones import COSTA_CENTRO, COSTA_NORTE, deps_por_macroregion_avisos, estaciones_costa
+from radar.comun.registro import describir
 from radar.comun.texto import sha1_corto, sin_tildes
 from radar.oficial.senamhi_paginas import leer_detalle, leer_mapa, mapas_del_panel, panel_aviso
 from radar.oficial.vocabulario import (
     CANCELADO,
     EMITIDO,
+    NIVEL_MINIMO_AVISO,
     PRECIPITACIONES,
     TEMA_DE_TIPO_AVISO,
     TEMPERATURA,
@@ -25,14 +27,13 @@ from radar.oficial.vocabulario import (
 
 log = logging.getLogger(__name__)
 
-HOST, HOST_GIS = "www.senamhi.gob.pe", "idesep.senamhi.gob.pe"
-BASE = f"https://{HOST}/"
-URL_TABLA = BASE + "?p=aviso-meteorologico"
-WFS = (
-    f"https://{HOST_GIS}/geoserver/g_aviso/ows?service=WFS&version=1.0.0&request=GetFeature"
+BASE = config.URL_SENAMHI
+SOLO_ZONAS_CON_AVISO = quote(f"nivel<>'Nivel {NIVEL_MINIMO_AVISO - 1}'", safe="")
+WFS = (  # polígonos oficiales de cada día
+    f"https://{config.HOST_SENAMHI_GIS}/geoserver/g_aviso/ows?service=WFS&version=1.0.0&request=GetFeature"
     "&typeName=g_aviso:view_aviso&viewparams=qry:{num}_{mapa}_{anio}&outputFormat=application/json"
-    "&propertyName=nivel,nro_mapa,geom&cql_filter=nivel%3C%3E%27Nivel%201%27"
-)  # solo zonas con aviso (niveles 2-4)
+    f"&propertyName=nivel,nro_mapa,geom&cql_filter={SOLO_ZONAS_CON_AVISO}"
+)
 DIR = config.DIR_RAW_OFICIAL / "senamhi"
 ARCHIVO_TABLA = DIR / "tabla.html.gz"
 ALCANCE, CONTROL = "alcance", "control"
@@ -353,7 +354,7 @@ def construir(tabla):
         except Exception as e:
             ident = f"senamhi-{clave_aviso(fila)}"
             log.debug("Senamhi · %s", ident, exc_info=True)
-            errores[ident] = f"{type(e).__name__}: {e}"[:200]
+            errores[ident] = describir(e)
             continue
         if resultado:
             aviso, filas_dias, filas_parrafos = resultado

@@ -16,8 +16,14 @@ DIR_REGISTROS = DIR_DATOS / "registros"
 # ---------------------------------------------------------------- fechas del proyecto (README, "Ventana de datos")
 LIMA = dt.timezone(dt.timedelta(hours=-5))  # el Perú no tiene horario de verano
 INICIO = dt.date(2026, 1, 1)
-CORTE = dt.datetime(2026, 11, 20, 23, 59, tzinfo=LIMA)
-CONGELAMIENTO = dt.date(2026, 11, 27)
+
+# ---------------------------------------------------------------- fuentes oficiales (recolector y corpus)
+HOST_ENFEN = "enfen.imarpe.gob.pe"
+HOST_SENAMHI = "www.senamhi.gob.pe"
+HOST_SENAMHI_GIS = "idesep.senamhi.gob.pe"
+URL_ENFEN = f"https://{HOST_ENFEN}"
+URL_SENAMHI = f"https://{HOST_SENAMHI}/"
+URL_AVISOS_SENAMHI = URL_SENAMHI + "?p=aviso-meteorologico"
 
 # ---------------------------------------------------------------- red
 USER_AGENT = (

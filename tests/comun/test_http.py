@@ -52,7 +52,8 @@ def test_retry_after_en_segundos_y_como_fecha():
     assert http.segundos_retry_after("mañana") is None
 
 
-def test_reintenta_errores_transitorios(sin_esperas):
+@pytest.mark.usefixtures("sin_esperas")
+def test_reintenta_errores_transitorios():
     cliente = cliente_con(
         [requests.exceptions.ChunkedEncodingError("cortada"), Respuesta(503), Respuesta(200, b"listo")]
     )
@@ -60,13 +61,15 @@ def test_reintenta_errores_transitorios(sin_esperas):
     assert len(cliente.pedidas) == 3
 
 
-def test_descarga_incompleta_se_reintenta(sin_esperas):
+@pytest.mark.usefixtures("sin_esperas")
+def test_descarga_incompleta_se_reintenta():
     incompleta = Respuesta(200, b"abc", {"Content-Length": "10"})
     completa = Respuesta(200, b"abcdefghij", {"Content-Length": "10"})
     assert cliente_con([incompleta, completa]).get("https://a.pe/x").content == b"abcdefghij"
 
 
-def test_host_caido_se_suspende(sin_esperas, monkeypatch):
+@pytest.mark.usefixtures("sin_esperas")
+def test_host_caido_se_suspende(monkeypatch):
     monkeypatch.setattr(config, "FALLOS_SEGUIDOS_POR_HOST", 2)
     intentos = config.REINTENTOS + 1
     cliente = cliente_con([requests.ConnectionError("caído")] * (2 * intentos))
@@ -78,7 +81,8 @@ def test_host_caido_se_suspende(sin_esperas, monkeypatch):
     assert len(cliente.pedidas) == 2 * intentos
 
 
-def test_exito_reinicia_los_fallos(sin_esperas):
+@pytest.mark.usefixtures("sin_esperas")
+def test_exito_reinicia_los_fallos():
     cliente = cliente_con([Respuesta(503)] * (config.REINTENTOS + 1) + [Respuesta(200)])
     with pytest.raises(requests.HTTPError):
         cliente.get("https://a.pe/x")

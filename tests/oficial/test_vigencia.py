@@ -55,3 +55,31 @@ def test_avisos_aplicables(corpus):
     assert corpus.avisos_aplicables("2026-01-13", "costa_centro") == []
     assert corpus.avisos_aplicables("2026-01-13", "lima") == []  # Lima usa los de costa centro
     assert corpus.avisos_aplicables("2026-01-13", "nacional") == []
+
+
+def test_parrafos_vigentes(tmp_path):
+    parrafos = [
+        {"id": "enfen-2026-01-p01", "doc_id": "enfen-2026-01", "fuente": "enfen", "orden": 1, "duplicado_de": ""},
+        {"id": "enfen-2026-01-p02", "doc_id": "enfen-2026-01", "fuente": "enfen", "orden": 2, "duplicado_de": "x"},
+        {"id": "enfen-2025-13-p01", "doc_id": "enfen-2025-13", "fuente": "enfen", "orden": 1, "duplicado_de": ""},
+        {
+            "id": "senamhi-2026-010-p01",
+            "doc_id": "senamhi-2026-010",
+            "fuente": "senamhi",
+            "orden": 1,
+            "duplicado_de": "",
+        },
+    ]
+    for nombre, filas in (
+        ("comunicados.csv", COMUNICADOS),
+        ("avisos.csv", AVISOS),
+        ("aviso_dias.csv", DIAS),
+        ("parrafos.csv", parrafos),
+    ):
+        escribir_csv(tmp_path / nombre, esquemas.ARCHIVOS[nombre], filas)
+    corpus = Corpus(tmp_path)
+    assert [p["id"] for p in corpus.parrafos_vigentes("2026-01-16")] == ["enfen-2026-01-p01"]
+    dia_de_cambio = {p["id"] for p in corpus.parrafos_vigentes("2026-01-15")}
+    assert dia_de_cambio == {"enfen-2026-01-p01", "enfen-2025-13-p01"}
+    con_aviso = {p["id"] for p in corpus.parrafos_vigentes("2026-01-12", "costa_norte")}
+    assert "senamhi-2026-010-p01" in con_aviso

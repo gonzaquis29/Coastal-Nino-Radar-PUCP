@@ -12,22 +12,22 @@ import sys
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 import requests
-from lxml import etree, html
+from lxml import html
+from lxml.etree import ParserError
 
 from radar import config
 from radar.comun.archivos import anexar_csv, leer_csv
 from radar.comun.http import Cliente, ErrorDescarga
-from radar.comun.registro import configurar
+from radar.comun.registro import configurar, describir
 from radar.comun.texto import a_lima, ahora
+from radar.comun.xml import NS_SITEMAP, XMLMalFormado, leer_xml
+from radar.recoleccion.urls import archivos_de_notas
 
 log = logging.getLogger(__name__)
 
-NS = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9", "n": "http://www.google.com/schemas/sitemap-news/0.9"}
 COLUMNAS = ["url", "medio", "id", "fecha", "tipo_fecha", "seccion", "origen", "recolectado"]
 COLUMNAS_SITEMAPS = ["sitemap", "http", "entradas", "mas_antigua", "mas_reciente", "ventana_h", "recolectado"]
-ARCHIVO_NOTAS = re.compile(r"^\d{4}-\d{2}-\d{2}_[a-z]+\.csv$")
-PARSER_XML = etree.XMLParser(resolve_entities=False, no_network=True)
-ERRORES_FUENTE = (requests.RequestException, ErrorDescarga, etree.XMLSyntaxError, etree.ParserError)
+ERRORES_FUENTE = (requests.RequestException, ErrorDescarga, XMLMalFormado, ParserError)
 HORAS_SIN_NOVEDADES = 12
 HORAS_ALERTA_EJECUCION = 36
 HORAS_MAXIMO = 48
@@ -47,7 +47,7 @@ class Fuente:
     """Junta las filas de un medio y el registro de cada sitemap leído."""
 
     def __init__(self, medio, cliente, momento):
-        self.medio, self.cli, self.momento = medio, cliente, momento
+        self.medio, self.cliente, self.momento = medio, cliente, momento
         self.recolectado = momento.isoformat()
         self.filas = {}  # clave -> fila
         self.registro = []  # filas del CSV de sitemaps
@@ -77,7 +77,7 @@ class Fuente:
             fila["seccion"].add(seccion)
 
     def registrar(self, nombre, http, fechas, cobertura=False):
-        fechas = sorted(f for f in fechas if f)
+        fechas = sorted(fecha for fecha in fechas if fecha)
         ventana = ""
         if fechas:
             quinta = dt.datetime.fromisoformat(fechas[min(ENTRADA_VENTANA - 1, len(fechas) - 1)])
@@ -112,41 +112,41 @@ class Fuente:
     def fallo(self, nombre, error):
         http = getattr(getattr(error, "response", None), "status_code", "")
         self.registrar_sin_fechas(nombre, http or "error", 0)
-        self.fallos.append(f"{nombre}: {type(error).__name__} {error}"[:200])
+        self.fallos.append(f"{nombre}: {describir(error)}")
         log.debug("fallo en %s:%s", self.medio, nombre, exc_info=error)
 
     def sitemap(self, url, nombre):
         """Entradas (loc, publication_date, lastmod) de un urlset; None si falla."""
         try:
-            r = self.cli.get(url)
-            raiz = etree.fromstring(r.content, PARSER_XML)
+            r = self.cliente.get(url)
+            raiz = leer_xml(r.content)
         except ERRORES_FUENTE as e:
             self.fallo(nombre, e)
             return None
         entradas = []
-        for u in raiz.findall("s:url", NS):
-            loc = (u.findtext("s:loc", namespaces=NS) or "").strip()
-            pub = (u.findtext("n:news/n:publication_date", namespaces=NS) or "").strip()
-            mod = (u.findtext("s:lastmod", namespaces=NS) or "").strip()
+        for u in raiz.findall("s:url", NS_SITEMAP):
+            loc = (u.findtext("s:loc", namespaces=NS_SITEMAP) or "").strip()
+            pub = (u.findtext("n:news/n:publication_date", namespaces=NS_SITEMAP) or "").strip()
+            mod = (u.findtext("s:lastmod", namespaces=NS_SITEMAP) or "").strip()
             if loc:
                 entradas.append((loc, a_lima(pub), a_lima(mod)))
         return r.status_code, entradas
 
     def indice(self, url, nombre):
         try:
-            raiz = etree.fromstring(self.cli.get(url).content, PARSER_XML)
+            raiz = leer_xml(self.cliente.get(url).content)
         except ERRORES_FUENTE as e:
             self.fallo(nombre, e)
             return []
-        return [(e.text or "").strip() for e in raiz.iter(f"{{{NS['s']}}}loc")]
+        return [(e.text or "").strip() for e in raiz.iter(f"{{{NS_SITEMAP['s']}}}loc")]
 
 
-def andina(f):
+def andina(fuente):
     base = "https://andina.pe/agencia/"
-    secciones = [u for u in f.indice(base + "sitemap.xml", "sitemap.xml") if "/sitemap-seccion-" in u]
+    secciones = [u for u in fuente.indice(base + "sitemap.xml", "sitemap.xml") if "/sitemap-seccion-" in u]
     for url in [base + "news-sitemap.xml", base + "sitemap-ultimo.xml", *secciones]:
         nombre = url.rsplit("/", 1)[1]
-        leido = f.sitemap(url, nombre)
+        leido = fuente.sitemap(url, nombre)
         if leido is None:
             continue
         http, entradas = leido
@@ -155,7 +155,7 @@ def andina(f):
         for loc, pub, mod in entradas:
             nota = re.match(r"https://andina\.pe/agencia/noticia-.*-(\d+)\.aspx$", loc)
             if nota:
-                f.agregar(
+                fuente.agregar(
                     loc,
                     nota.group(1),
                     pub or mod,
@@ -163,15 +163,15 @@ def andina(f):
                     seccion,
                     f"andina:{nombre}",
                 )
-        f.registrar(nombre, http, [p or m for _, p, m in entradas], cobertura=nombre == "sitemap-ultimo.xml")
+        fuente.registrar(nombre, http, [p or m for _, p, m in entradas], cobertura=nombre == "sitemap-ultimo.xml")
 
 
-def rpp(f):
-    web = f.indice("https://rpp.pe/sitemap/web", "sitemap/web")
-    declarados = [u for u in f.cli.robots_de("rpp.pe")[1] if u.startswith("https://rpp.pe/sitemap/web/")]
+def rpp(fuente):
+    web = fuente.indice("https://rpp.pe/sitemap/web", "sitemap/web")
+    declarados = [u for u in fuente.cliente.robots_de("rpp.pe")[1] if u.startswith("https://rpp.pe/sitemap/web/")]
     for url in ["https://rpp.pe/sitemap/news", *dict.fromkeys(web + declarados)]:
         nombre = url.replace("https://rpp.pe/sitemap/", "")
-        leido = f.sitemap(url, nombre)
+        leido = fuente.sitemap(url, nombre)
         if leido is None:
             continue
         http, entradas = leido
@@ -179,52 +179,52 @@ def rpp(f):
             m = re.search(r"-(noticias?|live)-(\d+)$", loc)
             ident = f"{'live' if m.group(1) == 'live' else 'noticia'}-{m.group(2)}" if m else ""
             partes = urlsplit(loc).path.strip("/").split("/")
-            f.agregar(
+            fuente.agregar(
                 loc, ident, pub or mod, "publicacion" if pub else "modificacion", "/".join(partes[:-1]), f"rpp:{nombre}"
             )
-        f.registrar(nombre, http, [p or m for _, p, m in entradas], cobertura=nombre.startswith("web/"))
+        fuente.registrar(nombre, http, [p or m for _, p, m in entradas], cobertura=nombre.startswith("web/"))
 
 
-def exitosa(f):
+def exitosa(fuente):
     base = "https://www.exitosanoticias.pe/"
-    mes = f.momento.date().replace(day=1)
+    mes = fuente.momento.date().replace(day=1)
     anterior = (mes - dt.timedelta(days=1)).replace(day=1)
     for nombre in ["sitemapNews.xml", f"sitemapNoticias{anterior:%Y%m}.xml", f"sitemapNoticias{mes:%Y%m}.xml"]:
         try:
-            r = f.cli.get(base + nombre)
-            raiz = etree.fromstring(r.content, PARSER_XML)
+            r = fuente.cliente.get(base + nombre)
+            raiz = leer_xml(r.content)
         except requests.HTTPError as e:
             if e.response is not None and e.response.status_code == 404 and nombre.endswith(f"{mes:%Y%m}.xml"):
-                f.registrar(nombre, 404, [])  # el mensual del mes nuevo aún no existe
+                fuente.registrar(nombre, 404, [])  # el mensual del mes nuevo aún no existe
             else:
-                f.fallo(nombre, e)
+                fuente.fallo(nombre, e)
             continue
         except ERRORES_FUENTE as e:
-            f.fallo(nombre, e)
+            fuente.fallo(nombre, e)
             continue
         fechas = []
-        for u in raiz.findall("s:url", NS):
-            loc = (u.findtext("s:loc", namespaces=NS) or "").strip()
-            pub = a_lima(u.findtext("n:news/n:publication_date", namespaces=NS))
+        for u in raiz.findall("s:url", NS_SITEMAP):
+            loc = (u.findtext("s:loc", namespaces=NS_SITEMAP) or "").strip()
+            pub = a_lima(u.findtext("n:news/n:publication_date", namespaces=NS_SITEMAP))
             m = re.search(r"-(n\d+)$", loc)
             if not m:
                 continue
             fechas.append(pub)
-            f.agregar(
+            fuente.agregar(
                 loc, m.group(1), pub, "publicacion", urlsplit(loc).path.strip("/").split("/")[0], f"exitosa:{nombre}"
             )
         if any(fechas):
-            f.registrar(nombre, r.status_code, fechas)
+            fuente.registrar(nombre, r.status_code, fechas)
         else:  # el mensual no trae fechas: se registra solo el número de entradas
-            f.registrar_sin_fechas(nombre, r.status_code, len(fechas))
+            fuente.registrar_sin_fechas(nombre, r.status_code, len(fechas))
 
 
-def eltiempo(f):
-    desde = (f.momento - dt.timedelta(days=DIAS_API_ELTIEMPO)).replace(tzinfo=None).isoformat()
+def eltiempo(fuente):
+    desde = (fuente.momento - dt.timedelta(days=DIAS_API_ELTIEMPO)).replace(tzinfo=None).isoformat()
     filas, pagina, paginas = [], 1, 1
     try:
         while pagina <= paginas:
-            r = f.cli.get(
+            r = fuente.cliente.get(
                 "https://eltiempo.pe/wp-json/wp/v2/posts",
                 params={"per_page": 100, "page": pagina, "after": desde, "_fields": "id,link,date_gmt"},
             )
@@ -232,13 +232,13 @@ def eltiempo(f):
             filas += r.json()
             pagina += 1
     except (*ERRORES_FUENTE, ValueError) as e:
-        f.fallo("api", e)
-        leido = f.sitemap("https://eltiempo.pe/news.xml", "news.xml")
+        fuente.fallo("api", e)
+        leido = fuente.sitemap("https://eltiempo.pe/news.xml", "news.xml")
         if leido is None:
             return
         http, entradas = leido
         for loc, pub, mod in entradas:
-            f.agregar(
+            fuente.agregar(
                 loc,
                 "",
                 pub or mod,
@@ -246,13 +246,13 @@ def eltiempo(f):
                 urlsplit(loc).path.strip("/").split("/")[0],
                 "eltiempo:news.xml",
             )
-        f.registrar("news.xml", http, [p or m for _, p, m in entradas], cobertura=True)
+        fuente.registrar("news.xml", http, [p or m for _, p, m in entradas], cobertura=True)
         return
     fechas = []
     for p in filas:
         fecha = a_lima(p["date_gmt"])
         fechas.append(fecha)
-        f.agregar(
+        fuente.agregar(
             p["link"],
             str(p["id"]),
             fecha,
@@ -260,33 +260,33 @@ def eltiempo(f):
             urlsplit(p["link"]).path.strip("/").split("/")[0],
             "eltiempo:api",
         )
-    f.registrar("api", 200, fechas)
+    fuente.registrar("api", 200, fechas)
 
 
-def enfen(f):
+def enfen(fuente):
     for nombre in ["wpdmpro-sitemap.xml", "post-sitemap.xml"]:
-        leido = f.sitemap("https://enfen.imarpe.gob.pe/" + nombre, nombre)
+        leido = fuente.sitemap(f"{config.URL_ENFEN}/{nombre}", nombre)
         if leido is None:
             continue
         http, entradas = leido
         for loc, _, mod in entradas:
-            m = re.match(r"https://enfen\.imarpe\.gob\.pe/(?:download|\d{4}/\d{2}/\d{2})/([^/]+)/?$", loc)
+            m = re.match(re.escape(config.URL_ENFEN) + r"/(?:download|\d{4}/\d{2}/\d{2})/([^/]+)/?$", loc)
             if not m:
                 continue
             slug = m.group(1)
             tipo = (
                 "entrada" if "/download/" not in loc else next((t for t in TIPOS_ENFEN if slug.startswith(t)), "otro")
             )
-            f.agregar(loc, slug, mod, "modificacion", tipo, f"enfen:{nombre}")
-        f.registrar(nombre, http, [m for _, _, m in entradas])
+            fuente.agregar(loc, slug, mod, "modificacion", tipo, f"enfen:{nombre}")
+        fuente.registrar(nombre, http, [m for _, _, m in entradas])
 
 
-def senamhi(f):
+def senamhi(fuente):
     try:
-        r = f.cli.get("https://www.senamhi.gob.pe/?p=aviso-meteorologico")
+        r = fuente.cliente.get(config.URL_AVISOS_SENAMHI)
         doc = html.fromstring(r.content)
     except ERRORES_FUENTE as e:
-        f.fallo("aviso-meteorologico", e)
+        fuente.fallo("aviso-meteorologico", e)
         return
     fechas = []
     for tr in doc.xpath("//table[@id='table_id']/tbody/tr"):
@@ -299,10 +299,10 @@ def senamhi(f):
         if not (q.get("a") and q.get("b") and re.match(r"\d{4}-\d{2}-\d{2}$", emision)):
             continue
         q["p"] = "aviso-meteorologico-detalle"
-        url = "https://www.senamhi.gob.pe/?" + urlencode({k: q[k] for k in ["p", "a", "b", "c", "d"] if k in q})
+        url = config.URL_SENAMHI + "?" + urlencode({k: q[k] for k in ["p", "a", "b", "c", "d"] if k in q})
         fechas.append(emision)
-        f.agregar(url, f"{q['a']}-{q['b']}", emision, "emision", "aviso", "senamhi:aviso-meteorologico")
-    f.registrar(
+        fuente.agregar(url, f"{q['a']}-{q['b']}", emision, "emision", "aviso", "senamhi:aviso-meteorologico")
+    fuente.registrar(
         "aviso-meteorologico", r.status_code, [x + "T00:00:00-05:00" for x in fechas if x >= config.INICIO.isoformat()]
     )
 
@@ -322,9 +322,7 @@ RECUPERACION = {
 def leer_existentes():
     """Claves y direcciones ya recolectadas, y la última fecha de recolección."""
     claves, urls, ultima = set(), set(), None
-    for ruta in sorted(config.DIR_URLS.glob("*.csv")):
-        if not ARCHIVO_NOTAS.match(ruta.name):
-            continue
+    for ruta in archivos_de_notas():
         for fila in leer_csv(ruta):
             if fila.get("id"):
                 claves.add((fila["medio"], fila["id"]))
@@ -343,17 +341,17 @@ def git(*args):
 
 
 def recolectar(momento, claves, urls):
-    cli = Cliente()
+    cliente = Cliente()
     nuevas, registro, resumen = [], [], []
     for medio, funcion in FUENTES.items():
-        f = Fuente(medio, cli, momento)
+        fuente = Fuente(medio, cliente, momento)
         try:
-            funcion(f)
+            funcion(fuente)
         except Exception as e:  # una fuente que falla no detiene a las demás
-            f.fallos.append(f"{type(e).__name__}: {e}"[:200])
+            fuente.fallos.append(describir(e))
             log.debug("fallo inesperado en %s", medio, exc_info=True)
         propias = []
-        for fila in f.filas.values():
+        for fila in fuente.filas.values():
             if (medio, fila["id"]) in claves or fila["url"] in urls:
                 continue
             fila["seccion"] = "|".join(sorted(fila["seccion"]))
@@ -361,29 +359,29 @@ def recolectar(momento, claves, urls):
             claves.add((medio, fila["id"]))
             urls.add(fila["url"])
         nuevas += propias
-        registro += f.registro
-        fechas = sorted(x["fecha"] for x in f.filas.values() if x["fecha"])
-        resumen.append((f, len(f.filas), propias, fechas[0][:10] if fechas else "-"))
+        registro += fuente.registro
+        fechas = sorted(x["fecha"] for x in fuente.filas.values() if x["fecha"])
+        resumen.append((fuente, len(fuente.filas), propias, fechas[0][:10] if fechas else "-"))
     return nuevas, registro, resumen
 
 
 def alertas_de(resumen, momento, ultima):
-    alertas = [f"FALLO {f.medio} · {falla}" for f, _, _, _ in resumen for falla in f.fallos]
+    alertas = [f"FALLO {fuente.medio} · {falla}" for fuente, _, _, _ in resumen for falla in fuente.fallos]
     if not ultima:
         return alertas
     horas = (momento - ultima).total_seconds() / 3600
     if horas > HORAS_ALERTA_EJECUCION:
         alertas.append(f"Pasaron {horas:.0f} h desde la última ejecución (máximo {HORAS_MAXIMO} h).")
-    for f, _, propias, _ in resumen:
-        for nombre, inicio in f.cobertura:
+    for fuente, _, propias, _ in resumen:
+        for nombre, inicio in fuente.cobertura:
             if inicio > ultima:
                 alertas.append(
-                    f"HUECO {f.medio}:{nombre} empieza {inicio:%d-%m %H:%M}, después de la última "
-                    f"recolección ({ultima:%d-%m %H:%M}). Recuperar por {RECUPERACION.get(f.medio, '-')}."
+                    f"HUECO {fuente.medio}:{nombre} empieza {inicio:%d-%m %H:%M}, después de la última "
+                    f"recolección ({ultima:%d-%m %H:%M}). Recuperar por {RECUPERACION.get(fuente.medio, '-')}."
                 )
-        if f.medio in PUBLICAN_A_DIARIO and not propias and horas > HORAS_SIN_NOVEDADES:
-            alertas.append(f"Sin novedades en {f.medio}.")
-        if f.medio == "enfen":
+        if fuente.medio in PUBLICAN_A_DIARIO and not propias and horas > HORAS_SIN_NOVEDADES:
+            alertas.append(f"Sin novedades en {fuente.medio}.")
+        if fuente.medio == "enfen":
             alertas += [f"Nuevo documento del ENFEN: {fila['id']}" for fila in propias]
     return alertas
 
@@ -409,9 +407,9 @@ def main(argv=None):
 
     log.info(f"\nRecolección {momento.isoformat()} ({args.persona}){' [PRUEBA]' if args.prueba else ''}")
     log.info(f"{'medio':10}{'sitemaps':>10}{'vistas':>8}{'nuevas':>8}  más antigua")
-    for f, vistas, propias, antigua in resumen:
-        ok = sum(1 for r in f.registro if r["http"] in (200, 404))
-        log.info(f"{f.medio:10}{ok:>5}/{len(f.registro):<4}{vistas:>8}{len(propias):>8}  {antigua}")
+    for fuente, vistas, propias, antigua in resumen:
+        ok = sum(1 for r in fuente.registro if r["http"] in (200, 404))
+        log.info(f"{fuente.medio:10}{ok:>5}/{len(fuente.registro):<4}{vistas:>8}{len(propias):>8}  {antigua}")
     log.info(f"{'total':10}{'':>10}{sum(v for _, v, _, _ in resumen):>8}{len(nuevas):>8}")
     alertas = alertas_de(resumen, momento, ultima)
     log.info("\n" + ("\n".join("- " + a for a in alertas) if alertas else "Sin alertas."))

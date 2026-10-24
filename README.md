@@ -351,8 +351,8 @@ data/registros/  registro detallado de cada ejecución (no se versiona)
 config/          listas de referencia editables: regiones.csv, estaciones_costa.csv
 src/radar/       paquete del proyecto (pip install -e ".[dev]")
   config.py      único lugar de rutas, fechas del proyecto, user-agent, ritmo y reintentos
-  comun/         compartido: http (robots.txt, reintentos, hosts caídos), archivos, texto, regiones, geo, registro
-  recoleccion/   recolector diario de direcciones de notas
+  comun/         compartido: http (robots.txt, reintentos, hosts caídos), archivos, xml, texto, regiones, geo, registro
+  recoleccion/   recolector diario (diario) y lectura de data/urls/ (urls)
   oficial/       corpus oficial: enfen, enfen_pdf, senamhi, senamhi_paginas, vigencia, validar, corpus (línea de comandos)
                  (después: noticias/, youtube/, nlp/, modelos/, app/)
 tests/           pruebas por paquete: comun/, recoleccion/, oficial/

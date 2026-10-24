@@ -7,7 +7,7 @@ from radar import config
 from radar.comun.archivos import leer_csv
 from radar.comun.texto import sin_tildes
 
-COSTA_NORTE, COSTA_CENTRO, LIMA, OTRAS, NACIONAL = "costa_norte", "costa_centro", "lima", "otras", "nacional"
+COSTA_NORTE, COSTA_CENTRO, LIMA_Y_CALLAO, OTRAS = "costa_norte", "costa_centro", "lima", "otras"
 MACROREGIONES_COSTA = (COSTA_NORTE, COSTA_CENTRO)
 
 
@@ -63,7 +63,7 @@ def regiones_mencionadas(texto):
     if re.search(r"costa (centro|central)", t):
         encontradas.add(COSTA_CENTRO)
     if re.search(r"toda la costa|costa peruana|litoral peruano|a lo largo (de toda )?(la costa|del litoral)", t):
-        encontradas |= {COSTA_NORTE, COSTA_CENTRO, LIMA}
+        encontradas |= {COSTA_NORTE, COSTA_CENTRO, LIMA_Y_CALLAO}
     for macro, deps in deps_por_macroregion().items():
         if macro == OTRAS:
             continue

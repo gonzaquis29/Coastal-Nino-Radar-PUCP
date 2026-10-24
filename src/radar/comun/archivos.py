@@ -13,7 +13,7 @@ NOMBRE_SEGURO = re.compile(r"^[a-z0-9][a-z0-9._-]{0,150}$")
 
 
 class NombreInvalido(ValueError):
-    pass
+    """Un nombre de archivo que viene de datos externos no es seguro."""
 
 
 def ruta_segura(base, nombre):
@@ -26,14 +26,14 @@ def ruta_segura(base, nombre):
 def escribir_atomico(ruta, datos):
     """Escribe en un temporal de la misma carpeta y lo renombra: si se corta, queda el archivo anterior."""
     ruta.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=ruta.parent, prefix=".tmp-")
+    descriptor, temporal = tempfile.mkstemp(dir=ruta.parent, prefix=".tmp-")
     try:
-        with os.fdopen(fd, "wb") as fh:
-            fh.write(datos)
-        os.replace(tmp, ruta)
+        with os.fdopen(descriptor, "wb") as archivo:
+            archivo.write(datos)
+        os.replace(temporal, ruta)
     except BaseException:
-        if os.path.exists(tmp):
-            os.remove(tmp)
+        if os.path.exists(temporal):
+            os.remove(temporal)
         raise
 
 
@@ -60,36 +60,32 @@ def a_celda(valor):
     return "" if valor is None else valor
 
 
-def _csv_en_texto(columnas, filas):
-    buf = io.StringIO()
-    w = csv.DictWriter(buf, fieldnames=columnas, lineterminator="\n", extrasaction="raise")
-    w.writeheader()
-    for fila in filas:
-        w.writerow({k: a_celda(v) for k, v in fila.items()})
-    return buf.getvalue()
-
-
 def escribir_csv(ruta, columnas, filas):
     """CSV UTF-8 con saltos LF, de forma atómica. Una columna que no está en el esquema es un error."""
-    escribir_atomico(ruta, _csv_en_texto(columnas, filas).encode("utf-8"))
+    texto = io.StringIO()
+    escritor = csv.DictWriter(texto, fieldnames=columnas, lineterminator="\n", extrasaction="raise")
+    escritor.writeheader()
+    for fila in filas:
+        escritor.writerow({k: a_celda(v) for k, v in fila.items()})
+    escribir_atomico(ruta, texto.getvalue().encode("utf-8"))
 
 
 def anexar_csv(ruta, columnas, filas):
     """Agrega filas (con encabezado si el archivo es nuevo)."""
     nuevo = not ruta.exists()
     ruta.parent.mkdir(parents=True, exist_ok=True)
-    with open(ruta, "a", encoding="utf-8", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=columnas, lineterminator="\n")
+    with open(ruta, "a", encoding="utf-8", newline="") as archivo:
+        escritor = csv.DictWriter(archivo, fieldnames=columnas, lineterminator="\n")
         if nuevo:
-            w.writeheader()
-        w.writerows({k: a_celda(v) for k, v in f.items()} for f in filas)
+            escritor.writeheader()
+        escritor.writerows({k: a_celda(v) for k, v in fila.items()} for fila in filas)
 
 
 def leer_csv(ruta):
     if not ruta.exists():
         return []
-    with open(ruta, encoding="utf-8", newline="") as fh:
-        return list(csv.DictReader(fh))
+    with open(ruta, encoding="utf-8", newline="") as archivo:
+        return list(csv.DictReader(archivo))
 
 
 def leer_json(ruta, defecto=None):
@@ -107,11 +103,9 @@ class EstadoDescargas:
         self.ruta, self.cada, self.pendientes = ruta, cada, 0
         self.datos = leer_json(ruta, {})
 
-    def get(self, clave, defecto=None):
-        return self.datos.get(clave, defecto if defecto is not None else {})
-
-    def __contains__(self, clave):
-        return clave in self.datos
+    def get(self, clave):
+        """Lo registrado para una clave ({} si nunca se descargó)."""
+        return self.datos.get(clave, {})
 
     def __iter__(self):
         return iter(self.datos)
@@ -129,6 +123,6 @@ class EstadoDescargas:
     def __enter__(self):
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, *_):
         self.guardar()
         return False

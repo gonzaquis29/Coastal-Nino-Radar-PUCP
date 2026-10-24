@@ -50,7 +50,7 @@ Escalas: Niño 1+2 (ICEN) débil, moderado, fuerte, extraordinario; Niño 3.4 us
 
 **Tablas de probabilidad** (N.° 13-16): `page.find_tables()` de PyMuPDF; la región sale de las categorías (Extraordinario → Niño 1+2, Muy Fuerte → Niño 3.4).
 
-**Temas** (categorías de interés del README): el rótulo del ENFEN si el párrafo lo trae ("Lluvias:", "Caudales:", "Embalses:" → lluvias; "Temperatura del Aire:" → calor; "Pesquero:" → pesca); si no, palabras clave (`enfen.TEMAS`). En los avisos, el tema es el tipo (precipitaciones → lluvias, temperatura → calor).
+**Temas** (categorías de interés del README): el rótulo del ENFEN si el párrafo lo trae ("Lluvias:", "Caudales:", "Embalses:" → lluvias; "Temperatura del Aire:" → calor; "Pesquero:" → pesca); si no, palabras clave (`enfen.PALABRAS_TEMA`). En los avisos, el tema es el tipo (precipitaciones → lluvias, temperatura → calor).
 
 ## Párrafos del ENFEN
 1. Líneas de PyMuPDF (`get_text("dict")`) con su bloque. Se quitan las marcas de nota al pie pegadas ("Costero1", "20266": números con bandera de superíndice o letra < 80 % de la línea) y se repone el espacio entre dos fragmentos separados en la página.
