@@ -62,3 +62,16 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 **Prompt (resumen fiel):** volver a analizar; por ahora solo documentar, y si hacen falta pruebas o validaciones, colocarlas.
 
 **Resultado:** la IA revisó los sitemaps de los 4 medios y encontró que Andina, RPP y La República solo listan los últimos días, así que se documentó cómo recuperar el histórico por medio y la recolección diaria. También se corrigieron el conteo de búsquedas de YouTube (110 en 2 días), la precedencia del semáforo, la regla de agregación del NLI, la exclusión de videos recientes, la comparación de series de Trends y la privacidad de comentarios. Se agregaron pruebas de histórico, control positivo y despliegue.
+
+## 2026-10-24 · Histórico validado, ventana de datos y calendario (Claude Code, Claude Opus 5.5)
+**Propósito:** validar si se puede recolectar hacia atrás, definir hasta qué fecha recolectar y elegir entre La República y Exitosa.
+
+**Prompts (resumen fiel, en orden):**
+1. Hacer git pull y commit; subir los commits.
+2. ¿Con qué continuamos?
+3. ¿Solo podemos buscar del presente al futuro?
+4. ¿Estás seguro? Validar e indicar hasta qué fecha considerar; la presentación es el martes 1-dic y ese día no se desarrolla.
+5. ¿No íbamos a mirar también hacia atrás con un margen acotado?
+6. ¿Considerar La República y Exitosa, o sería ruido? Elegir el más adecuado.
+
+**Resultado:** la IA validó el histórico por fuente (Andina completo por número de nota, RPP ~83 % por archivo, La República sin vía, Exitosa completo por sitemaps mensuales). Se excluyó La República, entró Exitosa, se fijó la ventana 1-ene → 20-nov con monitoreo hasta el 27-nov, el congelamiento el 27-nov y un calendario de 5 semanas.

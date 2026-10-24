@@ -79,26 +79,50 @@ Una herramienta que compara lo que circula sobre el Fenómeno El Niño Costero (
 **Descartado:** clasificador del estado oficial a partir del texto. Su etiqueta sale de la fecha, así que aprendería la época y no el contenido, y con partición temporal faltarían clases en la prueba.
 
 ## Alcance de datos
-**Período.** Análisis principal del 1-ene-2026 (comunicado N.° 01) al **20-nov-2026** (corte), para incluir el inicio de la intensificación esperada para fines de año. El modelo de engagement entrena con enero–agosto y prueba con septiembre–20 de noviembre. Del corte a la presentación se recolecta para el monitoreo (fase 6 de CRISP-ML(Q)). Los recolectores son incrementales: la descarga del corte refresca también los datos de YouTube dentro del plazo de 30 días.
+**Ventana de datos.**
 
-**Cobertura histórica de noticias.** Revisado el 23-oct-2026: los sitemaps de Andina, RPP y La República solo listan las notas de los últimos días (Andina y La República ~3 días, RPP ~1 semana), así que no sirven para recuperar enero–octubre.
+```
+1-ene-2026 ─────────── 24-oct ─────────── 20-nov ──── 27-nov ── 1-dic
+   │◄──── hacia atrás: histórico ────►│◄─ hacia adelante ─►│◄ monitoreo ►│ presentación
+```
 
-| Medio | Notas nuevas (desde ya) | Histórico (enero–octubre) |
-|-------|-------------------------|---------------------------|
-| Andina | Sitemaps diarios | Por verificar: listados de sección paginados (no tiene `robots.txt`) |
-| RPP | Sitemaps diarios | Archivo por fecha `/archivo/<sección>/<AAAA-MM-DD>` (permitido para 2021 en adelante; probado con una fecha de marzo de 2026) |
-| La República | Sitemaps diarios | `robots.txt` prohíbe el archivo, la paginación y las etiquetas. Por verificar: descubrir las URL en índices externos (Internet Archive o Common Crawl) y leer solo las notas, que sí están permitidas |
-| El Tiempo | Sitemaps de WordPress | Sus sitemaps cubren desde 2020 |
+- **Hacia atrás (1-ene → 24-oct):** se recupera de una vez en la semana 1. Empieza el 1 de enero porque es el ciclo completo de este El Niño: el comunicado N.° 01 (15-ene) pasó de "No activo" a "Vigilancia" y luego vino "Alerta", y el índice compara cada texto con el estado vigente en su fecha. Del 1 al 14 de enero sirve como línea base antes del primer comunicado; ir más atrás no aporta.
+- **Hacia adelante (24-oct → 20-nov):** recolección diaria. **Corte: viernes 20-nov-2026 a las 23:59**, con una descarga final que también refresca los datos de YouTube.
+- **Monitoreo (21 → 27-nov):** el recolector sigue corriendo solo, sin desarrollo nuevo, para la fase 6 de CRISP-ML(Q).
 
-Como los sitemaps de notas nuevas solo duran unos días, la recolección de notas nuevas corre **todos los días desde la semana 1** hasta el corte. Si un medio no permite recuperar su histórico, se usa solo desde que empieza la recolección diaria y se declara.
+Consecuencias de las fechas:
+- El modelo de engagement entrena con enero–agosto y prueba con septiembre–corte. Como excluye videos con menos de 14 días, el último video que entra es del 6-nov.
+- En el estudio de eventos solo tienen ventana completa (+7 días) los comunicados publicados hasta el 13-nov.
+- Los datos crudos de YouTube de la descarga del corte vencen a los 30 días: se borran a más tardar el **20-dic-2026**.
+
+**Cobertura histórica, validada el 24-oct-2026.** Los sitemaps de Andina y RPP solo listan los últimos días, así que el histórico se recupera por otras vías:
+
+| Fuente | Histórico (1-ene → 24-oct) | Hacia adelante | Validación |
+|--------|----------------------------|----------------|------------|
+| ENFEN | Sitemap de entradas y de archivos PDF | Revisión diaria | El sitemap lista los comunicados desde el N.° 01 (15-ene) |
+| Senamhi | Lista de avisos del año y página de avisos anteriores | Revisión diaria | Páginas revisadas |
+| Andina | Número de nota: `noticia.aspx?id=N` redirige (301) a la dirección con el título, sin descargar la nota; ~43 mil números para el período | Sitemaps diarios | El id 1054000 es de dic-2025; el 1099500 aún no existe |
+| RPP | Archivo por fecha `/archivo/<sección>/<AAAA-MM-DD>` (solo la primera página de cada día; RPP bloquea a Common Crawl) | Sitemaps diarios | **~83 %**: el archivo del 22-oct (sección Perú) tenía 19 de las 23 notas del sitemap |
+| Exitosa | Sitemaps mensuales (~2.000 notas por mes) | Sitemap de noticias | Sitemaps de enero a octubre de 2026 disponibles |
+| El Tiempo | Sitemaps de WordPress | Sitemaps | Cubren desde 2020 |
+| YouTube | API con `publishedAfter` / `publishedBefore` | Descarga del corte | Documentación oficial |
+| Google Trends | Una exportación por departamento que cubre todo el período | Se vuelve a exportar en el corte | — |
+
+**Cómo se acota el volumen hacia atrás:**
+1. Se filtra primero **por título**, sin descargar el cuerpo (el título está en la dirección de Andina, en el archivo de RPP y en los sitemaps de Exitosa y El Tiempo), con una lista amplia de términos: El Niño, Niño costero, ENFEN, Senamhi, Indeci, lluvias, huaicos, calor, anchoveta, etc.
+2. Solo se descarga el cuerpo de las candidatas, se procesa en memoria y se descarta.
+3. A ritmo bajo y repartido en varias noches (por ejemplo, ~43 mil redirecciones de Andina a 1 por segundo son ~12 horas).
+
+El filtro por título pierde las notas que tratan El Niño sin nombrarlo en el título. Se mide con la recolección diaria, donde se tienen todas las notas, y se declara.
 
 **Medios.**
 - **Andina** (agencia estatal): control positivo; se reporta aparte de los medios privados.
-- **RPP, La República:** medios privados nacionales.
+- **RPP, Exitosa:** medios privados nacionales.
 - **El Tiempo (Piura):** medio regional de la costa norte, la zona más afectada; los otros tres son de Lima.
+- **La República: excluida.** Su sitemap cubre 2-3 días, su `robots.txt` prohíbe el archivo, la paginación y las etiquetas, y Common Crawl casi no tiene sus notas de 2026. Solo tendría ~1 mes de datos frente a ~11 de los demás: compararla sería engañoso y sumaría trabajo sin aportar al histórico.
 - **Infobae Perú: excluido.** Sus términos prohíben expresamente "copiar … usar, tratar" sus contenidos (cláusula 3.4).
 
-Todos los términos de uso prohíben reproducir el contenido sin autorización (La República permite la copia para uso personal y privado), y la ley peruana no tiene una excepción para minería de textos. Por eso el cuerpo de las notas solo se procesa en memoria, se guarda únicamente lo que el D. Leg. 822 no protege o permite citar (art. 9: noticias del día con fuente, simples hechos o datos; art. 44: citas breves) y nada se publica más allá de titular, enlace y métricas.
+Todos los términos de uso prohíben reproducir el contenido sin autorización (Exitosa limita el uso a fines personales), y la ley peruana no tiene una excepción para minería de textos. Por eso el cuerpo de las notas solo se procesa en memoria, se guarda únicamente lo que el D. Leg. 822 no protege o permite citar (art. 9: noticias del día con fuente, simples hechos o datos; art. 44: citas breves) y nada se publica más allá de titular, enlace y métricas.
 
 **Videos de YouTube.** `search.list` con 5 términos ("fenómeno El Niño", "Niño costero", "ENFEN", "El Niño Perú", "lluvias costa norte"), `regionCode=PE`, idioma español, mes a mes, orden por fecha y por relevancia, solo la primera página de cada búsqueda (hasta 50 videos): 5 términos × 11 meses × 2 órdenes = 110 búsquedas, repartidas en 2 días por el límite de 100 diarias. Se conserva un video solo si su título o descripción menciona El Niño y además menciona Perú o una región peruana, o su canal es de Perú.
 
@@ -167,7 +191,7 @@ El trabajo se divide en **dos verticales de punta a punta** en lugar de "datos /
 | ML | Índice de discrepancia y calibración del semáforo | Modelo de engagement |
 | Analítica | Indicadores de los medios; estudio de eventos | KPIs de engagement; interés en Trends |
 
-**Trabajo conjunto:** corpus oficial (ENFEN y Senamhi), preprocesamiento y asignación de región en la semana 1; recomendador, agente y dashboard en las semanas 3-4; conclusiones del informe. Cada integrante escribe las partes de su vertical en cada fase de CRISP-ML(Q).
+**Trabajo conjunto:** corpus oficial (ENFEN y Senamhi), preprocesamiento y asignación de región en la semana 1; recomendador, agente y dashboard en las semanas 3-5; conclusiones del informe. Cada integrante escribe las partes de su vertical en cada fase de CRISP-ML(Q).
 
 La asignación de verticales y del coordinador (vocero ante el profesor) está pendiente.
 
@@ -176,15 +200,19 @@ La asignación de verticales y del coordinador (vocero ante el profesor) está p
 - `docs/avances/semana-N.md` cada semana, con lo que hizo cada integrante y enlaces a sus commits, más una etiqueta de git por semana.
 - Cada integrante hace commits con su propia cuenta; los commits hechos con IA llevan la línea `Co-Authored-By`.
 
-## Plan de 4 semanas
-Las horas son una estimación orientativa, no un límite; el alcance agregado puede tomar más tiempo.
+## Calendario (presentación: martes 1-dic-2026)
+Las horas son una estimación orientativa, no un límite.
 
 | Semana | Vertical Noticias | Vertical YouTube | Conjunto | Entregable |
 |--------|-------------------|------------------|----------|------------|
-| 1 | **Primero:** pruebas de viabilidad de noticias. Luego recolección diaria de notas nuevas y recuperación del histórico de los 4 medios; enlaces y citas | **Primero:** pruebas de viabilidad de YouTube y Trends. Luego recolector de YouTube por API; exportar Trends | Corpus oficial, preprocesamiento, asignación de región, TF-IDF | Resultado de las pruebas (pasa / no pasa) y dataset limpio con fechas, regiones, enlaces y videos |
-| 2 | Red de enlaces y citas; tópicos y emociones de notas | Red social de audiencias; tipo de canal; emociones de videos | Embeddings | Notebooks con resultados |
-| 3 | Índice de discrepancia, semáforo, estudio de eventos | Modelo de engagement, KPIs de analítica web | Recomendador híbrido; evaluación | Métricas validadas |
-| 4 | Descarga del corte (20-nov); informe de su vertical | Descarga del corte (20-nov); informe de su vertical | Agente, dashboard con registro de eventos, despliegue, conclusiones | Producto, informe y presentación |
+| 0 (24-25 oct) | Recolector diario de notas nuevas corriendo (versión mínima) | — | — | Recolector diario activo |
+| 1 (26 oct – 1 nov) | **Primero:** pruebas de viabilidad de noticias. Luego recuperación del histórico de los 4 medios; enlaces y citas | **Primero:** pruebas de viabilidad de YouTube y Trends. Luego primera descarga de YouTube por API; exportar Trends | Corpus oficial, preprocesamiento, asignación de región, TF-IDF | Resultado de las pruebas (pasa / no pasa) y dataset con fechas, regiones, enlaces y videos |
+| 2 (2 – 8 nov) | Red de enlaces y citas; tópicos y emociones de notas | Red social de audiencias; tipo de canal; emociones de videos | Embeddings | Notebooks con resultados |
+| 3 (9 – 15 nov) | Índice de discrepancia, semáforo, estudio de eventos | Modelo de engagement, KPIs de analítica web | Recomendador híbrido | Métricas preliminares |
+| 4 (16 – 22 nov) | **Corte: vie 20-nov 23:59**, descarga final | **Corte: vie 20-nov 23:59**, descarga final de YouTube y Trends | Agente, dashboard con registro de eventos | Dataset final y producto completo |
+| 5 (23 – 29 nov) | Evaluación final e informe de su vertical | Evaluación final e informe de su vertical | Despliegue, monitoreo (script del 27-nov), conclusiones. **Congelamiento: vie 27-nov** (no se agregan funciones) | Producto desplegado e informe final |
+| 28 – 30 nov | — | — | Ensayo de la presentación y grabación de respaldo de la demo | Presentación lista |
+| Mar 1-dic | — | — | Presentación; sin desarrollo | — |
 
 ## Informe: CRISP-ML(Q)
 El informe se organiza por las seis fases de Studer et al. (2021), cada una con su control de calidad:
@@ -218,8 +246,10 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [ ] Descargar los comunicados ENFEN y probar la extracción de fecha, estado y magnitud con reglas.
 - [ ] Extraer avisos del Senamhi (fecha, tipo, nivel, macro-región) y aplicar el filtro.
 - [ ] Probar pysentimiento (polaridad y emociones) sobre ~20 titulares.
-- [x] Revisar cuánto histórico cubren los sitemaps. *Andina, RPP y La República solo los últimos días; El Tiempo desde 2020. Ver "Cobertura histórica de noticias".*
-- [ ] Probar la recuperación del histórico: listados de sección de Andina, archivo por fecha de RPP e índices externos para La República.
+- [x] Revisar cuánto histórico cubren los sitemaps. *Andina, RPP y La República solo los últimos días; El Tiempo y Exitosa completos. Ver "Cobertura histórica".*
+- [x] Probar vías de histórico. *Andina por número de nota (completo), RPP por archivo (~83 %), La República sin vía → excluida, Exitosa como reemplazo.*
+- [ ] Medir la cobertura del archivo de RPP en otras secciones y fechas (se midió solo Perú, 22-oct).
+- [ ] Medir cuántas notas sobre El Niño pierde el filtro por título, usando la recolección diaria.
 - [ ] Contar notas sobre El Niño por medio en el período.
 - [ ] Contar notas de Andina que enlazan al PDF de un comunicado (control positivo).
 - [ ] Probar el NLI con ~20 contradicciones sintéticas.
@@ -230,7 +260,8 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 
 | Prueba | Pasa si… | Si no pasa |
 |--------|----------|------------|
-| Histórico de noticias | ≥ 3 de los 4 medios con notas recuperables de enero a octubre | Análisis histórico solo con los medios que lo permiten; los demás desde la recolección diaria; declararlo |
+| Histórico de noticias | ≥ 3 de los 4 medios con notas recuperables de enero a octubre (validado: Andina, Exitosa y El Tiempo completos; RPP ~83 %) | Análisis histórico solo con los medios que lo permiten; los demás desde la recolección diaria; declararlo |
+| Filtro por título | Pierde ≤ 20 % de las notas sobre El Niño en la recolección diaria | Ampliar la lista de términos o descargar el cuerpo de más candidatas |
 | Volumen de noticias | ≥ 400 notas sobre El Niño en el período entre los 4 medios (heurística para tópicos estables) | Sumar secciones o ampliar términos; tópicos solo a nivel global |
 | Control positivo | ≥ 20 notas de Andina que enlazan al PDF de un comunicado | Sumar notas que citan el número del comunicado en el texto ("Comunicado Oficial N.° 12") |
 | Videos de YouTube | ≥ 300 videos del período que mencionan El Niño | YouTube deja de ser central; evaluar plan B |
@@ -250,14 +281,15 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 - Estado visto al 22-oct-2026: "Alerta de El Niño Costero", comunicados hasta N.° 18-2026. Confirmar en la fuente antes de citar.
 - YouTube Data API v3 (página oficial de cuotas, 23-oct-2026): 10 000 unidades/día; `commentThreads.list`, `videos.list` y `channels.list` cuestan 1 unidad; `search.list` tiene un límite propio de 100 llamadas/día (hasta 50 resultados cada una).
 - Google Trends: `pytrends` está archivado (confirmado en GitHub) y el API oficial está en alfa cerrado; se usa la exportación CSV de la web. Cada consulta se normaliza a 0-100 por separado, por eso cada departamento se descarga en una sola consulta que cubra todo el período (datos semanales).
-- **No verificado aún:** recuperación del histórico de Andina y La República, volumen de noticias y de comentarios de YouTube, datos de Trends por departamento, calidad del NLI y de las emociones de pysentimiento, memoria disponible en Streamlit Community Cloud, texto oficial del D. Leg. 822 (se leyó una transcripción de terceros), norma de NIC.pe sobre `.gob.pe` y acceso al listado oficial de ubigeos del INEI. Cada punto tiene su prueba en "Pruebas de viabilidad".
+- **No verificado aún:** cobertura del archivo de RPP fuera de la sección Perú, pérdida del filtro por título, volumen de noticias y de comentarios de YouTube, datos de Trends por departamento, calidad del NLI y de las emociones de pysentimiento, memoria disponible en Streamlit Community Cloud, texto oficial del D. Leg. 822 (se leyó una transcripción de terceros), norma de NIC.pe sobre `.gob.pe` y acceso al listado oficial de ubigeos del INEI. Cada punto tiene su prueba en "Pruebas de viabilidad".
 
-## Reglas por sitio (revisado el 22 y 23-oct-2026)
+## Reglas por sitio (revisado del 22 al 24-oct-2026)
 | Sitio | Regla |
 |-------|-------|
 | Andina | Sin `robots.txt`; usar sitemap. |
 | RPP | Archivo por fecha permitido desde 2021 (`/archivo/` bloqueado solo para años anteriores); `/tema*` bloqueado. Bloquea por completo a Scrapy y bots de IA; usar `requests` con un user-agent honesto, nunca suplantando otro. Términos: prohíben la reproducción "en cualquier soporte" y el consumo masivo de recursos. |
-| La República | Prohíbe `/archivo/`, la paginación (`/*/pag/`) y las etiquetas (`/*/tag/`); las notas sí están permitidas. Términos: permiten copiar y almacenar solo para uso personal y privado. |
+| Exitosa | `robots.txt` permite todo; usar sus sitemaps mensuales y de noticias. Términos: uso personal; prohíben usar el contenido en sitios propios o de terceros sin autorización. |
+| La República | **Excluida**: prohíbe `/archivo/`, la paginación y las etiquetas, y no hay otra vía para su histórico. |
 | El Tiempo (Piura) | Permite el acceso salvo `/wp-admin/`; usar sus sitemaps. Términos: misma redacción que RPP. |
 | Infobae | **Excluido**: sus términos prohíben "tratar" el contenido. |
 | Expreso | Responde 403: **excluido**. |
@@ -272,7 +304,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 - **Comunicación de resultados:** el índice de discrepancia no es un "detector de desinformación" y no se señalan medios ni canales individuales; se reporta por tipo de fuente.
 
 ## Decisiones abiertas
-Las definiciones de este README son la mejor alternativa evaluada al 23-oct-2026 y pueden cambiar según las pruebas de viabilidad o la opinión del profesor.
+Las definiciones de este README son la mejor alternativa evaluada al 24-oct-2026 y pueden cambiar según las pruebas de viabilidad o la opinión del profesor.
 
 ## Estructura del repo
 ```
