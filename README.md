@@ -38,7 +38,7 @@ Una herramienta que compara lo que circula sobre el Fenómeno El Niño Costero (
 ## Pipeline
 | # | Etapa | Detalle |
 |---|-------|---------|
-| 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (página HTML y PDF de cada uno) y avisos meteorológicos del Senamhi (tipo, nivel, macro-región, vigencia), filtrados según "Alcance de datos". **Noticias:** 5 medios (ver "Alcance de datos") vía sitemaps/RSS y HTML: título, cuerpo, `datePublished`, sección e hipervínculos; los textos se guardan solo localmente. **YouTube (API oficial):** título, descripción, canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés por departamento y semana, exportado manualmente en CSV. Respeta `robots.txt` y limita la tasa de peticiones. |
+| 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (página HTML y PDF de cada uno) y avisos meteorológicos del Senamhi (tipo, nivel, macro-región, vigencia), filtrados según "Alcance de datos". **Noticias:** 4 medios (ver "Alcance de datos") vía sitemaps/RSS y HTML. El cuerpo se procesa en memoria y no se guarda: solo se conservan titular, resumen, `datePublished`, sección, hipervínculos, citas a fuentes oficiales, magnitudes y vectores. **YouTube (API oficial):** título, descripción, canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés por departamento y semana, exportado manualmente en CSV. Respeta `robots.txt` y limita la tasa de peticiones. |
 | 2 | Preprocesamiento | Limpieza, tokenización, stopwords, lematización en español (spaCy / NLTK). Asignación de macro-región (ver "Alcance de datos"). |
 | 3 | Representación | TF-IDF (línea base) contra embeddings multilingües livianos (MiniLM / e5-small) con similitud coseno. |
 | 4 | Tópicos | LDA contra BERTopic, por mes y macro-región; sentimiento por tópico. Los tópicos se nombran con sus palabras clave (c-TF-IDF), sin LLM. |
@@ -62,8 +62,11 @@ Una herramienta que compara lo que circula sobre el Fenómeno El Niño Costero (
 
 **Medios.**
 - **Andina** (agencia estatal): control positivo; se reporta aparte de los medios privados.
-- **RPP, Infobae Perú, La República:** medios privados nacionales.
-- **El Tiempo (Piura):** medio regional de la costa norte, la zona más afectada; los otros cuatro son de Lima.
+- **RPP, La República:** medios privados nacionales.
+- **El Tiempo (Piura):** medio regional de la costa norte, la zona más afectada; los otros tres son de Lima.
+- **Infobae Perú: excluido.** Sus términos prohíben expresamente "copiar … usar, tratar" sus contenidos (cláusula 3.4).
+
+Todos los términos de uso prohíben reproducir el contenido sin autorización (La República permite la copia para uso personal y privado), y la ley peruana no tiene una excepción para minería de textos. Por eso el cuerpo de las notas solo se procesa en memoria, se guarda únicamente lo que el D. Leg. 822 no protege o permite citar (art. 9: noticias del día con fuente, simples hechos o datos; art. 44: citas breves) y nada se publica más allá de titular, enlace y métricas.
 
 **Videos de YouTube.** `search.list` con 5 términos ("fenómeno El Niño", "Niño costero", "ENFEN", "El Niño Perú", "lluvias costa norte"), `regionCode=PE`, idioma español, mes a mes, orden por fecha y por relevancia: 5 × 10 × 2 = 100 búsquedas (el límite diario). Se conserva un video solo si su título o descripción menciona El Niño y además menciona Perú o una región peruana, o su canal es de Perú.
 
@@ -113,19 +116,38 @@ Verificado el 23-oct-2026: Senamhi, Indeci, ENFEN, IGP, RPP, Andina, La Repúbli
 - Los modelos pesados (BERTopic, embeddings, modelo de engagement) se ejecutan offline; la app solo carga resultados precalculados.
 - El registro de uso va a un almacenamiento externo: el sistema de archivos de Community Cloud se borra en cada reinicio.
 - La app no usa la clave de YouTube (datos precalculados); la clave del LLM va en los *secrets* de la plataforma.
-- **Derecho de autor:** de las notas solo se muestra titular, extracto breve, enlace y fuente, nunca el texto completo (D. Leg. 822: art. 9 excluye "las noticias del día" y los textos oficiales; art. 44 permite la cita breve con fuente; confirmar en el texto oficial). Los comunicados y avisos, como textos oficiales, se pueden mostrar completos.
+- **Derecho de autor:** de las notas solo se muestra titular, medio, fecha, enlace y nuestras métricas; ningún fragmento del cuerpo (ver "Alcance de datos"). Los comunicados y avisos son textos oficiales (D. Leg. 822, art. 9.b) y se pueden mostrar completos citando la fuente.
+- Ritmo bajo de peticiones a los medios, para no caer en el "consumo masivo de recursos" que prohíben sus términos.
+
+## Organización del trabajo
+El trabajo se divide en **dos verticales de punta a punta** en lugar de "datos / modelos": así nadie espera al otro para empezar y cada integrante toca scraping, minería de texto, redes, ML y analítica (los exámenes son individuales).
+
+| | Vertical Noticias | Vertical YouTube |
+|---|---|---|
+| Scraping | 4 medios (sitemaps, HTML, `robots.txt`) | API de YouTube y exportación de Google Trends |
+| Minería de texto | Tópicos y emociones de las notas | Emociones de títulos y comentarios |
+| Redes | Red de enlaces y citas; co-mención de actores | Red social de audiencias; tipo de canal |
+| ML | Índice de discrepancia y calibración del semáforo | Modelo de engagement |
+| Analítica | Indicadores de los medios; estudio de eventos | KPIs de engagement; interés en Trends |
+
+**Trabajo conjunto:** corpus oficial (ENFEN y Senamhi), preprocesamiento y asignación de región en la semana 1; recomendador, agente y dashboard en las semanas 3-4; conclusiones del informe. Cada integrante escribe las partes de su vertical en cada fase de CRISP-ML(Q).
+
+La asignación de verticales y del coordinador (vocero ante el profesor) está pendiente.
+
+**Evidencia del aporte individual** (directiva de trabajo grupal del sílabo):
+- `docs/declaracion-trabajo-grupal.md` con el formato del anexo del sílabo: planificación y funciones al inicio, labor realizada al final.
+- `docs/avances/semana-N.md` cada semana, con lo que hizo cada integrante y enlaces a sus commits, más una etiqueta de git por semana.
+- Cada integrante hace commits con su propia cuenta; los commits hechos con IA llevan la línea `Co-Authored-By`.
 
 ## Plan de 4 semanas
 Las horas son una estimación orientativa, no un límite; el alcance agregado puede tomar más tiempo.
 
-| Semana | Persona A (datos) | Persona B (modelos) | Entregable |
-|--------|-------------------|---------------------|------------|
-| 1 | Scrapers de ENFEN, Senamhi y 5 medios; extraer enlaces y citas; recolector de YouTube por API | Preprocesamiento, asignación de región y TF-IDF | Dataset limpio con fechas, regiones, enlaces y videos |
-| 2 | Red de enlaces y citas; red social de YouTube; exportar Trends | Embeddings, tópicos, emociones | Notebooks con resultados |
-| 3 | Índice de discrepancia, estudio de eventos, KPIs de analítica web, tipo de canal | Modelo de engagement, recomendador híbrido; evaluación (recall@k, precision@k, MAE, coherencia) | Métricas validadas |
-| 4 | Dashboard con registro de eventos y despliegue | Agente con herramientas | Producto, informe y presentación |
-
-Los roles A/B no están asignados y pueden intercambiarse.
+| Semana | Vertical Noticias | Vertical YouTube | Conjunto | Entregable |
+|--------|-------------------|------------------|----------|------------|
+| 1 | Scrapers de los 4 medios; enlaces y citas | Recolector de YouTube por API; exportar Trends | Corpus oficial, preprocesamiento, asignación de región, TF-IDF | Dataset limpio con fechas, regiones, enlaces y videos |
+| 2 | Red de enlaces y citas; tópicos y emociones de notas | Red social de audiencias; tipo de canal; emociones de videos | Embeddings | Notebooks con resultados |
+| 3 | Índice de discrepancia, semáforo, estudio de eventos | Modelo de engagement, KPIs de analítica web | Recomendador híbrido; evaluación | Métricas validadas |
+| 4 | Informe de su vertical | Informe de su vertical | Agente, dashboard con registro de eventos, despliegue, conclusiones | Producto, informe y presentación |
 
 ## Informe: CRISP-ML(Q)
 El informe se organiza por las seis fases de Studer et al. (2021), cada una con su control de calidad:
@@ -144,7 +166,7 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 2. Efecto comunicado solo con volumen (sin emociones ni engagement).
 3. Indicadores secundarios de los medios.
 4. Agente sin LLM (enrutador por embeddings); en último caso, solo extractivo.
-5. Bajar de 4 a 3 medios nacionales (El Tiempo se mantiene).
+5. Bajar de 3 a 2 medios nacionales (Andina, como control, y El Tiempo se mantienen).
 
 **Núcleo que no se recorta:** scraping (incluido YouTube), vectores (TF-IDF y embeddings), tópicos, emociones, modelo de engagement, recomendador, analítica web, red social (o su respaldo de co-mención), estudio de eventos, agente con herramientas (o su respaldo) y dashboard.
 
@@ -155,7 +177,7 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [x] Revisar estructura de comunicados y avisos. *Usan macro-regiones, no departamentos; más de 400 avisos en 2026.*
 - [ ] Contar comentarios de ~30 videos de YouTube sobre El Niño **con la API oficial**. Decide si la red social usa YouTube o el respaldo de co-mención.
 - [ ] Revisar en Google Trends si hay datos por departamento de la costa norte (en especial Tumbes) para "El Niño".
-- [ ] Revisar términos de uso de Andina, Infobae, La República y El Tiempo (RPP: revisado).
+- [x] Revisar términos de uso de los medios. *Todos prohíben reproducir sin autorización; Infobae prohíbe "tratar" el contenido → excluido. Ver "Alcance de datos".*
 - [ ] Descargar los comunicados ENFEN y probar la extracción de fecha, estado y magnitud con reglas.
 - [ ] Extraer avisos del Senamhi (fecha, tipo, nivel, macro-región) y aplicar el filtro.
 - [ ] Probar pysentimiento (polaridad y emociones) sobre ~20 titulares.
@@ -180,16 +202,16 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 - Estado visto al 22-oct-2026: "Alerta de El Niño Costero", comunicados hasta N.° 18-2026. Confirmar en la fuente antes de citar.
 - YouTube Data API v3 (página oficial de cuotas, 23-oct-2026): 10 000 unidades/día; `commentThreads.list`, `videos.list` y `channels.list` cuestan 1 unidad; `search.list` tiene un límite propio de 100 llamadas/día (hasta 50 resultados cada una).
 - Google Trends: `pytrends` está archivado (confirmado en GitHub) y el API oficial está en alfa cerrado; se usa la exportación CSV de la web.
-- **No verificado aún:** volumen de comentarios de YouTube, datos de Trends por departamento, términos de uso de cuatro medios, texto oficial del art. 9 del D. Leg. 822, límites actuales de Streamlit Community Cloud, acceso al listado oficial de ubigeos del INEI y calidad de las emociones de pysentimiento en titulares.
+- **No verificado aún:** volumen de comentarios de YouTube, datos de Trends por departamento, texto oficial del D. Leg. 822 (se leyó una transcripción de terceros), límites actuales de Streamlit Community Cloud, acceso al listado oficial de ubigeos del INEI y calidad de las emociones de pysentimiento en titulares.
 
 ## Reglas por sitio (revisado el 22 y 23-oct-2026)
 | Sitio | Regla |
 |-------|-------|
 | Andina | Sin `robots.txt`; usar sitemap. |
-| RPP | Bloquea por completo a Scrapy y bots de IA; usar `requests` con un user-agent honesto, nunca suplantando otro. Sus términos prohíben reproducir contenido sin autorización: solo análisis local y citas breves. |
-| La República | Prohíbe `/archivo/`; recolectar solo desde sitemaps/RSS. |
-| Infobae Perú | Usar el sitemap de noticias de la categoría Perú. |
-| El Tiempo (Piura) | Permite el acceso salvo `/wp-admin/`; usar sus sitemaps. |
+| RPP | Bloquea por completo a Scrapy y bots de IA; usar `requests` con un user-agent honesto, nunca suplantando otro. Términos: prohíben la reproducción "en cualquier soporte" y el consumo masivo de recursos. |
+| La República | Prohíbe `/archivo/`; recolectar solo desde sitemaps/RSS. Términos: permiten copiar y almacenar solo para uso personal y privado. |
+| El Tiempo (Piura) | Permite el acceso salvo `/wp-admin/`; usar sus sitemaps. Términos: misma redacción que RPP. |
+| Infobae | **Excluido**: sus términos prohíben "tratar" el contenido. |
 | Expreso | Responde 403: **excluido**. |
 | YouTube | Solo la API oficial; `robots.txt` prohíbe `/results`. Borrar o refrescar datos crudos a los 30 días (políticas de la API); guardar agregados y seudónimos. |
 
@@ -197,7 +219,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 - **Cero etiquetado manual.** Toda validación usa una referencia externa.
 - **Ética de scraping:** `robots.txt`, términos de uso, rate limiting, propósito declarado; sin eludir bloqueos. `requests` + `BeautifulSoup`; Playwright solo si es imprescindible.
 - **Privacidad:** seudonimizar; no guardar nombres de usuario ni identificadores personales.
-- **Derecho de autor:** los textos de las notas no se versionan ni se publican completos.
+- **Derecho de autor:** el cuerpo de las notas no se guarda, no se versiona ni se publica; solo titular, enlace, datos derivados y métricas.
 - **IA generativa:** se declara su uso y se conserva un registro de prompts en `docs/prompts.md`. En el producto, un LLM solo se usa dentro del agente para elegir herramientas. Los modelos preentrenados de NLP (embeddings, emociones) se usan como herramientas de minería de texto.
 - **Comunicación de resultados:** el índice de discrepancia no es un "detector de desinformación" y no se señalan medios ni canales individuales; se reporta por tipo de fuente.
 

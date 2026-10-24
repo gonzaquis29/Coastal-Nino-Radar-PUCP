@@ -35,3 +35,14 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 2. Hacer commit local mientras tanto y continuar.
 
 **Resultado:** la IA revisó un comunicado del ENFEN, la lista de avisos del Senamhi, los términos de RPP, el D. Leg. 822 (versión de terceros), la documentación de Streamlit y el `robots.txt` de El Tiempo. Se cambió la unidad regional a macro-región, los avisos del Senamhi pasaron de eventos a contexto, se agregaron reglas de derecho de autor y despliegue, y El Tiempo (Piura) entró como medio regional.
+
+## 2026-10-23 · Términos de uso de medios y organización (Claude Code, Claude Opus 5.5)
+**Propósito:** revisar los términos de uso de los medios y definir la organización del grupo.
+
+**Prompts (resumen fiel, en orden):**
+1. Continuar con análisis crítico; commit local.
+2. "¿Estás totalmente seguro? Analiza de nuevo."
+3. ¿Por qué hay preguntas para el profesor?
+4. El uso de IA no es problema, no hay anexo ni rúbrica: elegir la opción más adecuada.
+
+**Resultado:** la IA leyó las cláusulas literales de los términos de uso y del D. Leg. 822 y corrigió tres errores de su revisión anterior. Se excluyó Infobae, el cuerpo de las notas solo se procesa en memoria, el dashboard no muestra fragmentos del cuerpo y el trabajo se dividió en dos verticales (Noticias y YouTube) con evidencia de aporte individual.
