@@ -12,7 +12,7 @@ Lee `README.md` para el alcance, el pipeline y el plan. Este archivo recoge las 
 - **YouTube:** solo la API oficial (nunca scraping de la web); borra o refresca los datos crudos a los 30 días. Sigue las "Reglas por sitio" del README para cada medio.
 
 ## Stack
-`requests`, `BeautifulSoup`, spaCy/NLTK, `scikit-learn` (TF-IDF), `sentence-transformers` (con `normalize_embeddings=True`), ChromaDB (`PersistentClient`), `gensim`/LDA, BERTopic, pysentimiento, `networkx`, `google-api-python-client` (YouTube Data API v3), Streamlit.
+`requests`, `BeautifulSoup`, spaCy/NLTK, `scikit-learn` (TF-IDF), `sentence-transformers` (con `normalize_embeddings=True`), ChromaDB (`PersistentClient`), `gensim`/LDA, BERTopic, pysentimiento, `transformers` (NLI con `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`), `networkx`, `google-api-python-client` (YouTube Data API v3), Streamlit.
 
 ## Qué no hacer
 - No presentar el índice de discrepancia como "detector de desinformación" ni señalar medios o canales individuales como engañosos.

@@ -46,3 +46,12 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 4. El uso de IA no es problema, no hay anexo ni rúbrica: elegir la opción más adecuada.
 
 **Resultado:** la IA leyó las cláusulas literales de los términos de uso y del D. Leg. 822 y corrigió tres errores de su revisión anterior. Se excluyó Infobae, el cuerpo de las notas solo se procesa en memoria, el dashboard no muestra fragmentos del cuerpo y el trabajo se dividió en dos verticales (Noticias y YouTube) con evidencia de aporte individual.
+
+## 2026-10-23 · Revisión completa del README (Claude Code, Claude Opus 5.5)
+**Propósito:** revisar el README completo y corregir las observaciones.
+
+**Prompts (resumen fiel, en orden):**
+1. No importa definir quién hace cada cosa; dejar la planificación general clara y analizar todo por si queda alguna observación.
+2. Corregir esas observaciones validando, analizando y evaluando como antes.
+
+**Resultado:** se corrigieron 14 observaciones, entre ellas: NLI y contradicciones sintéticas para el índice de discrepancia, evaluación no circular del recomendador y del sentimiento, contradicciones internas (estructura de datos, despliegue, enlace de video), corte el 20-nov, prueba de volumen de noticias, edad del video como control, Trends semanal, enlaces de descripciones de videos y tabla de cobertura del sílabo. La IA verificó el tamaño de los modelos en Hugging Face y la normalización de Google Trends.
