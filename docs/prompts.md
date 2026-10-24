@@ -55,3 +55,10 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 2. Corregir esas observaciones validando, analizando y evaluando como antes.
 
 **Resultado:** se corrigieron 14 observaciones, entre ellas: NLI y contradicciones sintéticas para el índice de discrepancia, evaluación no circular del recomendador y del sentimiento, contradicciones internas (estructura de datos, despliegue, enlace de video), corte el 20-nov, prueba de volumen de noticias, edad del video como control, Trends semanal, enlaces de descripciones de videos y tabla de cobertura del sílabo. La IA verificó el tamaño de los modelos en Hugging Face y la normalización de Google Trends.
+
+## 2026-10-23 · Segunda revisión completa (Claude Code, Claude Opus 5.5)
+**Propósito:** volver a revisar el README, solo documentación, dejando escritas las pruebas necesarias.
+
+**Prompt (resumen fiel):** volver a analizar; por ahora solo documentar, y si hacen falta pruebas o validaciones, colocarlas.
+
+**Resultado:** la IA revisó los sitemaps de los 4 medios y encontró que Andina, RPP y La República solo listan los últimos días, así que se documentó cómo recuperar el histórico por medio y la recolección diaria. También se corrigieron el conteo de búsquedas de YouTube (110 en 2 días), la precedencia del semáforo, la regla de agregación del NLI, la exclusión de videos recientes, la comparación de series de Trends y la privacidad de comentarios. Se agregaron pruebas de histórico, control positivo y despliegue.

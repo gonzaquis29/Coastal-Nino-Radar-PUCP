@@ -20,4 +20,4 @@ Lee `README.md` para el alcance, el pipeline y el plan. Este archivo recoge las 
 - No versionar `data/` ni modelos pesados.
 
 ## Estado
-Nada de lo marcado "no verificado" en el README debe darse por cierto hasta probarlo (ver "Primera noche").
+Nada de lo marcado "no verificado" en el README debe darse por cierto hasta probarlo (ver "Pruebas de viabilidad"). Los sitemaps de Andina, RPP y La República solo cubren los últimos días: la recolección de notas nuevas debe correr a diario.
