@@ -1,0 +1,80 @@
+"""Columnas de cada CSV de data/oficial/ (definición en docs/oficial/definicion.md, "Salida")."""
+
+COMUNICADOS = (
+    "id",
+    "tipo",
+    "numero",
+    "anio",
+    "fecha_emision",
+    "fecha_web",
+    "vigente_desde",
+    "vigente_hasta",
+    "estado",
+    "magnitud_max_prevista",
+    "magnitudes_mencionadas",
+    "plazo",
+    "proximo_anunciado",
+    "titular",
+    "slug",
+    "url",
+    "lastmod",
+    "sha256_pdf",
+    "fuente_texto",
+    "n_parrafos",
+)
+PROBABILIDADES = ("comunicado_id", "region", "periodo", "categoria", "probabilidad")
+AVISOS = (
+    "id",
+    "anio",
+    "numero",
+    "b",
+    "titulo",
+    "tipo",
+    "nivel",
+    "estado",
+    "relacion",
+    "aviso_relacionado",
+    "emision",
+    "inicio",
+    "fin",
+    "duracion",
+    "macroregiones",
+    "metodo_macroregion",
+    "url",
+)
+AVISO_DIAS = (
+    "aviso_id",
+    "fecha",
+    "mapa",
+    "macroregion",
+    "nivel_dia",
+    "nivel_macroregion",
+    "estaciones",
+    "departamentos",
+    "metodo",
+)
+PARRAFOS = (
+    "id",
+    "doc_id",
+    "fuente",
+    "orden",
+    "seccion",
+    "texto",
+    "fecha_doc",
+    "vigente_desde",
+    "vigente_hasta",
+    "macroregiones",
+    "temas",
+    "duplicado_de",
+    "sha1",
+)
+VALIDACION = ("prueba", "criterio", "valor", "umbral", "pasa", "detalle")
+
+ARCHIVOS = {
+    "comunicados.csv": COMUNICADOS,
+    "probabilidades.csv": PROBABILIDADES,
+    "avisos.csv": AVISOS,
+    "aviso_dias.csv": AVISO_DIAS,
+    "parrafos.csv": PARRAFOS,
+    "validacion.csv": VALIDACION,
+}

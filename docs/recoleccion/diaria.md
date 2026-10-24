@@ -4,8 +4,8 @@ Script que descubre las notas nuevas de cada fuente y guarda solo sus direccione
 
 ## Uso
 ```bash
-pip install -r requirements.txt
-python src/recolector/diario.py --persona joseph
+pip install -e ".[dev]"          # una sola vez (ver "Cómo montar el proyecto" en el README)
+python -m radar.recoleccion.diario --persona joseph
 ```
 - `--persona gonzalo|joseph`: obligatorio; va en el nombre del archivo.
 - `--prueba`: ejecuta todo y muestra el resumen sin escribir archivos ni tocar git.
@@ -73,8 +73,11 @@ Con 48 h entre ejecuciones solo puede perderse, en días muy cargados, parte del
 
 ## Errores
 - Cada fuente corre por separado: si una falla, las demás siguen. Si falla un sitemap, siguen los demás de esa fuente.
-- 5xx o tiempo agotado: hasta 2 reintentos con espera creciente; `Retry-After` se respeta hasta 120 s.
-- 403: no se reintenta y se reporta (no se eluden bloqueos). 429: se espera una sola vez.
+- Errores de red (conexión, tiempo agotado, respuesta cortada o incompleta frente a `Content-Length`) y respuestas 429, 500, 502, 503 o 504: hasta 2 reintentos con espera exponencial y algo de azar; `Retry-After` se respeta en segundos o como fecha, hasta 120 s.
+- Un host que falla 5 veces seguidas se suspende en esa ejecución (no se le sigue pidiendo nada) y se reporta.
+- 403: no se reintenta y se reporta (no se eluden bloqueos).
+- El detalle técnico de cada fallo (con la traza) queda en `data/registros/diario-<fecha>.log`; en pantalla, solo el resumen.
+- Estos valores están en `src/radar/config.py`.
 - XML mal formado: se descarta ese sitemap y se reporta.
 - 404 del mensual del mes en curso de Exitosa (aún no creado): normal.
 - Código de salida 1 solo si fallan todas las fuentes.

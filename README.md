@@ -9,6 +9,29 @@ Una herramienta que compara lo que circula sobre el Fenómeno El Niño Costero (
 
 **Por qué este tema.** Hay una temporada de lluvias por delante y la información oficial es técnica y está dispersa. El corpus oficial es pequeño y ordenado (~20 comunicados en 2026), lo que lo hace factible. Una muestra inicial indica que los medios tradicionales tienden a reproducir al ENFEN, mientras que en YouTube circulan títulos claramente exagerados: el contraste interesante está entre ambos.
 
+## Cómo montar el proyecto
+Requisitos: Python 3.11 o superior y git.
+
+```bash
+git clone https://github.com/gonzaquis29/Coastal-Nino-Radar-PUCP.git
+cd Coastal-Nino-Radar-PUCP
+python -m venv .venv
+.venv\Scripts\activate            # Windows; en Linux o macOS: source .venv/bin/activate
+pip install -e ".[dev]"           # una sola vez: el paquete radar y las herramientas de prueba
+```
+
+| Para qué | Comando | Cuándo |
+|----------|---------|--------|
+| Recolección diaria de notas | `python -m radar.recoleccion.diario --persona <nombre> --publicar` | 1 vez al día, máximo 48 h entre ejecuciones |
+| Corpus oficial (ENFEN y Senamhi) | `python -m radar.oficial.corpus` | tras un "Nuevo documento del ENFEN" y antes del corte |
+| Pruebas | `python -m pytest` | antes de cada commit |
+| Estilo | `ruff format src tests` y `ruff check src tests` | antes de cada commit |
+
+- **Se versiona:** el código (`src/radar/`), la configuración (`src/radar/config.py` y `config/*.csv`), `data/urls/`, `data/oficial/` y `docs/`.
+- **Se genera al ejecutar (no se versiona):** `data/raw/` (descargas) y `data/registros/` (registro detallado de cada ejecución, con los errores).
+- **Para cambiar** fechas del proyecto, user-agent, ritmo de peticiones, reintentos o rutas: `src/radar/config.py`. Regiones o estaciones de referencia: `config/*.csv`. No hace falta tocar otro código.
+- Dependencias en `pyproject.toml` (fuente única). La app de Streamlit tendrá su propio `requirements.txt` en su carpeta, que Community Cloud lee primero.
+
 ## Preguntas que responde
 1. ¿Qué tan alineadas están las noticias y los videos con la información oficial vigente en su fecha y macro-región?
 2. ¿Qué fuentes enlazan o citan a ENFEN, Senamhi e Indeci, y cuáles no? (red de enlaces y citas)
@@ -117,7 +140,7 @@ Detalle de las mediciones en [docs/recoleccion/validacion-2026-10-24.md](docs/re
 
 El filtro por título pierde las notas que tratan El Niño sin nombrarlo en el título. Se mide con la recolección diaria, donde se tienen todas las notas, y se declara.
 
-**Recolección diaria.** `python src/recolector/diario.py --persona <nombre> --publicar`, a mano, **una vez al día** y con **máximo 48 h entre ejecuciones** (la sección Perú de RPP llega a cubrir solo 3,4 días y el `sitemap-ultimo` de Andina, 2-3). Guarda solo dirección, número de nota, medio, fecha, sección y fecha de recolección, sin título ni texto, en un archivo por ejecución (`data/urls/AAAA-MM-DD_<persona>.csv`); no duplica notas y avisa si quedó un hueco. Definición y uso: [docs/recoleccion/diaria.md](docs/recoleccion/diaria.md).
+**Recolección diaria.** `python -m radar.recoleccion.diario --persona <nombre> --publicar`, a mano, **una vez al día** y con **máximo 48 h entre ejecuciones** (la sección Perú de RPP llega a cubrir solo 3,4 días y el `sitemap-ultimo` de Andina, 2-3). Guarda solo dirección, número de nota, medio, fecha, sección y fecha de recolección, sin título ni texto, en un archivo por ejecución (`data/urls/AAAA-MM-DD_<persona>.csv`); no duplica notas y avisa si quedó un hueco. Definición y uso: [docs/recoleccion/diaria.md](docs/recoleccion/diaria.md).
 
 **Medios.**
 - **Andina** (agencia estatal): control positivo; se reporta aparte de los medios privados.
@@ -141,10 +164,10 @@ Se ignora el encabezado de lugar de las notas ("LIMA (ANDINA)") y se excluyen pr
 
 **Avisos del Senamhi.** Entran solo precipitaciones e incremento de temperatura en costa norte y costa centro; quedan fuera friaje, nevadas, selva y sierra sur. Se presentan como "aviso vigente en tu zona", **nunca como causados por El Niño**.
 
-**Corpus oficial.** `python src/oficial/corpus.py` arma `data/oficial/` (se versiona, ~0,5 MB; la app lo necesita para ChromaDB): 19 comunicados (N.° 13-2025, vigente del 1 al 14-ene, y N.° 01 a 18 de 2026), 125 avisos y 834 párrafos con id estable.
+**Corpus oficial.** `python -m radar.oficial.corpus` arma `data/oficial/` (se versiona, ~0,5 MB; la app lo necesita para ChromaDB): 19 comunicados (N.° 13-2025, vigente del 1 al 14-ene, y N.° 01 a 18 de 2026), 125 avisos y 834 párrafos con id estable.
 - **ENFEN:** el PDF manda sobre la página HTML; número, fecha de emisión (la del PDF, no el `lastmod`), estado, magnitud prevista y mencionadas para la costa (Niño 1+2), plazo y tablas de probabilidad. Sin informes técnicos ni notas técnicas.
 - **Senamhi:** precipitaciones e incremento de temperatura (sin llovizna); macro-región y nivel según el polígono oficial del aviso sobre 21 estaciones costeras de referencia (supuesto declarado), con la regla de título y departamentos como respaldo.
-- **Vigencia:** un comunicado rige desde su emisión hasta el día anterior al siguiente (el día de cambio se compara con ambos); un aviso aplica desde su emisión hasta su fin, salvo cancelados. Se consulta con `oficial.vigencia.Corpus` (`estado_vigente`, `avisos_aplicables`, `parrafos_vigentes`).
+- **Vigencia:** un comunicado rige desde su emisión hasta el día anterior al siguiente (el día de cambio se compara con ambos); un aviso aplica desde su emisión hasta su fin, salvo cancelados. Se consulta con `radar.oficial.vigencia.Corpus` (`estado_vigente`, `avisos_aplicables`, `parrafos_vigentes`).
 - Se vuelve a correr sin duplicar: solo descarga lo nuevo o cambiado y no empeora el corpus si una fuente falla. Definición: [docs/oficial/definicion.md](docs/oficial/definicion.md); mediciones: [docs/oficial/validacion-2026-10-24.md](docs/oficial/validacion-2026-10-24.md).
 
 **Actores (red de co-mención).**
@@ -324,11 +347,18 @@ data/urls/       direcciones de notas por ejecución diaria y registro de sitema
 data/oficial/    corpus oficial: comunicados, avisos, días por macro-región y párrafos (SÍ se versiona; textos oficiales)
 data/raw/        comunicados (PDF/HTML), avisos, respuestas de la API de YouTube, CSV de Trends (no se versiona; nunca el cuerpo de las notas)
 data/processed/  párrafos oficiales, titulares y resúmenes, enlaces, citas, vectores, resultados de NLI y agregados (no se versiona)
+data/registros/  registro detallado de cada ejecución (no se versiona)
+config/          listas de referencia editables: regiones.csv, estaciones_costa.csv
+src/radar/       paquete del proyecto (pip install -e ".[dev]")
+  config.py      único lugar de rutas, fechas del proyecto, user-agent, ritmo y reintentos
+  comun/         compartido: http (robots.txt, reintentos, hosts caídos), archivos, texto, regiones, geo, registro
+  recoleccion/   recolector diario de direcciones de notas
+  oficial/       corpus oficial: enfen, enfen_pdf, senamhi, senamhi_paginas, vigencia, validar, corpus (línea de comandos)
+                 (después: noticias/, youtube/, nlp/, modelos/, app/)
+tests/           pruebas por paquete: comun/, recoleccion/, oficial/
 notebooks/       exploración y análisis
-src/             crawler, recolector YouTube, redes, recuperación, sentimiento, tópicos, modelo de engagement, recomendador, agente, dashboard
 results/         figuras y métricas
 docs/            bibliografía, notas y registro de prompts
 docs/recoleccion/ definición de la recolección y validaciones de las fuentes
 docs/oficial/    definición y validación del corpus oficial
-tests/           pruebas de las reglas (python -m pytest tests/)
 ```

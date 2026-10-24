@@ -1,9 +1,9 @@
 prueba,criterio,valor,umbral,pasa,detalle
 enfen,comunicados descargados y extraídos del PDF,19/19,100 %,1,
 enfen,número y año del PDF = slug,19/19,100 %,1,
-enfen,fecha de emisión a ±1 día de la fecha de la página,19/19,100 %,1,[]
+enfen,fecha de emisión a ±1 día de la fecha de la página,19/19,100 %,1,
 enfen,emisión real a ±1 día de la anunciada en el comunicado anterior,18/18,≥ 90 %,1,
-enfen,estado = estado de la página de descarga,19/19,100 %,1,[]
+enfen,estado = estado de la página de descarga,19/19,100 %,1,
 enfen,magnitud extraída (vigilancia o alerta),18/18,100 %,1,
 enfen,magnitudes del resumen HTML ⊆ magnitudes del PDF,16/16,100 %,1,
 enfen,categoría más probable de la tabla ∈ magnitudes mencionadas,4/4,100 %,1,

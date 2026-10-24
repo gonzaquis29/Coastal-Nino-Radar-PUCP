@@ -4,15 +4,16 @@ Comunicados del ENFEN y avisos meteorológicos del Senamhi, partidos en párrafo
 
 ## Uso
 ```bash
-pip install -r requirements.txt
-python src/oficial/corpus.py
+pip install -e ".[dev]"          # una sola vez (ver "Cómo montar el proyecto" en el README)
+python -m radar.oficial.corpus
 ```
 - `--solo enfen|senamhi`: una sola fuente; los párrafos de la otra se conservan.
 - `--sin-descarga`: vuelve a extraer desde `data/raw/oficial/` sin pedir nada (unos segundos).
 - `--prueba`: hace todo y muestra el reporte, sin escribir `data/oficial/`.
-- Correrlo después de `diario.py` cuando este avise "Nuevo documento del ENFEN", y antes del corte (20-nov). La primera vez tarda ~30 min; las siguientes, pocos minutos.
-- Pruebas de las reglas: `python -m pytest tests/`.
-- En Python: `from oficial.vigencia import Corpus` → `Corpus().estado_vigente("2026-10-24", "costa_norte")`, `avisos_aplicables(...)`, `comunicados_a_comparar(...)`, `parrafos_vigentes(...)`.
+- Correrlo después del recolector diario cuando este avise "Nuevo documento del ENFEN", y antes del corte (20-nov). La primera vez tarda ~30 min; las siguientes, pocos minutos.
+- Pruebas: `python -m pytest`. El registro detallado de cada ejecución queda en `data/registros/corpus-<fecha>.log`.
+- Código: `src/radar/oficial/` (`enfen.py`, `enfen_pdf.py`, `senamhi.py`, `senamhi_paginas.py`, `vigencia.py`, `validar.py`, `esquemas.py`, `vocabulario.py`, `corpus.py`). Estaciones de referencia en `config/estaciones_costa.csv`; macro-regiones en `config/regiones.csv`.
+- En Python: `from radar.oficial.vigencia import Corpus` → `Corpus().estado_vigente("2026-10-24", "costa_norte")`, `avisos_aplicables(...)`, `comunicados_a_comparar(...)`, `parrafos_vigentes(...)`.
 
 ## Alcance
 - **ENFEN:** comunicados oficiales y extraordinarios de 2026, más el **N.° 13-2025** (18-dic-2025, "No Activo"), que rige del 1 al 14-ene. Fuera quedan los informes técnicos (~17 MB cada uno, análisis técnico que metería ruido en la búsqueda del párrafo más cercano) y las notas técnicas. El N.° 13-2025 no es evento: los eventos son los de 2026.
@@ -93,10 +94,10 @@ CSV UTF-8 con saltos LF (fijado en `.gitattributes`), filas ordenadas, listas un
 - Estado de descargas: `data/raw/oficial/{enfen,senamhi}/estado.json`.
 
 ## Seguridad y errores
-- Mismo `Cliente` que `diario.py`: user-agent del proyecto, `robots.txt` con el verificador propio (también para `idesep.senamhi.gob.pe`, que no tiene), 1 petición por segundo por host, reintentos ante 5xx y `Retry-After`. Ante 403 o verificación de robot se detiene y lo reporta.
+- `radar.comun.http.Cliente`, el mismo del recolector: user-agent del proyecto, `robots.txt` con el verificador propio (también para `idesep.senamhi.gob.pe`, que no tiene), 1 petición por segundo por host, reintentos con espera exponencial ante errores de red y 429/5xx, `Retry-After` en segundos o como fecha, y suspensión de un host tras 5 fallos seguidos. Ante 403 o verificación de robot se detiene y lo reporta.
 - Solo se piden direcciones de `enfen.imarpe.gob.pe`, `www.senamhi.gob.pe` e `idesep.senamhi.gob.pe`, sin seguir redirecciones a otros hosts ni enlaces de dentro de los documentos; tope de 30 MB por respuesta; un PDF debe empezar con `%PDF-` y venir como `application/pdf`.
 - Nombres de archivo derivados de slugs o números validados (`[a-z0-9._-]`); XML sin entidades externas.
-- Escritura atómica (temporal + renombrar). **No se empeora el corpus:** si un documento que ya estaba falla, se conservan sus filas anteriores y se avisa.
+- Escritura atómica (temporal + renombrar); el estado de descargas se guarda cada 20 cambios y al salir, aunque sea por un error; una columna fuera del esquema es un error. **No se empeora el corpus:** si un documento que ya estaba falla, se conservan sus filas anteriores y se avisa.
 - Respaldos: PDF ilegible → resumen HTML (`fuente_texto=html`); sin polígono → regla (`metodo=regla`); sin tabla del Senamhi → última copia guardada; una fuente que falla no detiene la otra. Código de salida 1 solo si fallan las dos.
 
 ## Pruebas de viabilidad (criterios fijados antes de correrlas)
