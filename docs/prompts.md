@@ -100,5 +100,7 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 5. Resumir si todo está conforme; asegurarse de que el resto esté validado (sin GitHub Actions ni turnos, que maneja el equipo).
 6. Eliminar los archivos de prueba y crear un `.md` con las definiciones.
 7. Aprobar; escribir el script, probarlo, actualizar README/CLAUDE.md sin mezclar todo en el README (solo resumen) y organizar los `.md` nuevos; commit local.
+8. Subirlo; aclarar qué es una ejecución real frente al modo `--prueba` y si el script recupera días anteriores (sí: lee la ventana completa de cada sitemap).
+9. ¿Todo está subido y bien documentado?
 
 **Resultado:** la IA hizo ~600 peticiones a las fuentes (1 por segundo) y leyó copias de sitemaps en Wayback Machine. Encontró que `lastmod` es fecha de modificación, que los sitemaps de El Tiempo están congelados (se usa su API REST), que Andina sí tiene `robots.txt`, que el margen de 3 días perdía notas (pasó a 48 h, validado con el día más cargado de 2026), un hueco del 31-may en los mensuales de Exitosa y que el 301 de Andina no confirma que una nota exista. Se escribió `src/recolector/diario.py` (requests + lxml, verificador propio de `robots.txt`, registro de sitemaps y alertas de hueco), se documentó en `docs/recoleccion/` y la primera ejecución guardó 7.485 direcciones.

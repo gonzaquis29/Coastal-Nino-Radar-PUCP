@@ -11,6 +11,8 @@ python src/recolector/diario.py --persona joseph
 - `--prueba`: ejecuta todo y muestra el resumen sin escribir archivos ni tocar git.
 - `--publicar`: `git pull --ff-only` (se detiene si falla) → recolecta → `git add` solo de sus archivos → commit "datos: recolección AAAA-MM-DD (persona)" → push; si el push se rechaza, `git pull --rebase` y otro intento (no hay conflicto: cada ejecución escribe sus propios archivos).
 - **Margen: máximo 48 h entre ejecuciones.** Con más tiempo se pierden notas de RPP y Andina (ver "Ventanas").
+- Cada ejecución lee la ventana completa de cada sitemap (varios días hacia atrás) y guarda solo lo que falta: las notas publicadas después de una ejecución entran en la siguiente. El nombre del archivo es la fecha de la ejecución, no la de las notas; para tener un día completo se unen todos los CSV y se agrupa por `fecha`.
+- `--prueba` no cuenta para el margen, porque no guarda nada.
 
 ## Qué hace
 - Lee los sitemaps (y una API) de 6 fuentes, sin descargar ninguna nota.

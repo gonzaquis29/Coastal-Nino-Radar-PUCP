@@ -250,7 +250,7 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [ ] Descargar los comunicados ENFEN y probar la extracción de fecha, estado y magnitud con reglas.
 - [ ] Extraer avisos del Senamhi (fecha, tipo, nivel, macro-región) y aplicar el filtro.
 - [ ] Probar pysentimiento (polaridad y emociones) sobre ~20 titulares.
-- [x] Revisar cuánto histórico cubren los sitemaps. *Andina, RPP y La República solo los últimos días; El Tiempo y Exitosa completos. Ver "Cobertura histórica".*
+- [x] Revisar cuánto histórico cubren los sitemaps. *Andina, RPP y La República solo los últimos días; Exitosa completo; los de El Tiempo están congelados desde el 9-oct, pero su API REST es completa. Ver "Cobertura histórica".*
 - [x] Probar vías de histórico. *Andina por número de nota (completo), RPP por archivo (~83 %), La República sin vía → excluida, Exitosa como reemplazo.*
 - [ ] Medir la cobertura del archivo de RPP en otras secciones y fechas (se midió solo Perú, 22-oct).
 - [ ] Medir cuántas notas sobre El Niño pierde el filtro por título, usando la recolección diaria.
@@ -301,7 +301,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 
 ## Reglas del proyecto
 - **Cero etiquetado manual.** Toda validación usa una referencia externa.
-- **Ética de scraping:** `robots.txt`, términos de uso, rate limiting, propósito declarado; sin eludir bloqueos. `requests` + `BeautifulSoup`; Playwright solo si es imprescindible.
+- **Ética de scraping:** `robots.txt`, términos de uso, rate limiting, propósito declarado; sin eludir bloqueos. `requests` + `BeautifulSoup` (`lxml` para sitemaps XML); Playwright solo si es imprescindible.
 - **Privacidad:** seudonimizar; no guardar nombres de usuario ni identificadores personales.
 - **Derecho de autor:** el cuerpo de las notas no se guarda, no se versiona ni se publica; solo titular, enlace, datos derivados y métricas.
 - **IA generativa:** se declara su uso y se conserva un registro de prompts en `docs/prompts.md`. En el producto, un LLM solo se usa dentro del agente para elegir herramientas. Los modelos preentrenados de NLP (embeddings, emociones) se usan como herramientas de minería de texto.
