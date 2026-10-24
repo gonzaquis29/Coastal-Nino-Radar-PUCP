@@ -87,7 +87,7 @@ Una herramienta que compara lo que circula sobre el Fenómeno El Niño Costero (
 ```
 
 - **Hacia atrás (1-ene → 24-oct):** se recupera de una vez en la semana 1. Empieza el 1 de enero porque es el ciclo completo de este El Niño: el comunicado N.° 01 (15-ene) pasó de "No activo" a "Vigilancia" y luego vino "Alerta", y el índice compara cada texto con el estado vigente en su fecha. Del 1 al 14 de enero sirve como línea base antes del primer comunicado; ir más atrás no aporta.
-- **Hacia adelante (24-oct → 20-nov):** recolección diaria. **Corte: viernes 20-nov-2026 a las 23:59**, con una descarga final que también refresca los datos de YouTube.
+- **Hacia adelante (24-oct → 20-nov):** recolección diaria (ver "Recolección diaria"). **Corte: viernes 20-nov-2026 a las 23:59**, con una descarga final que también refresca los datos de YouTube.
 - **Monitoreo (21 → 27-nov):** el recolector sigue corriendo solo, sin desarrollo nuevo, para la fase 6 de CRISP-ML(Q).
 
 Consecuencias de las fechas:
@@ -114,6 +114,15 @@ Consecuencias de las fechas:
 3. A ritmo bajo y repartido en varias noches (por ejemplo, ~43 mil redirecciones de Andina a 1 por segundo son ~12 horas).
 
 El filtro por título pierde las notas que tratan El Niño sin nombrarlo en el título. Se mide con la recolección diaria, donde se tienen todas las notas, y se declara.
+
+**Recolección diaria.** Un script que cualquiera de los dos ejecuta a mano, **una vez al día** (la hora no importa).
+- **Por qué alcanza una vez al día:** la lista más corta es la de Andina (~2-3 días), así que cada nota aparece en varias ejecuciones seguidas. RPP guarda ~4-7 días; Exitosa, El Tiempo, ENFEN y Senamhi guardan todo.
+- **Margen:** no dejar pasar **más de 3 días seguidos** sin ejecutarlo. RPP es el caso crítico, porque su archivo por fecha solo recupera ~83 %. Lo que se pierda de Andina se puede recuperar después por número de nota.
+- **Idempotente:** cada nota se identifica por su dirección; ejecutarlo dos veces, o que lo ejecuten los dos, no duplica nada.
+- **Qué guarda:** solo dirección, medio, fecha de publicación, sección y fecha de recolección. Sin título ni texto: un enlace no reproduce el contenido y el repositorio es público.
+- **Dónde:** se versiona en `data/urls/` (única excepción a "no versionar `data/`"), con **un archivo por ejecución** (`data/urls/AAAA-MM-DD_<persona>.csv`) para que dos ejecuciones nunca choquen en git. Los duplicados entre archivos se eliminan al unirlos.
+- **Flujo:** `git pull` → ejecutar el script → `git add data/urls/` → `git commit` → `git push` (el script puede hacerlo en un solo comando). El historial de commits muestra la última ejecución y quién la hizo.
+- **Más adelante (opcional):** el mismo script puede pasar a GitHub Actions (gratis en un repositorio público), previa corrida de prueba para confirmar que los medios no bloquean las IP de GitHub.
 
 **Medios.**
 - **Andina** (agencia estatal): control positivo; se reporta aparte de los medios privados.
@@ -205,7 +214,7 @@ Las horas son una estimación orientativa, no un límite.
 
 | Semana | Vertical Noticias | Vertical YouTube | Conjunto | Entregable |
 |--------|-------------------|------------------|----------|------------|
-| 0 (24-25 oct) | Recolector diario de notas nuevas corriendo (versión mínima) | — | — | Recolector diario activo |
+| 0 (24-25 oct) | Script de recolección diaria (versión mínima) y primera ejecución | — | Acordar quién lo ejecuta cada día | Primer archivo en `data/urls/` |
 | 1 (26 oct – 1 nov) | **Primero:** pruebas de viabilidad de noticias. Luego recuperación del histórico de los 4 medios; enlaces y citas | **Primero:** pruebas de viabilidad de YouTube y Trends. Luego primera descarga de YouTube por API; exportar Trends | Corpus oficial, preprocesamiento, asignación de región, TF-IDF | Resultado de las pruebas (pasa / no pasa) y dataset con fechas, regiones, enlaces y videos |
 | 2 (2 – 8 nov) | Red de enlaces y citas; tópicos y emociones de notas | Red social de audiencias; tipo de canal; emociones de videos | Embeddings | Notebooks con resultados |
 | 3 (9 – 15 nov) | Índice de discrepancia, semáforo, estudio de eventos | Modelo de engagement, KPIs de analítica web | Recomendador híbrido | Métricas preliminares |
@@ -308,6 +317,7 @@ Las definiciones de este README son la mejor alternativa evaluada al 24-oct-2026
 
 ## Estructura del repo
 ```
+data/urls/       direcciones de notas por ejecución diaria: dirección, medio, fechas, sección (SÍ se versiona; sin títulos ni texto)
 data/raw/        comunicados (PDF/HTML), avisos, respuestas de la API de YouTube, CSV de Trends (no se versiona; nunca el cuerpo de las notas)
 data/processed/  párrafos oficiales, titulares y resúmenes, enlaces, citas, vectores, resultados de NLI y agregados (no se versiona)
 notebooks/       exploración y análisis

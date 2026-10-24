@@ -17,7 +17,7 @@ Lee `README.md` para el alcance, el pipeline y el plan. Este archivo recoge las 
 ## Qué no hacer
 - No presentar el índice de discrepancia como "detector de desinformación" ni señalar medios o canales individuales como engañosos.
 - No prometer métrica de exactitud para "alarmismo": el producto mide cercanía a lo oficial.
-- No versionar `data/` ni modelos pesados.
+- No versionar `data/` ni modelos pesados. Única excepción: `data/urls/`, con un archivo por ejecución diaria que solo tiene dirección, medio, fechas y sección (nunca títulos, cuerpo de notas ni datos de YouTube).
 
 ## Estado
 Nada de lo marcado "no verificado" en el README debe darse por cierto hasta probarlo (ver "Pruebas de viabilidad"). Los sitemaps de Andina y RPP solo cubren los últimos días: la recolección de notas nuevas debe correr a diario, y el histórico se recupera por las vías de "Cobertura histórica".

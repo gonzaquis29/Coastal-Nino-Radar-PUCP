@@ -75,3 +75,16 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 6. ¿Considerar La República y Exitosa, o sería ruido? Elegir el más adecuado.
 
 **Resultado:** la IA validó el histórico por fuente (Andina completo por número de nota, RPP ~83 % por archivo, La República sin vía, Exitosa completo por sitemaps mensuales). Se excluyó La República, entró Exitosa, se fijó la ventana 1-ene → 20-nov con monitoreo hasta el 27-nov, el congelamiento el 27-nov y un calendario de 5 semanas.
+
+## 2026-10-24 · Recolección diaria (Claude Code, Claude Opus 5.5)
+**Propósito:** decidir cómo y dónde correr la recolección diaria de notas nuevas.
+
+**Prompts (resumen fiel, en orden):**
+1. ¿Cuál sería el siguiente paso?
+2. ¿Hay problema con GitHub Actions? Tengo créditos de estudiante.
+3. ¿Cada cuánto correría? ¿Varias veces al día o una al final del día?
+4. ¿Podríamos dejar un script y que cualquiera lo ejecute a mano al final del día?
+5. ¿Esos archivos se guardarían en GitHub? Así nos daríamos cuenta rápido.
+6. Anotar eso primero.
+
+**Resultado:** la IA verificó en la documentación de GitHub que Actions es gratis en repositorios públicos y se cobra al dueño del repositorio. Se decidió un script manual diario (margen máximo de 3 días sin ejecutarlo), que guarda solo direcciones y fechas en `data/urls/` con un archivo por ejecución; GitHub Actions queda como opción posterior.
