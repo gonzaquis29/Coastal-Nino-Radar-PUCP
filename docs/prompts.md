@@ -88,3 +88,17 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 6. Anotar eso primero.
 
 **Resultado:** la IA verificó en la documentación de GitHub que Actions es gratis en repositorios públicos y se cobra al dueño del repositorio. Se decidió un script manual diario (margen máximo de 3 días sin ejecutarlo), que guarda solo direcciones y fechas en `data/urls/` con un archivo por ejecución; GitHub Actions queda como opción posterior.
+
+## 2026-10-24 · Script de recolección diaria (Claude Code, Claude Opus 5.5)
+**Propósito:** definir, validar y construir el script de recolección diaria de direcciones de notas.
+
+**Prompts (resumen fiel, en orden):**
+1. Definir el script (qué notas, esquema del CSV, fecha y sección por fuente, duplicados, errores, dependencias, resumen, paso a GitHub Actions) validando con peticiones reales; escribirlo solo tras aprobar.
+2. Volver a realizar el análisis y validar primero que no haya huecos u observaciones.
+3. ¿Estás seguro? ¿No hay algo más que innovar o mejorar?
+4. ¿No puedes validar ahora mismo de alguna manera lo pendiente?
+5. Resumir si todo está conforme; asegurarse de que el resto esté validado (sin GitHub Actions ni turnos, que maneja el equipo).
+6. Eliminar los archivos de prueba y crear un `.md` con las definiciones.
+7. Aprobar; escribir el script, probarlo, actualizar README/CLAUDE.md sin mezclar todo en el README (solo resumen) y organizar los `.md` nuevos; commit local.
+
+**Resultado:** la IA hizo ~600 peticiones a las fuentes (1 por segundo) y leyó copias de sitemaps en Wayback Machine. Encontró que `lastmod` es fecha de modificación, que los sitemaps de El Tiempo están congelados (se usa su API REST), que Andina sí tiene `robots.txt`, que el margen de 3 días perdía notas (pasó a 48 h, validado con el día más cargado de 2026), un hueco del 31-may en los mensuales de Exitosa y que el 301 de Andina no confirma que una nota exista. Se escribió `src/recolector/diario.py` (requests + lxml, verificador propio de `robots.txt`, registro de sitemaps y alertas de hueco), se documentó en `docs/recoleccion/` y la primera ejecución guardó 7.485 direcciones.

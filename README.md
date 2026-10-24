@@ -101,28 +101,23 @@ Consecuencias de las fechas:
 |--------|----------------------------|----------------|------------|
 | ENFEN | Sitemap de entradas y de archivos PDF | Revisión diaria | El sitemap lista los comunicados desde el N.° 01 (15-ene) |
 | Senamhi | Lista de avisos del año y página de avisos anteriores | Revisión diaria | Páginas revisadas |
-| Andina | Número de nota: `noticia.aspx?id=N` redirige (301) a la dirección con el título, sin descargar la nota; ~43 mil números para el período | Sitemaps diarios | El id 1054000 es de dic-2025; el 1099500 aún no existe |
+| Andina | Número de nota: `noticia.aspx?id=N` redirige (301) a la dirección con el título; ~43 mil números para el período. El 301 también aparece en notas no publicadas, así que cada número se confirma con una segunda petición | Sitemaps diarios | El id 1054000 es de dic-2025; el 1099500 aún no existe |
 | RPP | Archivo por fecha `/archivo/<sección>/<AAAA-MM-DD>` (solo la primera página de cada día; RPP bloquea a Common Crawl) | Sitemaps diarios | **~83 %**: el archivo del 22-oct (sección Perú) tenía 19 de las 23 notas del sitemap |
-| Exitosa | Sitemaps mensuales (~2.000 notas por mes) | Sitemap de noticias | Sitemaps de enero a octubre de 2026 disponibles |
-| El Tiempo | Sitemaps de WordPress | Sitemaps | Cubren desde 2020 |
+| Exitosa | Sitemaps mensuales (~2.000 notas por mes); el hueco del 31-may se recupera por número de nota | Sitemap de noticias | Sitemaps de enero a octubre de 2026 disponibles |
+| El Tiempo | API REST de WordPress (sus sitemaps están congelados desde el 9-oct) | API REST | 60.699 entradas |
 | YouTube | API con `publishedAfter` / `publishedBefore` | Descarga del corte | Documentación oficial |
 | Google Trends | Una exportación por departamento que cubre todo el período | Se vuelve a exportar en el corte | — |
 
 **Cómo se acota el volumen hacia atrás:**
 1. Se filtra primero **por título**, sin descargar el cuerpo (el título está en la dirección de Andina, en el archivo de RPP y en los sitemaps de Exitosa y El Tiempo), con una lista amplia de términos: El Niño, Niño costero, ENFEN, Senamhi, Indeci, lluvias, huaicos, calor, anchoveta, etc.
 2. Solo se descarga el cuerpo de las candidatas, se procesa en memoria y se descarta.
-3. A ritmo bajo y repartido en varias noches (por ejemplo, ~43 mil redirecciones de Andina a 1 por segundo son ~12 horas).
+3. A ritmo bajo y repartido en varias noches (por ejemplo, ~86 mil peticiones de Andina a 1 por segundo son ~24 horas).
+
+Detalle de las mediciones en [docs/recoleccion/validacion-2026-10-24.md](docs/recoleccion/validacion-2026-10-24.md).
 
 El filtro por título pierde las notas que tratan El Niño sin nombrarlo en el título. Se mide con la recolección diaria, donde se tienen todas las notas, y se declara.
 
-**Recolección diaria.** Un script que cualquiera de los dos ejecuta a mano, **una vez al día** (la hora no importa).
-- **Por qué alcanza una vez al día:** la lista más corta es la de Andina (~2-3 días), así que cada nota aparece en varias ejecuciones seguidas. RPP guarda ~4-7 días; Exitosa, El Tiempo, ENFEN y Senamhi guardan todo.
-- **Margen:** no dejar pasar **más de 3 días seguidos** sin ejecutarlo. RPP es el caso crítico, porque su archivo por fecha solo recupera ~83 %. Lo que se pierda de Andina se puede recuperar después por número de nota.
-- **Idempotente:** cada nota se identifica por su dirección; ejecutarlo dos veces, o que lo ejecuten los dos, no duplica nada.
-- **Qué guarda:** solo dirección, medio, fecha de publicación, sección y fecha de recolección. Sin título ni texto: un enlace no reproduce el contenido y el repositorio es público.
-- **Dónde:** se versiona en `data/urls/` (única excepción a "no versionar `data/`"), con **un archivo por ejecución** (`data/urls/AAAA-MM-DD_<persona>.csv`) para que dos ejecuciones nunca choquen en git. Los duplicados entre archivos se eliminan al unirlos.
-- **Flujo:** `git pull` → ejecutar el script → `git add data/urls/` → `git commit` → `git push` (el script puede hacerlo en un solo comando). El historial de commits muestra la última ejecución y quién la hizo.
-- **Más adelante (opcional):** el mismo script puede pasar a GitHub Actions (gratis en un repositorio público), previa corrida de prueba para confirmar que los medios no bloquean las IP de GitHub.
+**Recolección diaria.** `python src/recolector/diario.py --persona <nombre> --publicar`, a mano, **una vez al día** y con **máximo 48 h entre ejecuciones** (la sección Perú de RPP llega a cubrir solo 3,4 días y el `sitemap-ultimo` de Andina, 2-3). Guarda solo dirección, número de nota, medio, fecha, sección y fecha de recolección, sin título ni texto, en un archivo por ejecución (`data/urls/AAAA-MM-DD_<persona>.csv`); no duplica notas y avisa si quedó un hueco. Definición y uso: [docs/recoleccion/diaria.md](docs/recoleccion/diaria.md).
 
 **Medios.**
 - **Andina** (agencia estatal): control positivo; se reporta aparte de los medios privados.
@@ -229,7 +224,7 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 | Fase | Contenido | Control de calidad |
 |------|-----------|--------------------|
 | 1. Comprensión del negocio y de los datos | Problema, preguntas, fuentes, pruebas de viabilidad | Criterios de pasa / no pasa |
-| 2. Preparación de datos | Recolección, limpieza, seudonimización, reglas por sitio. Incluye una sección de **protocolos web** con casos propios: códigos HTTP (403 de Expreso, 404 del `robots.txt` de Andina), reglas por user-agent (RPP), sitemaps y RSS, JSON-LD, API REST con cuotas y verificación de identidad por enlace sitio–canal | Conteos, duplicados, fechas válidas |
+| 2. Preparación de datos | Recolección, limpieza, seudonimización, reglas por sitio. Incluye una sección de **protocolos web** con casos propios: códigos HTTP (403 de Expreso, 503 con `Retry-After` de El Tiempo), reglas por user-agent (RPP), sitemaps y RSS, JSON-LD, API REST con cuotas y verificación de identidad por enlace sitio–canal | Conteos, duplicados, fechas válidas |
 | 3. Ingeniería del modelo | Vectores, tópicos, emociones, modelo de engagement, recomendador, agente | Líneas base y comparación de métodos |
 | 4. Evaluación | Tabla de evaluación | Controles positivo y negativo, partición temporal |
 | 5. Despliegue | Dashboard y agente | Registro de uso de la app |
@@ -295,11 +290,11 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 ## Reglas por sitio (revisado del 22 al 24-oct-2026)
 | Sitio | Regla |
 |-------|-------|
-| Andina | Sin `robots.txt`; usar sitemap. |
+| Andina | `robots.txt` permite todo; usar sitemaps. |
 | RPP | Archivo por fecha permitido desde 2021 (`/archivo/` bloqueado solo para años anteriores); `/tema*` bloqueado. Bloquea por completo a Scrapy y bots de IA; usar `requests` con un user-agent honesto, nunca suplantando otro. Términos: prohíben la reproducción "en cualquier soporte" y el consumo masivo de recursos. |
 | Exitosa | `robots.txt` permite todo; usar sus sitemaps mensuales y de noticias. Términos: uso personal; prohíben usar el contenido en sitios propios o de terceros sin autorización. |
 | La República | **Excluida**: prohíbe `/archivo/`, la paginación y las etiquetas, y no hay otra vía para su histórico. |
-| El Tiempo (Piura) | Permite el acceso salvo `/wp-admin/`; usar sus sitemaps. Términos: misma redacción que RPP. |
+| El Tiempo (Piura) | Permite el acceso salvo `/wp-admin/`; usar su API REST (los sitemaps están congelados). Términos: misma redacción que RPP. |
 | Infobae | **Excluido**: sus términos prohíben "tratar" el contenido. |
 | Expreso | Responde 403: **excluido**. |
 | YouTube | Solo la API oficial; `robots.txt` prohíbe `/results`. Borrar o refrescar datos crudos a los 30 días (políticas de la API); guardar agregados y seudónimos. |
@@ -317,11 +312,12 @@ Las definiciones de este README son la mejor alternativa evaluada al 24-oct-2026
 
 ## Estructura del repo
 ```
-data/urls/       direcciones de notas por ejecución diaria: dirección, medio, fechas, sección (SÍ se versiona; sin títulos ni texto)
+data/urls/       direcciones de notas por ejecución diaria y registro de sitemaps (SÍ se versiona; sin títulos ni texto)
 data/raw/        comunicados (PDF/HTML), avisos, respuestas de la API de YouTube, CSV de Trends (no se versiona; nunca el cuerpo de las notas)
 data/processed/  párrafos oficiales, titulares y resúmenes, enlaces, citas, vectores, resultados de NLI y agregados (no se versiona)
 notebooks/       exploración y análisis
 src/             crawler, recolector YouTube, redes, recuperación, sentimiento, tópicos, modelo de engagement, recomendador, agente, dashboard
 results/         figuras y métricas
 docs/            bibliografía, notas y registro de prompts
+docs/recoleccion/ definición de la recolección y validaciones de las fuentes
 ```
