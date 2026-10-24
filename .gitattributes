@@ -1,1 +1,2 @@
 data/urls/*.csv text eol=lf
+data/oficial/*.csv text eol=lf

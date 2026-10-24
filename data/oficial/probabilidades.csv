@@ -1,0 +1,45 @@
+comunicado_id,region,periodo,categoria,probabilidad
+enfen-2026-13,nino_1+2,diciembre 2026 - marzo 2027,La Niña,0
+enfen-2026-13,nino_1+2,diciembre 2026 - marzo 2027,Neutro,0
+enfen-2026-13,nino_1+2,diciembre 2026 - marzo 2027,El Niño Débil,6
+enfen-2026-13,nino_1+2,diciembre 2026 - marzo 2027,El Niño Moderado,23
+enfen-2026-13,nino_1+2,diciembre 2026 - marzo 2027,El Niño Fuerte,38
+enfen-2026-13,nino_1+2,diciembre 2026 - marzo 2027,El Niño Extraordinario,33
+enfen-2026-13,nino_3.4,diciembre 2026 - marzo 2027,La Niña,0
+enfen-2026-13,nino_3.4,diciembre 2026 - marzo 2027,Neutro,0
+enfen-2026-13,nino_3.4,diciembre 2026 - marzo 2027,El Niño Débil,5
+enfen-2026-13,nino_3.4,diciembre 2026 - marzo 2027,El Niño Moderada,23
+enfen-2026-13,nino_3.4,diciembre 2026 - marzo 2027,El Niño Fuerte,42
+enfen-2026-13,nino_3.4,diciembre 2026 - marzo 2027,El Niño Muy Fuerte,30
+enfen-2026-14,nino_1+2,diciembre 2026 - marzo 2027,La Niña,0
+enfen-2026-14,nino_1+2,diciembre 2026 - marzo 2027,Neutro,0
+enfen-2026-14,nino_1+2,diciembre 2026 - marzo 2027,El Niño Débil,1
+enfen-2026-14,nino_1+2,diciembre 2026 - marzo 2027,El Niño Moderado,15
+enfen-2026-14,nino_1+2,diciembre 2026 - marzo 2027,El Niño Fuerte,43
+enfen-2026-14,nino_1+2,diciembre 2026 - marzo 2027,El Niño Extraordinario,41
+enfen-2026-14,nino_3.4,diciembre 2026 - marzo 2027,La Niña,0
+enfen-2026-14,nino_3.4,diciembre 2026 - marzo 2027,Neutro,0
+enfen-2026-14,nino_3.4,diciembre 2026 - marzo 2027,El Niño Débil,3
+enfen-2026-14,nino_3.4,diciembre 2026 - marzo 2027,El Niño Moderada,14
+enfen-2026-14,nino_3.4,diciembre 2026 - marzo 2027,El Niño Fuerte,43
+enfen-2026-14,nino_3.4,diciembre 2026 - marzo 2027,El Niño Muy Fuerte,40
+enfen-2026-15,nino_1+2,diciembre 2026 - marzo 2027,La Niña,0
+enfen-2026-15,nino_1+2,diciembre 2026 - marzo 2027,Neutro,0
+enfen-2026-15,nino_1+2,diciembre 2026 - marzo 2027,El Niño Débil,1
+enfen-2026-15,nino_1+2,diciembre 2026 - marzo 2027,El Niño Moderado,16
+enfen-2026-15,nino_1+2,diciembre 2026 - marzo 2027,El Niño Fuerte,40
+enfen-2026-15,nino_1+2,diciembre 2026 - marzo 2027,El Niño Extraordinario,43
+enfen-2026-15,nino_3.4,diciembre 2026 - marzo 2027,La Niña,0
+enfen-2026-15,nino_3.4,diciembre 2026 - marzo 2027,Neutro,0
+enfen-2026-15,nino_3.4,diciembre 2026 - marzo 2027,El Niño Débil,1
+enfen-2026-15,nino_3.4,diciembre 2026 - marzo 2027,El Niño Moderada,14
+enfen-2026-15,nino_3.4,diciembre 2026 - marzo 2027,El Niño Fuerte,41
+enfen-2026-15,nino_3.4,diciembre 2026 - marzo 2027,El Niño Muy Fuerte,44
+enfen-2026-16,nino_1+2,diciembre 2026 - marzo 2027,Débil,0
+enfen-2026-16,nino_1+2,diciembre 2026 - marzo 2027,Moderado,7
+enfen-2026-16,nino_1+2,diciembre 2026 - marzo 2027,Fuerte,45
+enfen-2026-16,nino_1+2,diciembre 2026 - marzo 2027,Extraordinario,48
+enfen-2026-16,nino_3.4,diciembre 2026 - marzo 2027,Débil,0
+enfen-2026-16,nino_3.4,diciembre 2026 - marzo 2027,Moderada,5
+enfen-2026-16,nino_3.4,diciembre 2026 - marzo 2027,Fuerte,40
+enfen-2026-16,nino_3.4,diciembre 2026 - marzo 2027,Muy Fuerte,55

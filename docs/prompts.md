@@ -104,3 +104,19 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 9. ¿Todo está subido y bien documentado?
 
 **Resultado:** la IA hizo ~600 peticiones a las fuentes (1 por segundo) y leyó copias de sitemaps en Wayback Machine. Encontró que `lastmod` es fecha de modificación, que los sitemaps de El Tiempo están congelados (se usa su API REST), que Andina sí tiene `robots.txt`, que el margen de 3 días perdía notas (pasó a 48 h, validado con el día más cargado de 2026), un hueco del 31-may en los mensuales de Exitosa y que el 301 de Andina no confirma que una nota exista. Se escribió `src/recolector/diario.py` (requests + lxml, verificador propio de `robots.txt`, registro de sitemaps y alertas de hueco), se documentó en `docs/recoleccion/` y la primera ejecución guardó 7.485 direcciones.
+
+## 2026-10-24 · Corpus oficial ENFEN y Senamhi (Claude Code, Claude Opus 5.5)
+**Propósito:** definir, validar con peticiones reales y construir el corpus oficial (comunicados del ENFEN y avisos del Senamhi en párrafos, con vigencia por fecha y macro-región).
+
+**Prompts (resumen fiel, en orden):**
+1. Leer README, CLAUDE.md, docs de recolección y `diario.py`; definir alcance, fuente del texto, campos, párrafos, vigencia, esquema, actualización, errores, criterios de las dos pruebas de viabilidad y ubicación del código, validando con todos los documentos reales; escribir solo tras aprobar.
+2. ¿Está todo validado y conforme? Para dejarlo definido de una vez.
+3. ¿Seguro que no hay forma de validar lo pendiente? Debe haberla.
+4. En resumen, ¿está todo conforme o falta algo?
+5. ¿Se aplicaron medidas de seguridad, respaldos y buenas prácticas? Evaluar las decisiones abiertas e indicar cuáles quedan.
+6. Aprobar la definición (incluida la excepción para versionar `data/oficial/`).
+7. ¿Cómo va?
+8. ¿El análisis del "no pasa" es conforme o falta algo? ¿Cuáles son las opciones? ¿Estás conforme con la evaluación?
+9. Verificar los 2 desacuerdos sin explicar; aprobar la opción A (polígono como método principal, prueba declarada como no pasa).
+
+**Resultado:** la IA descargó los 20 comunicados (más 3 de 2025 con slug de extraordinario) y 198 avisos, y validó contra referencias externas: página de descarga, cadena de "próximo comunicado", tablas de probabilidad, segundo extractor de PDF, tabla de avisos, polígonos oficiales del WFS del Senamhi, párrafos diarios, copias de Wayback y el texto consolidado del D. Leg. 822 en WIPO Lex. Encontró que la fecha real es la del PDF (no el `lastmod`), que del 1 al 14-ene rige el N.° 13-2025, que dos slugs de "extraordinario" son comunicados oficiales y que el título del aviso no basta para la macro-región; corrigió sus propias reglas varias veces (notas al pie, magnitud, "costa norte y centro"). Se escribió `src/oficial/` con pruebas en `tests/`, el corpus en `data/oficial/` (19 comunicados, 125 avisos, 834 párrafos) y la documentación en `docs/oficial/`. Prueba del ENFEN: pasa. Prueba del Senamhi: no pasa en 2 de 8 criterios (acuerdo polígono/regla 94,8 % y 94,5 %, umbral 95 %); con árbitros independientes (texto diario y nivel 1 del polígono) se explicaron los 35 desacuerdos y se decidió mantener el polígono, declarándolo.

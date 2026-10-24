@@ -59,7 +59,7 @@ Una herramienta que compara lo que circula sobre el Fenómeno El Niño Costero (
 ## Pipeline
 | # | Etapa | Detalle |
 |---|-------|---------|
-| 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (página HTML y PDF de cada uno) y avisos meteorológicos del Senamhi (tipo, nivel, macro-región, vigencia), filtrados según "Alcance de datos". **Noticias:** 4 medios (ver "Alcance de datos"), descubriendo las notas según "Cobertura histórica de noticias" y leyendo el HTML de cada nota. El cuerpo se procesa en memoria y no se guarda: solo se conservan titular, resumen, `datePublished`, sección, hipervínculos, citas a fuentes oficiales, magnitudes, resultados de NLI y vectores. Se recolecta además una muestra de notas de otros temas de los mismos medios, solo para el control negativo. **YouTube (API oficial):** título, descripción (incluidos sus enlaces), canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés semanal por departamento, exportado manualmente en CSV en una sola consulta por departamento para que las semanas sean comparables. Respeta `robots.txt` y limita la tasa de peticiones. |
+| 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (texto del PDF; la página HTML como control) y avisos meteorológicos del Senamhi (tipo, nivel, macro-región por el polígono oficial del aviso, vigencia), partidos en párrafos; ver "Corpus oficial". **Noticias:** 4 medios (ver "Alcance de datos"), descubriendo las notas según "Cobertura histórica de noticias" y leyendo el HTML de cada nota. El cuerpo se procesa en memoria y no se guarda: solo se conservan titular, resumen, `datePublished`, sección, hipervínculos, citas a fuentes oficiales, magnitudes, resultados de NLI y vectores. Se recolecta además una muestra de notas de otros temas de los mismos medios, solo para el control negativo. **YouTube (API oficial):** título, descripción (incluidos sus enlaces), canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés semanal por departamento, exportado manualmente en CSV en una sola consulta por departamento para que las semanas sean comparables. Respeta `robots.txt` y limita la tasa de peticiones. |
 | 2 | Preprocesamiento | Limpieza, tokenización, stopwords, lematización en español (spaCy / NLTK). Asignación de macro-región (ver "Alcance de datos"). |
 | 3 | Representación | TF-IDF (línea base) contra embeddings multilingües livianos (MiniLM / e5-small) con similitud coseno. |
 | 4 | Tópicos | LDA contra BERTopic, ajustados sobre todo el corpus y luego agregados por mes y macro-región (ajustar por cada grupo dejaría grupos casi vacíos); sentimiento por tópico. Los tópicos se nombran con sus palabras clave (c-TF-IDF), sin LLM. |
@@ -141,6 +141,12 @@ Se ignora el encabezado de lugar de las notas ("LIMA (ANDINA)") y se excluyen pr
 
 **Avisos del Senamhi.** Entran solo precipitaciones e incremento de temperatura en costa norte y costa centro; quedan fuera friaje, nevadas, selva y sierra sur. Se presentan como "aviso vigente en tu zona", **nunca como causados por El Niño**.
 
+**Corpus oficial.** `python src/oficial/corpus.py` arma `data/oficial/` (se versiona, ~0,5 MB; la app lo necesita para ChromaDB): 19 comunicados (N.° 13-2025, vigente del 1 al 14-ene, y N.° 01 a 18 de 2026), 125 avisos y 834 párrafos con id estable.
+- **ENFEN:** el PDF manda sobre la página HTML; número, fecha de emisión (la del PDF, no el `lastmod`), estado, magnitud prevista y mencionadas para la costa (Niño 1+2), plazo y tablas de probabilidad. Sin informes técnicos ni notas técnicas.
+- **Senamhi:** precipitaciones e incremento de temperatura (sin llovizna); macro-región y nivel según el polígono oficial del aviso sobre 21 estaciones costeras de referencia (supuesto declarado), con la regla de título y departamentos como respaldo.
+- **Vigencia:** un comunicado rige desde su emisión hasta el día anterior al siguiente (el día de cambio se compara con ambos); un aviso aplica desde su emisión hasta su fin, salvo cancelados. Se consulta con `oficial.vigencia.Corpus` (`estado_vigente`, `avisos_aplicables`, `parrafos_vigentes`).
+- Se vuelve a correr sin duplicar: solo descarga lo nuevo o cambiado y no empeora el corpus si una fuente falla. Definición: [docs/oficial/definicion.md](docs/oficial/definicion.md); mediciones: [docs/oficial/validacion-2026-10-24.md](docs/oficial/validacion-2026-10-24.md).
+
 **Actores (red de co-mención).**
 - ENFEN: IMARPE (preside), SENAMHI, DHN, IGP, ANA, INDECI y CENEPRED (según informe técnico del IMARPE).
 - Gestión del riesgo: PCM.
@@ -180,7 +186,7 @@ Verificado el 23-oct-2026: Senamhi, Indeci, ENFEN, IGP, RPP, Andina, La Repúbli
 - En la app, solo lo necesario para textos nuevos (semáforo y agente): el modelo de embeddings (~470 MB) y el de NLI (~560 MB), más el índice de ChromaDB de los textos oficiales, que se reconstruye al iniciar.
 - El registro de uso va a un almacenamiento externo: el sistema de archivos de Community Cloud se borra en cada reinicio.
 - La app no usa la clave de YouTube: un video nuevo se analiza pegando su título y descripción. La clave del LLM va en los *secrets* de la plataforma, con un límite diario de consultas.
-- **Derecho de autor:** de las notas solo se muestra titular, medio, fecha, enlace y nuestras métricas; ningún fragmento del cuerpo (ver "Alcance de datos"). Los comunicados y avisos son textos oficiales (D. Leg. 822, art. 9.b) y se pueden mostrar completos citando la fuente.
+- **Derecho de autor:** de las notas solo se muestra titular, medio, fecha, enlace y nuestras métricas; ningún fragmento del cuerpo (ver "Alcance de datos"). Los comunicados y avisos son textos oficiales (D. Leg. 822, art. 9.b, verificado en el texto consolidado de WIPO Lex) y se pueden mostrar completos, sin alterarlos y citando la fuente.
 - Ritmo bajo de peticiones a los medios, para no caer en el "consumo masivo de recursos" que prohíben sus términos.
 - **Comentarios de YouTube:** la app nunca muestra comentarios individuales, solo agregados (emociones, redes).
 
@@ -247,8 +253,8 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [ ] Contar comentarios de ~30 videos de YouTube sobre El Niño **con la API oficial**. Decide si la red social usa YouTube o el respaldo de co-mención.
 - [ ] Revisar en Google Trends si hay datos por departamento de la costa norte (en especial Tumbes) para "El Niño".
 - [x] Revisar términos de uso de los medios. *Todos prohíben reproducir sin autorización; Infobae prohíbe "tratar" el contenido → excluido. Ver "Alcance de datos".*
-- [ ] Descargar los comunicados ENFEN y probar la extracción de fecha, estado y magnitud con reglas.
-- [ ] Extraer avisos del Senamhi (fecha, tipo, nivel, macro-región) y aplicar el filtro.
+- [x] Descargar los comunicados ENFEN y probar la extracción de fecha, estado y magnitud con reglas. *Pasa (11/11): fecha, estado y magnitud coinciden con la página de descarga, el anuncio del comunicado anterior y las tablas de probabilidad.*
+- [x] Extraer avisos del Senamhi (fecha, tipo, nivel, macro-región) y aplicar el filtro. *No pasa en 2 de 8 criterios: polígono y regla coinciden en 94,8 % y 94,5 % (umbral 95 %). En los 35 desacuerdos falla la regla o es la ambigüedad de Ica, nunca el polígono: se mantiene el polígono y se declara.*
 - [ ] Probar pysentimiento (polaridad y emociones) sobre ~20 titulares.
 - [x] Revisar cuánto histórico cubren los sitemaps. *Andina, RPP y La República solo los últimos días; Exitosa completo; los de El Tiempo están congelados desde el 9-oct, pero su API REST es completa. Ver "Cobertura histórica".*
 - [x] Probar vías de histórico. *Andina por número de nota (completo), RPP por archivo (~83 %), La República sin vía → excluida, Exitosa como reemplazo.*
@@ -274,6 +280,8 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 | Tipo de canal | ≥ 70 % de los canales de la muestra se clasifican sin ambigüedad | Revisar las reglas de "Tipo de canal" |
 | Google Trends | ≥ 3 de los 4 departamentos de la costa norte con datos en ≥ 50 % de las semanas | Trends solo a nivel nacional |
 | pysentimiento | Emociones coherentes en la revisión cualitativa de ~20 titulares | Solo polaridad, aplicada al cuerpo de la nota |
+| Comunicados ENFEN | 100 % con fecha a ±1 día de la página de descarga, estado igual al HTML y magnitud extraída; magnitudes del HTML incluidas en las del PDF; acuerdo entre extractores de PDF ≥ 0,98 | Fecha o estado del HTML; magnitud solo de la frase "más probable" y la tabla |
+| Avisos Senamhi | 100 % de campos iguales a la tabla; polígono y regla coinciden en ≥ 95 % de los aviso-días; ningún aviso de sierra toca la costa | Macro-región solo por la regla; declararlo |
 | NLI | Detecta ≥ 15 de ~20 contradicciones sintéticas sin marcar las frases oficiales sin cambios | Discrepancia solo con distancia y regla de magnitud; declararlo |
 | Despliegue | La app mínima arranca en Streamlit Cloud con ambos modelos cargados | NLI solo offline; para textos nuevos la app usa distancia y regla de magnitud |
 
@@ -282,10 +290,10 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 ## Datos y fuentes
 - Comunicados oficiales: https://enfen.imarpe.gob.pe/comunicados/ (ENFEN: IMARPE, SENAMHI, DHN, IGP, ANA, INDECI y CENEPRED).
 - Avisos meteorológicos: https://www.senamhi.gob.pe/?p=aviso-meteorologico
-- Estado visto al 22-oct-2026: "Alerta de El Niño Costero", comunicados hasta N.° 18-2026. Confirmar en la fuente antes de citar.
+- Estado al 24-oct-2026: "Alerta de El Niño Costero", comunicado N.° 18-2026 (16-oct), con magnitud extraordinaria prevista para la costa hasta enero de 2027. Confirmar en la fuente antes de citar.
 - YouTube Data API v3 (página oficial de cuotas, 23-oct-2026): 10 000 unidades/día; `commentThreads.list`, `videos.list` y `channels.list` cuestan 1 unidad; `search.list` tiene un límite propio de 100 llamadas/día (hasta 50 resultados cada una).
 - Google Trends: `pytrends` está archivado (confirmado en GitHub) y el API oficial está en alfa cerrado; se usa la exportación CSV de la web. Cada consulta se normaliza a 0-100 por separado, por eso cada departamento se descarga en una sola consulta que cubra todo el período (datos semanales).
-- **No verificado aún:** cobertura del archivo de RPP fuera de la sección Perú, pérdida del filtro por título, volumen de noticias y de comentarios de YouTube, datos de Trends por departamento, calidad del NLI y de las emociones de pysentimiento, memoria disponible en Streamlit Community Cloud, texto oficial del D. Leg. 822 (se leyó una transcripción de terceros), norma de NIC.pe sobre `.gob.pe` y acceso al listado oficial de ubigeos del INEI. Cada punto tiene su prueba en "Pruebas de viabilidad".
+- **No verificado aún:** cobertura del archivo de RPP fuera de la sección Perú, pérdida del filtro por título, volumen de noticias y de comentarios de YouTube, datos de Trends por departamento, calidad del NLI y de las emociones de pysentimiento, memoria disponible en Streamlit Community Cloud, norma de NIC.pe sobre `.gob.pe` y acceso al listado oficial de ubigeos del INEI. Cada punto tiene su prueba en "Pruebas de viabilidad".
 
 ## Reglas por sitio (revisado del 22 al 24-oct-2026)
 | Sitio | Regla |
@@ -313,6 +321,7 @@ Las definiciones de este README son la mejor alternativa evaluada al 24-oct-2026
 ## Estructura del repo
 ```
 data/urls/       direcciones de notas por ejecución diaria y registro de sitemaps (SÍ se versiona; sin títulos ni texto)
+data/oficial/    corpus oficial: comunicados, avisos, días por macro-región y párrafos (SÍ se versiona; textos oficiales)
 data/raw/        comunicados (PDF/HTML), avisos, respuestas de la API de YouTube, CSV de Trends (no se versiona; nunca el cuerpo de las notas)
 data/processed/  párrafos oficiales, titulares y resúmenes, enlaces, citas, vectores, resultados de NLI y agregados (no se versiona)
 notebooks/       exploración y análisis
@@ -320,4 +329,6 @@ src/             crawler, recolector YouTube, redes, recuperación, sentimiento,
 results/         figuras y métricas
 docs/            bibliografía, notas y registro de prompts
 docs/recoleccion/ definición de la recolección y validaciones de las fuentes
+docs/oficial/    definición y validación del corpus oficial
+tests/           pruebas de las reglas (python -m pytest tests/)
 ```
