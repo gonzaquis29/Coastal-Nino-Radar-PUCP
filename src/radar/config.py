@@ -12,10 +12,26 @@ DIR_RAW = DIR_DATOS / "raw"
 DIR_RAW_OFICIAL = DIR_RAW / "oficial"
 DIR_OFICIAL = DIR_DATOS / "oficial"
 DIR_REGISTROS = DIR_DATOS / "registros"
+DIR_RAW_NOTICIAS = DIR_RAW / "noticias"  # listas descubiertas y estado; nunca el cuerpo de las notas
+DIR_NOTICIAS = DIR_DATOS / "processed" / "noticias"
 
 # ---------------------------------------------------------------- fechas del proyecto (README, "Ventana de datos")
 LIMA = dt.timezone(dt.timedelta(hours=-5))  # el Perú no tiene horario de verano
 INICIO = dt.date(2026, 1, 1)
+FIN_HISTORICO = dt.date(2026, 10, 24)  # primera recolección diaria: desde aquí las notas vienen de data/urls/
+
+# ---------------------------------------------------------------- medios (definición en docs/noticias/definicion.md)
+HOSTS_MEDIOS = {
+    "andina": "andina.pe",
+    "rpp": "rpp.pe",
+    "exitosa": "www.exitosanoticias.pe",
+    "eltiempo": "eltiempo.pe",
+}
+ANDINA_PRIMER_ID = 1057700  # el primer número con datePublished de 2026 es ≈ 1057710 (validado el 24-oct-2026)
+# Qué notas se descargan además de las que pasan el filtro por título: "titulo" (ninguna más), "secciones"
+# (todas las de secciones no excluidas en config/secciones_excluidas.csv) o "todo". Lo decide la prueba del filtro.
+CANDIDATAS = {"andina": "todo", "rpp": "secciones", "exitosa": "secciones", "eltiempo": "todo"}
+SEMILLA_MUESTRAS = 656
 
 # ---------------------------------------------------------------- fuentes oficiales (recolector y corpus)
 HOST_ENFEN = "enfen.imarpe.gob.pe"
@@ -46,3 +62,6 @@ PERSONAS = ("gonzalo", "joseph")
 # ---------------------------------------------------------------- referencias editables (config/*.csv)
 ARCHIVO_REGIONES = DIR_CONFIG / "regiones.csv"
 ARCHIVO_ESTACIONES = DIR_CONFIG / "estaciones_costa.csv"
+ARCHIVO_TERMINOS = DIR_CONFIG / "terminos_titulo.csv"
+ARCHIVO_SECCIONES_EXCLUIDAS = DIR_CONFIG / "secciones_excluidas.csv"
+ARCHIVO_ACTORES = DIR_CONFIG / "actores.csv"

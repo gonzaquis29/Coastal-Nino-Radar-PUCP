@@ -1,0 +1,10 @@
+actor,patron
+ENFEN,\bENFEN\b|\bEnfen\b|Estudio Nacional del Fenómeno El Niño
+SENAMHI,\bSENAMHI\b|\bSenamhi\b
+INDECI,\bINDECI\b|\bIndeci\b|Instituto Nacional de Defensa Civil
+IMARPE,\bIMARPE\b|\bImarpe\b|Instituto del Mar del Perú
+DHN,\bDHN\b|Dirección de Hidrografía y Navegación
+IGP,\bIGP\b|Instituto Geofísico del Perú
+ANA,\bANA\b|Autoridad Nacional del Agua
+CENEPRED,\bCENEPRED\b|\bCenepred\b
+PCM,\bPCM\b|Presidencia del Consejo de Ministros

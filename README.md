@@ -24,12 +24,14 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 |----------|---------|--------|
 | Recolección diaria de notas | `python -m radar.recoleccion.diario --persona <nombre> --publicar` | 1 vez al día, máximo 48 h entre ejecuciones |
 | Corpus oficial (ENFEN y Senamhi) | `python -m radar.oficial.corpus` | tras un "Nuevo documento del ENFEN" y antes del corte |
+| Histórico y notas nuevas de los 4 medios | `python -m radar.noticias.historico --horas 7` | de noche hasta completar el histórico; luego tras la recolección diaria y antes del corte (se reanuda solo) |
+| Pruebas de viabilidad de noticias | `python -m radar.noticias.viabilidad filtro\|rpp\|resultados` | `filtro` antes del histórico; `rpp` y `resultados` al terminarlo |
 | Pruebas | `python -m pytest` | antes de cada commit |
 | Estilo | `ruff format src tests` y `ruff check src tests` | antes de cada commit |
 
 - **Se versiona:** el código (`src/radar/`), la configuración (`src/radar/config.py` y `config/*.csv`), `data/urls/`, `data/oficial/` y `docs/`.
-- **Se genera al ejecutar (no se versiona):** `data/raw/` (descargas) y `data/registros/` (registro detallado de cada ejecución, con los errores).
-- **Para cambiar** fechas del proyecto, user-agent, ritmo de peticiones, reintentos o rutas: `src/radar/config.py`. Regiones o estaciones de referencia: `config/*.csv`. No hace falta tocar otro código.
+- **Se genera al ejecutar (no se versiona):** `data/raw/` (descargas y listas de notas, nunca su cuerpo), `data/processed/` (notas leídas: titular, resumen y rasgos) y `data/registros/` (registro detallado de cada ejecución, con los errores).
+- **Para cambiar** fechas del proyecto, user-agent, ritmo de peticiones, reintentos, rutas o qué notas se descargan: `src/radar/config.py`. Regiones, estaciones, términos del filtro, secciones excluidas o actores: `config/*.csv`. No hace falta tocar otro código.
 - Dependencias en `pyproject.toml` (fuente única). La app de Streamlit tendrá su propio `requirements.txt` en su carpeta, que Community Cloud lee primero.
 
 ## Preguntas que responde
@@ -82,7 +84,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 ## Pipeline
 | # | Etapa | Detalle |
 |---|-------|---------|
-| 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (texto del PDF; la página HTML como control) y avisos meteorológicos del Senamhi (tipo, nivel, macro-región por el polígono oficial del aviso, vigencia), partidos en párrafos; ver "Corpus oficial". **Noticias:** 4 medios (ver "Alcance de datos"), descubriendo las notas según "Cobertura histórica de noticias" y leyendo el HTML de cada nota. El cuerpo se procesa en memoria y no se guarda: solo se conservan titular, resumen, `datePublished`, sección, hipervínculos, citas a fuentes oficiales, magnitudes, resultados de NLI y vectores. Se recolecta además una muestra de notas de otros temas de los mismos medios, solo para el control negativo. **YouTube (API oficial):** título, descripción (incluidos sus enlaces), canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés semanal por departamento, exportado manualmente en CSV en una sola consulta por departamento para que las semanas sean comparables. Respeta `robots.txt` y limita la tasa de peticiones. |
+| 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (texto del PDF; la página HTML como control) y avisos meteorológicos del Senamhi (tipo, nivel, macro-región por el polígono oficial del aviso, vigencia), partidos en párrafos; ver "Corpus oficial". **Noticias:** 4 medios (ver "Alcance de datos"), descubriendo las notas según "Cobertura histórica" y leyendo el HTML de cada nota (El Tiempo, por su API). El cuerpo se procesa en memoria y no se guarda: solo se conservan titular, resumen, `datePublished`, sección, hipervínculos, citas a fuentes oficiales, comunicados citados, magnitudes, resultados de NLI y vectores; la etapa de NLP vuelve a leer los cuerpos. Definición: [docs/noticias/definicion.md](docs/noticias/definicion.md). Se recolecta además una muestra de notas de otros temas de los mismos medios, solo para el control negativo. **YouTube (API oficial):** título, descripción (incluidos sus enlaces), canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés semanal por departamento, exportado manualmente en CSV en una sola consulta por departamento para que las semanas sean comparables. Respeta `robots.txt` y limita la tasa de peticiones. |
 | 2 | Preprocesamiento | Limpieza, tokenización, stopwords, lematización en español (spaCy / NLTK). Asignación de macro-región (ver "Alcance de datos"). |
 | 3 | Representación | TF-IDF (línea base) contra embeddings multilingües livianos (MiniLM / e5-small) con similitud coseno. |
 | 4 | Tópicos | LDA contra BERTopic, ajustados sobre todo el corpus y luego agregados por mes y macro-región (ajustar por cada grupo dejaría grupos casi vacíos); sentimiento por tópico. Los tópicos se nombran con sus palabras clave (c-TF-IDF), sin LLM. |
@@ -124,21 +126,19 @@ Consecuencias de las fechas:
 |--------|----------------------------|----------------|------------|
 | ENFEN | Sitemap de entradas y de archivos PDF | Revisión diaria | El sitemap lista los comunicados desde el N.° 01 (15-ene) |
 | Senamhi | Lista de avisos del año y página de avisos anteriores | Revisión diaria | Páginas revisadas |
-| Andina | Número de nota: `noticia.aspx?id=N` redirige (301) a la dirección con el título; ~43 mil números para el período. El 301 también aparece en notas no publicadas, así que cada número se confirma con una segunda petición | Sitemaps diarios | El id 1054000 es de dic-2025; el 1099500 aún no existe |
-| RPP | Archivo por fecha `/archivo/<sección>/<AAAA-MM-DD>` (solo la primera página de cada día; RPP bloquea a Common Crawl) | Sitemaps diarios | **~83 %**: el archivo del 22-oct (sección Perú) tenía 19 de las 23 notas del sitemap |
-| Exitosa | Sitemaps mensuales (~2.000 notas por mes); el hueco del 31-may se recupera por número de nota | Sitemap de noticias | Sitemaps de enero a octubre de 2026 disponibles |
-| El Tiempo | API REST de WordPress (sus sitemaps están congelados desde el 9-oct) | API REST | 60.699 entradas |
+| Andina | Número de nota desde el 1.057.700: `noticia.aspx?id=N` redirige (301) a la dirección con el slug, **también en notas no publicadas**, que se descartan al leer la nota (segunda petición). ~40 mil números; las notas en inglés comparten numeración y se reconocen por el slug | Sitemaps diarios | 25 de 25 notas en inglés reconocidas |
+| RPP | Archivo `/archivo/<AAAA-MM-DD>` de todas las secciones, **con su paginación** (`page-1`, `page-2`… en JSON): ~12 peticiones por día, con titular y hora | Sitemaps diarios | **99,6 %** de 1.128 notas de 7 copias de 2026 de su sitemap de noticias en Wayback; las páginas "live" no están |
+| Exitosa | Sitemaps mensuales (~2.000 notas por mes); los 141 números que faltan (incluido el hueco del 31-may) se prueban con `/actualidad/x-nN` | Sitemap de noticias | 20.824 notas de enero a octubre |
+| El Tiempo | API REST de WordPress (sus sitemaps están congelados desde el 9-oct); el cuerpo viene en la API | API REST | 4.568 notas en 2026 |
 | YouTube | API con `publishedAfter` / `publishedBefore` | Descarga del corte | Documentación oficial |
 | Google Trends | Una exportación por departamento que cubre todo el período | Se vuelve a exportar en el corte | — |
 
 **Cómo se acota el volumen hacia atrás:**
-1. Se filtra primero **por título**, sin descargar el cuerpo (el título está en la dirección de Andina, en el archivo de RPP y en los sitemaps de Exitosa y El Tiempo), con una lista amplia de términos: El Niño, Niño costero, ENFEN, Senamhi, Indeci, lluvias, huaicos, calor, anchoveta, etc.
-2. Solo se descarga el cuerpo de las candidatas, se procesa en memoria y se descarta.
-3. A ritmo bajo y repartido en varias noches (por ejemplo, ~86 mil peticiones de Andina a 1 por segundo son ~24 horas).
+1. Se filtra primero **por título**, sin descargar el cuerpo (el slug de la dirección y, en RPP y El Tiempo, el título de la vía), con términos de `config/terminos_titulo.csv`: El Niño, ENFEN, Senamhi, Indeci, lluvias, huaicos, calor, anchoveta, etc.
+2. **El título solo no alcanza:** en la recolección diaria pierde 22,8 % de las notas que nombran El Niño en su resumen o primer párrafo (umbral 20 %; ver "Pruebas de viabilidad"). Por eso se descargan además todas las notas de secciones de noticias de RPP y Exitosa (sin deportes ni espectáculos) y todas las de Andina y El Tiempo: la pérdida estimada baja a 2,7 %.
+3. El cuerpo se procesa en memoria y se descarta. A 1 petición por segundo por medio, en paralelo: ~21 h, dominadas por Andina (~77 mil peticiones), repartidas en noches.
 
-Detalle de las mediciones en [docs/recoleccion/validacion-2026-10-24.md](docs/recoleccion/validacion-2026-10-24.md).
-
-El filtro por título pierde las notas que tratan El Niño sin nombrarlo en el título. Se mide con la recolección diaria, donde se tienen todas las notas, y se declara.
+Detalle de las mediciones en [docs/recoleccion/validacion-2026-10-24.md](docs/recoleccion/validacion-2026-10-24.md) y [docs/noticias/validacion-2026-10-24.md](docs/noticias/validacion-2026-10-24.md).
 
 **Recolección diaria.** `python -m radar.recoleccion.diario --persona <nombre> --publicar`, a mano, **una vez al día** y con **máximo 48 h entre ejecuciones** (la sección Perú de RPP llega a cubrir solo 3,4 días y el `sitemap-ultimo` de Andina, 2-3). Guarda solo dirección, número de nota, medio, fecha, sección y fecha de recolección, sin título ni texto, en un archivo por ejecución (`data/urls/AAAA-MM-DD_<persona>.csv`); no duplica notas y avisa si quedó un hueco. Definición y uso: [docs/recoleccion/diaria.md](docs/recoleccion/diaria.md).
 
@@ -281,10 +281,10 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [ ] Probar pysentimiento (polaridad y emociones) sobre ~20 titulares.
 - [x] Revisar cuánto histórico cubren los sitemaps. *Andina, RPP y La República solo los últimos días; Exitosa completo; los de El Tiempo están congelados desde el 9-oct, pero su API REST es completa. Ver "Cobertura histórica".*
 - [x] Probar vías de histórico. *Andina por número de nota (completo), RPP por archivo (~83 %), La República sin vía → excluida, Exitosa como reemplazo.*
-- [ ] Medir la cobertura del archivo de RPP en otras secciones y fechas (se midió solo Perú, 22-oct).
-- [ ] Medir cuántas notas sobre El Niño pierde el filtro por título, usando la recolección diaria.
-- [ ] Contar notas sobre El Niño por medio en el período.
-- [ ] Contar notas de Andina que enlazan al PDF de un comunicado (control positivo).
+- [ ] Medir la cobertura del archivo de RPP en otras secciones y fechas. *Preliminar: 99,6 % con su paginación, todas las secciones, frente a 7 copias de 2026 en Wayback; falta la prueba formal al terminar de descubrir RPP.*
+- [x] Medir cuántas notas sobre El Niño pierde el filtro por título, usando la recolección diaria. *No pasa: 22,8 % (IC95 13-32 %). Con las candidatas ampliadas (secciones de noticias de RPP y Exitosa, todo Andina y El Tiempo) pierde 2,7 % → se aplica. Ver [docs/noticias/validacion-2026-10-24.md](docs/noticias/validacion-2026-10-24.md).*
+- [ ] Contar notas sobre El Niño por medio en el período. *Histórico en curso.*
+- [ ] Contar notas de Andina que enlazan al PDF de un comunicado (control positivo). *Histórico en curso; Andina enlaza el PDF solo a veces (mayo), así que se cuentan también los respaldos: número citado, próximo comunicado anunciado e informe técnico.*
 - [ ] Probar el NLI con ~20 contradicciones sintéticas.
 - [ ] Desplegar en Streamlit Cloud una app mínima que cargue el modelo de embeddings y el de NLI.
 
@@ -316,7 +316,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 - Estado al 24-oct-2026: "Alerta de El Niño Costero", comunicado N.° 18-2026 (16-oct), con magnitud extraordinaria prevista para la costa hasta enero de 2027. Confirmar en la fuente antes de citar.
 - YouTube Data API v3 (página oficial de cuotas, 23-oct-2026): 10 000 unidades/día; `commentThreads.list`, `videos.list` y `channels.list` cuestan 1 unidad; `search.list` tiene un límite propio de 100 llamadas/día (hasta 50 resultados cada una).
 - Google Trends: `pytrends` está archivado (confirmado en GitHub) y el API oficial está en alfa cerrado; se usa la exportación CSV de la web. Cada consulta se normaliza a 0-100 por separado, por eso cada departamento se descarga en una sola consulta que cubra todo el período (datos semanales).
-- **No verificado aún:** cobertura del archivo de RPP fuera de la sección Perú, pérdida del filtro por título, volumen de noticias y de comentarios de YouTube, datos de Trends por departamento, calidad del NLI y de las emociones de pysentimiento, memoria disponible en Streamlit Community Cloud, norma de NIC.pe sobre `.gob.pe` y acceso al listado oficial de ubigeos del INEI. Cada punto tiene su prueba en "Pruebas de viabilidad".
+- **No verificado aún:** volumen de noticias y control positivo (se miden al terminar el histórico), volumen de comentarios de YouTube, datos de Trends por departamento, calidad del NLI y de las emociones de pysentimiento, memoria disponible en Streamlit Community Cloud, norma de NIC.pe sobre `.gob.pe` y acceso al listado oficial de ubigeos del INEI. Cada punto tiene su prueba en "Pruebas de viabilidad".
 
 ## Reglas por sitio (revisado del 22 al 24-oct-2026)
 | Sitio | Regla |
@@ -354,11 +354,14 @@ src/radar/       paquete del proyecto (pip install -e ".[dev]")
   comun/         compartido: http (robots.txt, reintentos, hosts caídos), archivos, xml, texto, regiones, geo, registro
   recoleccion/   recolector diario (diario) y lectura de data/urls/ (urls)
   oficial/       corpus oficial: enfen, enfen_pdf, senamhi, senamhi_paginas, vigencia, validar, corpus (línea de comandos)
-                 (después: noticias/, youtube/, nlp/, modelos/, app/)
-tests/           pruebas por paquete: comun/, recoleccion/, oficial/
+  noticias/      notas de los 4 medios: medios (vías y descarga), nota (lectura en memoria), filtro, rasgos, esquemas,
+                 historico y viabilidad (líneas de comando)
+                 (después: youtube/, nlp/, modelos/, app/)
+tests/           pruebas por paquete: comun/, recoleccion/, oficial/, noticias/ (HTML sintético, nunca notas reales)
 notebooks/       exploración y análisis
 results/         figuras y métricas
 docs/            bibliografía, notas y registro de prompts
 docs/recoleccion/ definición de la recolección y validaciones de las fuentes
 docs/oficial/    definición y validación del corpus oficial
+docs/noticias/   definición del histórico de noticias y validación de sus pruebas de viabilidad
 ```
