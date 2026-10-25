@@ -243,10 +243,15 @@ def _copias_wayback(cliente):
     return [fila[1] for fila in r.json()[1:]]
 
 
-def _referencias_wayback(cliente):
+def _referencias_wayback(cliente, alertas):
+    """Notas de las copias de 2026 del sitemap de noticias de RPP; una copia que falla se salta y se avisa."""
     refs = {}
     for copia in _copias_wayback(cliente):
-        raiz = leer_xml(cliente.get(f"https://{HOST_WAYBACK}/web/{copia}id_/https://rpp.pe/sitemap/news").content)
+        try:
+            raiz = leer_xml(cliente.get(f"https://{HOST_WAYBACK}/web/{copia}id_/https://rpp.pe/sitemap/news").content)
+        except Exception as e:
+            alertas.append(f"copia {copia} de Wayback no leída: {describir(e)}")
+            continue
         for u in raiz.findall("s:url", NS_SITEMAP):
             url = (u.findtext("s:loc", namespaces=NS_SITEMAP) or "").strip()
             fecha = a_lima((u.findtext("n:news/n:publication_date", namespaces=NS_SITEMAP) or "").strip())
@@ -264,21 +269,33 @@ def _referencias_diarias():
 
 
 def prueba_rpp(parar):
+    """El archivo de cada día se vuelve a leer aquí: la lista guarda una fila por nota, así que una nota que llegó
+    antes por la recolección diaria no queda registrada como vista en el archivo."""
     rpp = Rpp(Cliente(hosts_permitidos={config.HOSTS_MEDIOS["rpp"]}), parar)
-    por_dia = collections.defaultdict(set)
-    for f in rpp.lista.values():
-        if f["via"].startswith("archivo:"):
-            por_dia[f["via"].split(":", 1)[1]].add(f["id"])
+    por_dia = {}
+
+    def ids_del_dia(dia):
+        if dia not in por_dia:
+            try:
+                por_dia[dia] = {f["id"] for f in rpp.archivo(dia)}
+            except DETENER:
+                raise
+            except Exception as e:
+                log.debug("rpp archivo %s: %s", dia, describir(e))
+                por_dia[dia] = None
+        return por_dia[dia]
 
     def en_archivo(ident, fecha):
         dia = dt.date.fromisoformat(fecha[:10])
-        cercanos = [(dia + dt.timedelta(days=d)).isoformat() for d in (0, -1, 1)]
-        if not all(c in por_dia for c in cercanos if c <= config.FIN_HISTORICO.isoformat()):
-            return None  # día aún no descubierto
-        return any(ident in por_dia[c] for c in cercanos)
+        cercanos = [dia + dt.timedelta(days=d) for d in (0, -1, 1)]
+        conjuntos = [ids_del_dia(c) for c in cercanos if config.INICIO <= c <= config.FIN_HISTORICO]
+        if not conjuntos or None in conjuntos:
+            return None  # fuera del histórico o el archivo no respondió
+        return any(ident in c for c in conjuntos)
 
+    alertas = []
     referencias = {
-        "Wayback (sitemap de noticias)": _referencias_wayback(Cliente()),
+        "Wayback (sitemap de noticias)": _referencias_wayback(Cliente(), alertas),
         "recolección diaria": _referencias_diarias(),
     }
     filas = []
@@ -320,11 +337,11 @@ def prueba_rpp(parar):
                 round(valor, 4),
                 f"≥ {COBERTURA_RPP_MINIMA}",
                 valor >= COBERTURA_RPP_MINIMA and conteo["total"] > 0,
-                f"{conteo['en_archivo']}/{conteo['total']}; live aparte: {vivas}; sin día descubierto: "
+                f"{conteo['en_archivo']}/{conteo['total']}; live aparte: {vivas}; sin archivo: "
                 f"{conteo['sin_dia']}; {secciones}",
             )
         )
-    return filas, []
+    return filas, alertas
 
 
 # ---------------------------------------------------------------- resultados del histórico

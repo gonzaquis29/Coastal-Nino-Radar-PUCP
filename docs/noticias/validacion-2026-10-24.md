@@ -36,8 +36,15 @@ Recolección diaria (`data/urls/2026-10-24_joseph.csv`, temporada alta): se leye
 - **La referencia frente a las etiquetas de RPP: NO PASA (0,867 < 0,90).** Reconoce 39 de 45 notas que RPP etiqueta El Niño (se excluyó una etiqueta "Instituto Nacional de Salud del Niño"). Las 6 que no reconoce son notas de lluvias en Piura y Lima que RPP agrupa bajo "Fenómeno El Niño" aunque su inicio solo habla de lluvias: la referencia es más estrecha que el criterio editorial. No cambia la decisión: esas notas tienen "lluvias" en el título y entran por el filtro; con cualquier referencia las candidatas ampliadas pierden ≤ 3 %. Se declara como limitación.
 - Sesgo declarado: es octubre, en plena alerta. La pérdida de enero a octubre se mide con la prueba "Filtro por título (histórico)" al terminar el histórico.
 
-## Prueba: cobertura del archivo de RPP — preliminar
-Medición del 24-oct con un script de exploración (la prueba formal, `viabilidad rpp`, corre al terminar de descubrir RPP): de 1.128 notas de 7 copias de 2026 de `/sitemap/news` en Wayback (sin las "live"), 1.123 están en el archivo de su `datePublished` (±1 día): **99,6 %**. Con la fecha del sitemap salía 93 %: RPP vuelve a publicar notas (la de déficit fiscal figura el 22 y el 24-ene; su `datePublished` es el 26-ene). Las 38 páginas "live" nunca están en el archivo. Con el sitemap de noticias de la recolección diaria del 23-oct: 121 de 122.
+## Prueba: cobertura del archivo de RPP (25-oct) — **PASA**
+`python -m radar.noticias.viabilidad rpp`, que vuelve a leer el archivo de los días de cada referencia (la lista guarda una fila por nota, así que una nota que llegó antes por la recolección diaria no queda marcada como vista en el archivo; la primera corrida dio 0 % por eso):
+
+| Referencia | En el archivo (±1 día de su `datePublished`) | Páginas "live" (aparte) |
+|------------|---------------------------------------------|-------------------------|
+| 7 copias de 2026 de `/sitemap/news` en Wayback | **1.123 de 1.128 (99,56 %)** | 38, ninguna en el archivo |
+| Sitemap de noticias de la recolección diaria (21-24 oct) | **192 de 193 (99,48 %)** | 4 |
+
+Todas las secciones están por encima del 95 % salvo las de pocas notas (apuestas deportivas 3/5, campañas 5/6). Con la fecha del sitemap en vez del `datePublished` salía 93 %: RPP vuelve a publicar notas (la de déficit fiscal figura el 22 y el 24-ene; su `datePublished` es el 26-ene). Wayback responde a veces 503: una copia que falla se salta y se avisa.
 
 ## Histórico (en curso desde el 24-oct 23:16)
 - El Tiempo: 4.568 de 4.568 notas leídas.

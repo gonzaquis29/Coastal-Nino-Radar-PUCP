@@ -281,7 +281,7 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [ ] Probar pysentimiento (polaridad y emociones) sobre ~20 titulares.
 - [x] Revisar cuánto histórico cubren los sitemaps. *Andina, RPP y La República solo los últimos días; Exitosa completo; los de El Tiempo están congelados desde el 9-oct, pero su API REST es completa. Ver "Cobertura histórica".*
 - [x] Probar vías de histórico. *Andina por número de nota (completo), RPP por archivo (~83 %), La República sin vía → excluida, Exitosa como reemplazo.*
-- [ ] Medir la cobertura del archivo de RPP en otras secciones y fechas. *Preliminar: 99,6 % con su paginación, todas las secciones, frente a 7 copias de 2026 en Wayback; falta la prueba formal al terminar de descubrir RPP.*
+- [x] Medir la cobertura del archivo de RPP en otras secciones y fechas. *Pasa: con su paginación y todas las secciones, 99,6 % de 1.128 notas de 7 copias de 2026 de su sitemap en Wayback y 99,5 % de 193 de la recolección diaria; las páginas "live" no están en el archivo.*
 - [x] Medir cuántas notas sobre El Niño pierde el filtro por título, usando la recolección diaria. *No pasa: 22,8 % (IC95 13-32 %). Con las candidatas ampliadas (secciones de noticias de RPP y Exitosa, todo Andina y El Tiempo) pierde 2,7 % → se aplica. Ver [docs/noticias/validacion-2026-10-24.md](docs/noticias/validacion-2026-10-24.md).*
 - [ ] Contar notas sobre El Niño por medio en el período. *Histórico en curso.*
 - [ ] Contar notas de Andina que enlazan al PDF de un comunicado (control positivo). *Histórico en curso; Andina enlaza el PDF solo a veces (mayo), así que se cuentan también los respaldos: número citado, próximo comunicado anunciado e informe técnico.*
