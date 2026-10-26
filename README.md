@@ -26,12 +26,14 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 | Corpus oficial (ENFEN y Senamhi) | `python -m radar.oficial.corpus` | tras un "Nuevo documento del ENFEN" y antes del corte |
 | Histórico y notas nuevas de los 4 medios | `python -m radar.noticias.historico --horas 7` | de noche hasta completar el histórico; luego tras la recolección diaria y antes del corte (se reanuda solo) |
 | Pruebas de viabilidad de noticias | `python -m radar.noticias.viabilidad filtro\|rpp\|resultados` | `filtro` antes del histórico; `rpp` y `resultados` al terminarlo |
+| Macro-región de las notas y su validación | `python -m radar.region.notas` | tras cada ejecución del histórico (sin peticiones a los medios) |
+| Lista de lugares (ubigeos del INEI) | `python -m radar.region.lugares` | una vez al terminar el histórico; luego se congela |
 | Pruebas | `python -m pytest` | antes de cada commit |
 | Estilo | `ruff format src tests` y `ruff check src tests` | antes de cada commit |
 
 - **Se versiona:** el código (`src/radar/`), la configuración (`src/radar/config.py` y `config/*.csv`), `data/urls/`, `data/oficial/` y `docs/`.
 - **Se genera al ejecutar (no se versiona):** `data/raw/` (descargas y listas de notas, nunca su cuerpo), `data/processed/` (notas leídas: titular, resumen y rasgos) y `data/registros/` (registro detallado de cada ejecución, con los errores).
-- **Para cambiar** fechas del proyecto, user-agent, ritmo de peticiones, reintentos, rutas o qué notas se descargan: `src/radar/config.py`. Regiones, estaciones, términos del filtro, secciones excluidas o actores: `config/*.csv`. No hace falta tocar otro código.
+- **Para cambiar** fechas del proyecto, user-agent, ritmo de peticiones, reintentos, rutas o qué notas se descargan: `src/radar/config.py`. Regiones, lugares, estaciones, términos del filtro, secciones excluidas o actores: `config/*.csv`. No hace falta tocar otro código.
 - Dependencias en `pyproject.toml` (fuente única). La app de Streamlit tendrá su propio `requirements.txt` en su carpeta, que Community Cloud lee primero.
 
 ## Preguntas que responde
@@ -153,14 +155,14 @@ Todos los términos de uso prohíben reproducir el contenido sin autorización (
 
 **Videos de YouTube.** `search.list` con 5 términos ("fenómeno El Niño", "Niño costero", "ENFEN", "El Niño Perú", "lluvias costa norte"), `regionCode=PE`, idioma español, mes a mes, orden por fecha y por relevancia, solo la primera página de cada búsqueda (hasta 50 videos): 5 términos × 11 meses × 2 órdenes = 110 búsquedas, repartidas en 2 días por el límite de 100 diarias. Se conserva un video solo si su título o descripción menciona El Niño y además menciona Perú o una región peruana, o su canal es de Perú.
 
-**Región.** Lista de lugares con los 25 departamentos y las provincias de los departamentos costeros (ubigeos del INEI), agrupados en macro-regiones según el uso del Senamhi:
+**Región.** Lista de lugares con los ubigeos del INEI (`config/lugares.csv`: 25 departamentos, las provincias de los departamentos con litoral y los distritos de costa norte, costa centro y Lima), agrupados en macro-regiones según el uso del Senamhi:
 - Costa norte: Tumbes, Piura, Lambayeque, La Libertad.
 - Costa centro: Áncash, Ica.
 - Lima: aparte en el análisis (los boletines la tratan de forma inconsistente y dominaría por volumen); para avisos y recomendaciones usa los de costa centro.
 - Otros departamentos (costa sur, sierra, selva): "otras regiones".
 - Sin mención de lugar: "nacional".
 
-Se ignora el encabezado de lugar de las notas ("LIMA (ANDINA)") y se excluyen provincias con nombres ambiguos (p. ej. "Santa"). No hay una definición oficial publicada de estas macro-regiones: la agrupación es un supuesto declarado.
+Cada nombre se usa o se excluye **por medición** contra referencias externas (sección regional de RPP, sección local de El Tiempo), no a ojo: así salen "Santa" o "Castilla" y solo entran los distritos medidos (Comas, Chimbote, Máncora…). Las menciones pesan más en el titular, el resumen y el inicio del cuerpo; una nota puede tener varias macro-regiones y sin ninguna es "nacional". El encabezado "LIMA (ANDINA)" no aparece en las notas de 2026 revisadas. Validado con titular y resumen el 25-oct-2026: costa norte 96 %, costa centro 90 %, sección Lima 65 %, notas nacionales 87 % "nacional". Definición: [docs/region/definicion.md](docs/region/definicion.md); mediciones: [docs/region/validacion-2026-10-25.md](docs/region/validacion-2026-10-25.md). No hay una definición oficial publicada de estas macro-regiones: la agrupación es un supuesto declarado.
 
 **Avisos del Senamhi.** Entran solo precipitaciones e incremento de temperatura en costa norte y costa centro; quedan fuera friaje, nevadas, selva y sierra sur. Se presentan como "aviso vigente en tu zona", **nunca como causados por El Niño**.
 
@@ -283,6 +285,7 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [x] Probar vías de histórico. *Andina por número de nota (completo), RPP por archivo (~83 %), La República sin vía → excluida, Exitosa como reemplazo.*
 - [x] Medir la cobertura del archivo de RPP en otras secciones y fechas. *Pasa: con su paginación y todas las secciones, 99,6 % de 1.128 notas de 7 copias de 2026 de su sitemap en Wayback y 99,5 % de 193 de la recolección diaria; las páginas "live" no están en el archivo.*
 - [x] Medir cuántas notas sobre El Niño pierde el filtro por título, usando la recolección diaria. *No pasa: 22,8 % (IC95 13-32 %). Con las candidatas ampliadas (secciones de noticias de RPP y Exitosa, todo Andina y El Tiempo) pierde 2,7 % → se aplica. Ver [docs/noticias/validacion-2026-10-24.md](docs/noticias/validacion-2026-10-24.md).*
+- [x] Asignar macro-región sin etiquetado manual. *Pasa (7 de 7 pruebas): ubigeos del WFS del INEI y nombres decididos por medición; con titular y resumen, costa norte 96 % y costa centro 90 % frente a la sección regional de RPP. Ver [docs/region/validacion-2026-10-25.md](docs/region/validacion-2026-10-25.md).*
 - [ ] Contar notas sobre El Niño por medio en el período. *Histórico en curso.*
 - [ ] Contar notas de Andina que enlazan al PDF de un comunicado (control positivo). *Histórico en curso; Andina enlaza el PDF solo a veces (mayo), así que se cuentan también los respaldos: número citado, próximo comunicado anunciado e informe técnico.*
 - [ ] Probar el NLI con ~20 contradicciones sintéticas.
@@ -306,6 +309,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 | Comunicados ENFEN | 100 % con fecha a ±1 día de la página de descarga, estado igual al HTML y magnitud extraída; magnitudes del HTML incluidas en las del PDF; acuerdo entre extractores de PDF ≥ 0,98 | Fecha o estado del HTML; magnitud solo de la frase "más probable" y la tabla |
 | Avisos Senamhi | 100 % de campos iguales a la tabla; polígono y regla coinciden en ≥ 95 % de los aviso-días; ningún aviso de sierra toca la costa | Macro-región solo por la regla; declararlo |
 | NLI | Detecta ≥ 15 de ~20 contradicciones sintéticas sin marcar las frases oficiales sin cambios | Discrepancia solo con distancia y regla de magnitud; declararlo |
+| Asignación de macro-región | Con titular y resumen, frente a la sección regional de RPP: acierto ≥ 85 % y error ≤ 5 % (detalle en docs/region/definicion.md) | Revisar los nombres que causan los errores; Lima con cobertura parcial, declarada |
 | Despliegue | La app mínima arranca en Streamlit Cloud con ambos modelos cargados | NLI solo offline; para textos nuevos la app usa distancia y regla de magnitud |
 
 **Plan B** (reseñas de servicios digitales en Google Play, con estrellas como etiqueta externa): solo si fallan a la vez la prueba de videos y el contraste medios–YouTube.
@@ -316,7 +320,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 - Estado al 24-oct-2026: "Alerta de El Niño Costero", comunicado N.° 18-2026 (16-oct), con magnitud extraordinaria prevista para la costa hasta enero de 2027. Confirmar en la fuente antes de citar.
 - YouTube Data API v3 (página oficial de cuotas, 23-oct-2026): 10 000 unidades/día; `commentThreads.list`, `videos.list` y `channels.list` cuestan 1 unidad; `search.list` tiene un límite propio de 100 llamadas/día (hasta 50 resultados cada una).
 - Google Trends: `pytrends` está archivado (confirmado en GitHub) y el API oficial está en alfa cerrado; se usa la exportación CSV de la web. Cada consulta se normaliza a 0-100 por separado, por eso cada departamento se descarga en una sola consulta que cubra todo el período (datos semanales).
-- **No verificado aún:** volumen de noticias y control positivo (se miden al terminar el histórico), volumen de comentarios de YouTube, datos de Trends por departamento, calidad del NLI y de las emociones de pysentimiento, memoria disponible en Streamlit Community Cloud, norma de NIC.pe sobre `.gob.pe` y acceso al listado oficial de ubigeos del INEI. Cada punto tiene su prueba en "Pruebas de viabilidad".
+- **No verificado aún:** volumen de noticias y control positivo (se miden al terminar el histórico), volumen de comentarios de YouTube, datos de Trends por departamento, calidad del NLI y de las emociones de pysentimiento, memoria disponible en Streamlit Community Cloud, y norma de NIC.pe sobre `.gob.pe`. Cada punto tiene su prueba en "Pruebas de viabilidad".
 
 ## Reglas por sitio (revisado del 22 al 24-oct-2026)
 | Sitio | Regla |
@@ -348,7 +352,7 @@ data/oficial/    corpus oficial: comunicados, avisos, días por macro-región y 
 data/raw/        comunicados (PDF/HTML), avisos, respuestas de la API de YouTube, CSV de Trends (no se versiona; nunca el cuerpo de las notas)
 data/processed/  párrafos oficiales, titulares y resúmenes, enlaces, citas, vectores, resultados de NLI y agregados (no se versiona)
 data/registros/  registro detallado de cada ejecución (no se versiona)
-config/          listas de referencia editables: regiones.csv, estaciones_costa.csv
+config/          listas de referencia editables: regiones.csv, lugares.csv, estaciones_costa.csv
 src/radar/       paquete del proyecto (pip install -e ".[dev]")
   config.py      único lugar de rutas, fechas del proyecto, user-agent, ritmo y reintentos
   comun/         compartido: http (robots.txt, reintentos, hosts caídos), archivos, xml, texto, regiones, geo, registro
@@ -356,12 +360,15 @@ src/radar/       paquete del proyecto (pip install -e ".[dev]")
   oficial/       corpus oficial: enfen, enfen_pdf, senamhi, senamhi_paginas, vigencia, validar, corpus (línea de comandos)
   noticias/      notas de los 4 medios: medios (vías y descarga), nota (lectura en memoria), filtro, rasgos, esquemas,
                  historico y viabilidad (líneas de comando)
+  region/        macro-región de notas y videos: lugares (ubigeos del INEI y decisión medida), asignacion, referencias,
+                 notas (línea de comandos)
                  (después: youtube/, nlp/, modelos/, app/)
-tests/           pruebas por paquete: comun/, recoleccion/, oficial/, noticias/ (HTML sintético, nunca notas reales)
+tests/           pruebas por paquete: comun/, recoleccion/, oficial/, noticias/, region/ (HTML sintético, nunca notas reales)
 notebooks/       exploración y análisis
 results/         figuras y métricas
 docs/            bibliografía, notas y registro de prompts
 docs/recoleccion/ definición de la recolección y validaciones de las fuentes
 docs/oficial/    definición y validación del corpus oficial
 docs/noticias/   definición del histórico de noticias y validación de sus pruebas de viabilidad
+docs/region/     definición y validación de la asignación de macro-región
 ```

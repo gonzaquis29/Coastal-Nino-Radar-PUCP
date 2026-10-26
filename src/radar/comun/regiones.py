@@ -54,16 +54,38 @@ def estaciones_costa():
     )
 
 
+@functools.cache
+def departamentos_litoral():
+    """Departamentos con litoral (columna litoral de config/regiones.csv)."""
+    return frozenset(d["departamento"] for d in departamentos() if d["litoral"] == "1")
+
+
+# Expresiones que nombran una macro-región sin nombrar un lugar. "Norte del país" y "costa sur" no aparecen en los
+# textos oficiales de 2026 con otro sentido; se usan para las notas (docs/region/definicion.md).
+EXPRESIONES_MACROREGION = (
+    (
+        re.compile(r"costa norte|norte del (?:mar|litoral|pais)|zona norte del (?:pais|mar)|norte peruano"),
+        {COSTA_NORTE},
+    ),
+    (re.compile(r"costa (?:centro|central)"), {COSTA_CENTRO}),
+    (re.compile(r"costa sur|sur del pais"), {OTRAS}),
+    (
+        re.compile(r"toda la costa|costa peruana|litoral peruano|a lo largo (?:de toda )?(?:la costa|del litoral)"),
+        {COSTA_NORTE, COSTA_CENTRO, LIMA_Y_CALLAO},
+    ),
+)
+
+
+def macroregiones_explicitas(texto):
+    """[(posición, {macro-regiones})] de las expresiones de macro-región del texto ('costa norte', 'toda la costa')."""
+    t = sin_tildes(texto or "").lower()
+    return sorted((m.start(), macros) for patron, macros in EXPRESIONES_MACROREGION for m in patron.finditer(t))
+
+
 def regiones_mencionadas(texto):
     """Macro-regiones que nombra un texto oficial (conjunto vacío = nacional)."""
     t = sin_tildes(texto).lower()
-    encontradas = set()
-    if re.search(r"costa norte|norte del (mar|litoral)|zona norte del (pais|mar)", t):
-        encontradas.add(COSTA_NORTE)
-    if re.search(r"costa (centro|central)", t):
-        encontradas.add(COSTA_CENTRO)
-    if re.search(r"toda la costa|costa peruana|litoral peruano|a lo largo (de toda )?(la costa|del litoral)", t):
-        encontradas |= {COSTA_NORTE, COSTA_CENTRO, LIMA_Y_CALLAO}
+    encontradas = set().union(*(macros for _, macros in macroregiones_explicitas(t))) - {OTRAS}
     for macro, deps in deps_por_macroregion().items():
         if macro == OTRAS:
             continue

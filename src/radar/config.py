@@ -14,6 +14,8 @@ DIR_OFICIAL = DIR_DATOS / "oficial"
 DIR_REGISTROS = DIR_DATOS / "registros"
 DIR_RAW_NOTICIAS = DIR_RAW / "noticias"  # listas descubiertas y estado; nunca el cuerpo de las notas
 DIR_NOTICIAS = DIR_DATOS / "processed" / "noticias"
+DIR_RAW_INEI = DIR_RAW / "inei"  # ubigeos descargados del INEI (la lista decidida queda en config/lugares.csv)
+DIR_REGION = DIR_DATOS / "processed" / "region"  # validación de la asignación de macro-región
 
 # ---------------------------------------------------------------- fechas del proyecto (README, "Ventana de datos")
 LIMA = dt.timezone(dt.timedelta(hours=-5))  # el Perú no tiene horario de verano
@@ -40,6 +42,9 @@ HOST_SENAMHI_GIS = "idesep.senamhi.gob.pe"
 URL_ENFEN = f"https://{HOST_ENFEN}"
 URL_SENAMHI = f"https://{HOST_SENAMHI}/"
 URL_AVISOS_SENAMHI = URL_SENAMHI + "?p=aviso-meteorologico"
+# Ubigeos: WFS de la IDE del INEI (capas de límites "actualizado al 2023"; validado el 25-oct-2026)
+HOST_INEI_GIS = "geoespacial.inei.gob.pe"
+URL_WFS_INEI = f"https://{HOST_INEI_GIS}/geoserver/Interoperabilidad/ows"
 
 # ---------------------------------------------------------------- red
 USER_AGENT = (
@@ -65,3 +70,4 @@ ARCHIVO_ESTACIONES = DIR_CONFIG / "estaciones_costa.csv"
 ARCHIVO_TERMINOS = DIR_CONFIG / "terminos_titulo.csv"
 ARCHIVO_SECCIONES_EXCLUIDAS = DIR_CONFIG / "secciones_excluidas.csv"
 ARCHIVO_ACTORES = DIR_CONFIG / "actores.csv"
+ARCHIVO_LUGARES = DIR_CONFIG / "lugares.csv"
