@@ -286,8 +286,8 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [x] Medir la cobertura del archivo de RPP en otras secciones y fechas. *Pasa: con su paginación y todas las secciones, 99,6 % de 1.128 notas de 7 copias de 2026 de su sitemap en Wayback y 99,5 % de 193 de la recolección diaria; las páginas "live" no están en el archivo.*
 - [x] Medir cuántas notas sobre El Niño pierde el filtro por título, usando la recolección diaria. *No pasa: 22,8 % (IC95 13-32 %). Con las candidatas ampliadas (secciones de noticias de RPP y Exitosa, todo Andina y El Tiempo) pierde 2,7 % → se aplica. Ver [docs/noticias/validacion-2026-10-24.md](docs/noticias/validacion-2026-10-24.md).*
 - [x] Asignar macro-región sin etiquetado manual. *Pasa (7 de 7 pruebas): ubigeos del WFS del INEI y nombres decididos por medición; con titular y resumen sobre el histórico completo, costa norte 96 % y costa centro 93 % frente a la sección regional de RPP. Ver [docs/region/validacion-2026-10-27.md](docs/region/validacion-2026-10-27.md).*
-- [ ] Contar notas sobre El Niño por medio en el período. *Histórico en curso.*
-- [ ] Contar notas de Andina que enlazan al PDF de un comunicado (control positivo). *Histórico en curso; Andina enlaza el PDF solo a veces (mayo), así que se cuentan también los respaldos: número citado, próximo comunicado anunciado e informe técnico.*
+- [x] Contar notas sobre El Niño por medio en el período. *Pasa: 2.236 notas del 1-ene al 24-oct (Andina 1.119, RPP 452, Exitosa 336, El Tiempo 329), concentradas de junio a octubre. El histórico quedó completo: 75.169 notas de los 4 medios, con calidad que pasa (0 duplicados, 99,3 % con el cuerpo bien extraído) y pérdida estimada del filtro de 0 % de enero a octubre (cota conservadora ≈ 11 %). Ver [docs/noticias/validacion-2026-10-24.md](docs/noticias/validacion-2026-10-24.md).*
+- [x] Contar notas de Andina que enlazan al PDF de un comunicado (control positivo). *No pasa: solo 5 notas enlazan el PDF (umbral 20). Con el respaldo del README (número del comunicado citado) son 31 notas sobre 14 comunicados distintos (el ENFEN emitió 18 en 2026) → se usa el respaldo; con las extensiones aprobadas (próximo comunicado, informe técnico), 41 notas sobre 17 comunicados.*
 - [ ] Probar el NLI con ~20 contradicciones sintéticas.
 - [ ] Desplegar en Streamlit Cloud una app mínima que cargue el modelo de embeddings y el de NLI.
 
@@ -296,7 +296,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 
 | Prueba | Pasa si… | Si no pasa |
 |--------|----------|------------|
-| Histórico de noticias | ≥ 3 de los 4 medios con notas recuperables de enero a octubre (validado: Andina, Exitosa y El Tiempo completos; RPP ~83 %) | Análisis histórico solo con los medios que lo permiten; los demás desde la recolección diaria; declararlo |
+| Histórico de noticias | ≥ 3 de los 4 medios con notas recuperables de enero a octubre (validado: los 4 medios; RPP 99,6 % con la paginación de su archivo) | Análisis histórico solo con los medios que lo permiten; los demás desde la recolección diaria; declararlo |
 | Filtro por título | Pierde ≤ 20 % de las notas sobre El Niño en la recolección diaria | Ampliar la lista de términos o descargar el cuerpo de más candidatas |
 | Volumen de noticias | ≥ 400 notas sobre El Niño en el período entre los 4 medios (heurística para tópicos estables) | Sumar secciones o ampliar términos; tópicos solo a nivel global |
 | Control positivo | ≥ 20 notas de Andina que enlazan al PDF de un comunicado | Sumar notas que citan el número del comunicado en el texto ("Comunicado Oficial N.° 12") |
@@ -320,7 +320,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 - Estado al 24-oct-2026: "Alerta de El Niño Costero", comunicado N.° 18-2026 (16-oct), con magnitud extraordinaria prevista para la costa hasta enero de 2027. Confirmar en la fuente antes de citar.
 - YouTube Data API v3 (página oficial de cuotas, 23-oct-2026): 10 000 unidades/día; `commentThreads.list`, `videos.list` y `channels.list` cuestan 1 unidad; `search.list` tiene un límite propio de 100 llamadas/día (hasta 50 resultados cada una).
 - Google Trends: `pytrends` está archivado (confirmado en GitHub) y el API oficial está en alfa cerrado; se usa la exportación CSV de la web. Cada consulta se normaliza a 0-100 por separado, por eso cada departamento se descarga en una sola consulta que cubra todo el período (datos semanales).
-- **No verificado aún:** volumen de noticias y control positivo (se miden al terminar el histórico), volumen de comentarios de YouTube, datos de Trends por departamento, calidad del NLI y de las emociones de pysentimiento, memoria disponible en Streamlit Community Cloud, y norma de NIC.pe sobre `.gob.pe`. Cada punto tiene su prueba en "Pruebas de viabilidad".
+- **No verificado aún:** volumen de comentarios de YouTube, datos de Trends por departamento, calidad del NLI y de las emociones de pysentimiento, memoria disponible en Streamlit Community Cloud, y norma de NIC.pe sobre `.gob.pe`. Cada punto tiene su prueba en "Pruebas de viabilidad".
 
 ## Reglas por sitio (revisado del 22 al 24-oct-2026)
 | Sitio | Regla |

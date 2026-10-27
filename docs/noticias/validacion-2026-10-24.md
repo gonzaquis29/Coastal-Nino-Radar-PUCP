@@ -1,4 +1,4 @@
-# Validación del histórico de noticias (24 y 25-oct-2026)
+# Validación del histórico de noticias (24 al 27-oct-2026)
 
 Peticiones reales con el user-agent del proyecto (1 por segundo por host). Respalda [definicion.md](definicion.md) y corrige supuestos del README. Los resultados de cada prueba quedan también en `data/processed/noticias/validacion.csv`.
 
@@ -46,11 +46,53 @@ Recolección diaria (`data/urls/2026-10-24_joseph.csv`, temporada alta): se leye
 
 Todas las secciones están por encima del 95 % salvo las de pocas notas (apuestas deportivas 3/5, campañas 5/6). Con la fecha del sitemap en vez del `datePublished` salía 93 %: RPP vuelve a publicar notas (la de déficit fiscal figura el 22 y el 24-ene; su `datePublished` es el 26-ene). Wayback responde a veces 503: una copia que falla se salta y se avisa.
 
-## Histórico (en curso desde el 24-oct 23:16)
-- El Tiempo: 4.568 de 4.568 notas leídas.
-- Exitosa: 20.965 notas listadas; lectura en curso.
-- RPP: archivo recorrido hasta fines de agosto en la primera noche (~30 mil notas listadas).
-- Andina: el descubrimiento por número va por el 1.060.300 de 1.097.224; luego se leen ~37 mil notas (~10 h).
-- Entre las 00:22 y las 04:33 del 25-oct el equipo perdió la conexión (DNS) y se suspendió; lo que falló se reintenta en la siguiente ejecución. Hay que impedir que el equipo se suspenda durante la corrida.
+## Histórico (24 al 27-oct) — completo
+Corrió del 24-oct 23:16 al 27-oct 09:28 en varias ejecuciones (se reanuda sola). Las pausas fueron por el equipo: una caída de conexión (25-oct, 00:22-04:33), suspensiones y un apagado (25-oct 23:37); el 26-oct Andina respondió 502 entre las 15:52 y las 16:00, y esas notas se leyeron en la ejecución siguiente.
 
-Pendiente al terminar el histórico: volumen, control positivo, calidad, pérdida histórica y control negativo (`python -m radar.noticias.viabilidad resultados`), y la prueba formal de RPP.
+| Medio | Listadas | Candidatas | Leídas | Sin nota | Errores que quedan |
+|-------|---------:|-----------:|-------:|---------:|-------------------:|
+| Andina | 39.647 | 37.396 | 36.194 | 1.202 (1.064 no publicadas, 138 sin JSON-LD de noticia) | 0 |
+| RPP | 35.835 | 19.289 | 19.349 | 70 (videos y galerías) | 20 (8 agotaron los 3 intentos) |
+| Exitosa | 20.990 | 14.973 | 15.123 | 0 | 0 |
+| El Tiempo | 4.580 | 4.580 | 4.580 | 0 | 0 |
+
+Consolidado: **75.169 notas de 2026** en `data/processed/noticias/notas.csv`. "Leídas" incluye las notas de muestra de las pruebas, por eso supera a las candidatas en RPP y Exitosa.
+
+## Pruebas al terminar el histórico (27-oct)
+`python -m radar.noticias.viabilidad resultados` (5,2 min, sin alertas). Umbrales fijados en [definicion.md](definicion.md) antes de correrlas.
+
+### Volumen — **PASA**
+**2.236 notas `sobre_nino`** del 1-ene al 24-oct (umbral 400): Andina 1.119, RPP 452, Exitosa 336, El Tiempo 329.
+
+| Mes | ene | feb | mar | abr | may | jun | jul | ago | sep | oct (al 24) |
+|-----|----:|----:|----:|----:|----:|----:|----:|----:|----:|----:|
+| Notas | 21 | 78 | 79 | 31 | 53 | 180 | 325 | 423 | 556 | 490 |
+
+La cobertura sigue al estado oficial: poca en el verano y crece de junio en adelante, con la alerta. Andina aporta la mitad: los tópicos y comparaciones por medio deben ponderar o separar por medio.
+
+### Control positivo — **NO PASA**; con el respaldo del README, pasa
+| Nivel (acumulado) | Notas de Andina | Comunicados distintos |
+|-------------------|----------------:|----------------------:|
+| `enlace` (PDF del comunicado, criterio del README) | **5** (umbral 20) | 5 |
+| + `numero` (cita el número; respaldo del README) | **31** | 14 |
+| + `proximo` (anuncia la fecha del próximo; extensión aprobada) | 40 | 17 |
+| + `informe` (enlaza el informe técnico de su fecha; extensión aprobada) | 41 | 17 |
+
+Como se anticipó el 24-oct, Andina casi nunca enlaza el PDF. Se aplica el remedio previsto: el control positivo usa `numero`, que pasa (31 notas sobre 14 comunicados distintos; el ENFEN emitió 18 en 2026). `proximo` e `informe` se reportan aparte, como extensiones.
+
+### Calidad — **PASA**
+- Candidatas con titular y `datePublished`: 100 %. Duplicados (medio, id): 0.
+- Cuerpo con ≥ 40 % de las palabras del resumen: 99,25 % (umbral 95 %); sin texto (galerías, videos): 355 de 73.307.
+- RPP, cuerpo con ≥ 90 % del `articleBody`: 18.397 de 18.402 (99,97 %).
+
+### Filtro por título (histórico) — **PASA**
+Pérdida estimada de enero a octubre con las candidatas de `config.CANDIDATAS`: **0 %** (umbral 20 %). Andina y El Tiempo se descargan completos. De lo que no se descarga se leyeron 15 notas por mes: RPP 0 de 138 (15.568 no descargadas), Exitosa 0 de 120 (4.812) y 0 de 15 en los números probados (25).
+
+- **El IC95 bootstrap sale 0-0 porque no hubo ningún positivo, no porque la pérdida sea nula.** Cota conservadora (regla del tres: con 0 de 273 notas leídas, a lo más 1,1 % de las 20.405 no descargadas hablan de El Niño, ≈ 224 notas; ya se tienen 1.739 con El Niño en su inicio): **pérdida ≤ ≈ 11 %**, también por debajo del 20 %.
+- Exitosa de septiembre y octubre no entra en esta muestra: esos meses llegaron por la recolección diaria, que lee sus sitemaps mensuales 202609 y 202610. Su pérdida se midió en el paso 1 (2,7 % con las candidatas).
+
+### Control negativo (informativo)
+`data/processed/noticias/control_negativo.csv`: 100 notas por medio que no mencionan El Niño ni tienen términos del filtro (`otros_temas`), y 100 por medio que no lo mencionan pero hablan de lluvias, calor u otros términos (`cercano`). Repartidas por mes, 800 en total.
+
+### Cobertura del archivo de RPP
+Ya pasó como prueba formal el 25-oct (99,56 % y 99,48 %); con el histórico completo no hay nada nuevo que medir.

@@ -164,3 +164,14 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 2. Volví a prender la laptop: continúa la ejecución del histórico y dime cuánto queda aproximadamente.
 
 **Resultado:** la IA verificó que el commit de la asignación ya estaba en GitHub (lo subió Joseph) y que el histórico no había terminado; lo reanudó, estimó ~1 h a partir del ritmo medido de Andina (~3.450 notas por hora) y terminó en 46 min, sin errores (75.169 notas consolidadas). Corrió `radar.region.lugares` con los mismos criterios y congeló la lista (127 lugares; salen San Martín y Apurímac, de "otras", y Santa Rosa de Lima, por debajo del 80 %) y `radar.region.notas`: las 7 pruebas pasan (costa norte 96,5 %, costa centro 92,9 %, sección Lima 70 %); "nacional" en política y economía bajó a 83 %, cerca del umbral, y se dejó anotado. Detalle en `docs/region/validacion-2026-10-27.md`.
+
+## 2026-10-26/27 · Seguimiento del histórico de noticias y pruebas finales (Claude Code, Claude Opus 5.5)
+**Propósito:** seguir el histórico de noticias hasta completarlo y correr las pruebas de viabilidad que dependían de él.
+
+**Prompts (resumen fiel, en orden):**
+1. ¿Hay que ejecutar algún otro proceso hoy, según lo planificado?
+2. ¿Cómo va el proceso? ¿Se detuvo? ¿Sigue igual?
+3. ¿Cómo va? ¿Dejaste algún archivo sin commit?
+4. Primero haz git pull, verifica que no nos quede nada pendiente y continúa con el commit y el push.
+
+**Resultado:** la IA vio en el registro de Windows que el histórico se había pausado por la suspensión del equipo (21:52-23:31) y que retomó solo. Luego encontró que el proceso nocturno se cortó y que la ejecución del 27-oct lo completó: 75.169 notas, sin errores pendientes salvo 20 de RPP. Las notas sin cuerpo de Andina son 1.064 no publicadas y 138 sin JSON-LD. Corrió `viabilidad resultados`: volumen pasa (2.236 notas), calidad pasa y el filtro en el histórico pasa (0 %). El control positivo no pasa con el PDF enlazado (5 notas) y pasa con el respaldo del README (número citado, 31 notas). Al revisar la pérdida de 0 % advirtió que el IC bootstrap 0-0 solo refleja que no hubo positivos, y agregó una cota conservadora (≤ ≈ 11 %). También que Exitosa de septiembre y octubre no entra en esa muestra porque llegó por la recolección diaria. No se movieron umbrales. Se incluyó el cambio de `medios.py` que no reintenta las notas sin JSON-LD (videos y galerías).

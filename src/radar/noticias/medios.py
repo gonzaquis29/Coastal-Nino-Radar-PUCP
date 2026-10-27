@@ -134,7 +134,7 @@ class Medio:
                     anexar_csv(self.dir / "enlaces.csv", esquemas.ENLACES, enlaces)
                 self.hechas.add(fila["id"])
                 leidas += 1
-            elif isinstance(resultado, NoExiste):
+            elif isinstance(resultado, NoExiste | NotaInvalida):  # videos y galerías sin JSON-LD de noticia
                 estado.marcar(clave, {"estado": "no_existe", "detalle": str(resultado)})
                 sin_nota += 1
             else:
