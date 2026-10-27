@@ -1,6 +1,6 @@
 # Asignación de macro-región
 
-Asigna a cada nota (y, más adelante, al título y la descripción de cada video) las macro-regiones del README: costa norte, costa centro, Lima, otras regiones o nacional. Lo usan el análisis por macro-región, el recomendador y el semáforo. Las mediciones que respaldan estas decisiones están en [validacion-2026-10-25.md](validacion-2026-10-25.md).
+Asigna a cada nota (y, más adelante, al título y la descripción de cada video) las macro-regiones del README: costa norte, costa centro, Lima, otras regiones o nacional. Lo usan el análisis por macro-región, el recomendador y el semáforo. Las mediciones que respaldan estas decisiones están en [validacion-2026-10-25.md](validacion-2026-10-25.md) y, con el histórico completo y la lista congelada, en [validacion-2026-10-27.md](validacion-2026-10-27.md).
 
 ## Uso
 ```bash
@@ -9,7 +9,7 @@ python -m radar.region.lugares --sin-descarga # vuelve a medir con data/raw/inei
 python -m radar.region.notas                  # macro-región de las notas ya leídas y validación (sin peticiones)
 ```
 - `notas` se vuelve a correr después de cada ejecución del histórico (unos 80 s). No pide nada a los medios: lee `data/raw/noticias/`, `data/urls/` y `config/lugares.csv`.
-- `lugares` se vuelve a correr **una vez, al terminar el histórico**, con los mismos criterios, y luego la lista se congela.
+- `lugares` se corrió por última vez al terminar el histórico (27-oct-2026), con los mismos criterios: la lista quedó **congelada** y no se vuelve a correr.
 - En Python: `from radar.region.asignacion import asignar_nota` → `asignar_nota(titular, resumen, cuerpo=None)`.
 - Registro detallado en `data/registros/region-*.log`. Código: `src/radar/region/` (`lugares.py`, `asignacion.py`, `referencias.py`, `notas.py`, `esquemas.py`); las expresiones de macro-región, en `radar.comun.regiones`.
 

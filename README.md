@@ -27,7 +27,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 | Histórico y notas nuevas de los 4 medios | `python -m radar.noticias.historico --horas 7` | de noche hasta completar el histórico; luego tras la recolección diaria y antes del corte (se reanuda solo) |
 | Pruebas de viabilidad de noticias | `python -m radar.noticias.viabilidad filtro\|rpp\|resultados` | `filtro` antes del histórico; `rpp` y `resultados` al terminarlo |
 | Macro-región de las notas y su validación | `python -m radar.region.notas` | tras cada ejecución del histórico (sin peticiones a los medios) |
-| Lista de lugares (ubigeos del INEI) | `python -m radar.region.lugares` | una vez al terminar el histórico; luego se congela |
+| Lista de lugares (ubigeos del INEI) | `python -m radar.region.lugares` | ya congelada el 27-oct-2026 (no se vuelve a correr) |
 | Pruebas | `python -m pytest` | antes de cada commit |
 | Estilo | `ruff format src tests` y `ruff check src tests` | antes de cada commit |
 
@@ -162,7 +162,7 @@ Todos los términos de uso prohíben reproducir el contenido sin autorización (
 - Otros departamentos (costa sur, sierra, selva): "otras regiones".
 - Sin mención de lugar: "nacional".
 
-Cada nombre se usa o se excluye **por medición** contra referencias externas (sección regional de RPP, sección local de El Tiempo), no a ojo: así salen "Santa" o "Castilla" y solo entran los distritos medidos (Comas, Chimbote, Máncora…). Las menciones pesan más en el titular, el resumen y el inicio del cuerpo; una nota puede tener varias macro-regiones y sin ninguna es "nacional". El encabezado "LIMA (ANDINA)" no aparece en las notas de 2026 revisadas. Validado con titular y resumen el 25-oct-2026: costa norte 96 %, costa centro 90 %, sección Lima 65 %, notas nacionales 87 % "nacional". Definición: [docs/region/definicion.md](docs/region/definicion.md); mediciones: [docs/region/validacion-2026-10-25.md](docs/region/validacion-2026-10-25.md). No hay una definición oficial publicada de estas macro-regiones: la agrupación es un supuesto declarado.
+Cada nombre se usa o se excluye **por medición** contra referencias externas (sección regional de RPP, sección local de El Tiempo), no a ojo: así salen "Santa" o "Castilla" y solo entran los distritos medidos (Comas, Chimbote, Máncora…). Las menciones pesan más en el titular, el resumen y el inicio del cuerpo; una nota puede tener varias macro-regiones y sin ninguna es "nacional". El encabezado "LIMA (ANDINA)" no aparece en las notas de 2026 revisadas. Validado con titular y resumen sobre el histórico completo (27-oct-2026, lista congelada): costa norte 96 %, costa centro 93 %, sección Lima 70 %, notas nacionales 83 % "nacional". Definición: [docs/region/definicion.md](docs/region/definicion.md); mediciones: [docs/region/validacion-2026-10-27.md](docs/region/validacion-2026-10-27.md). No hay una definición oficial publicada de estas macro-regiones: la agrupación es un supuesto declarado.
 
 **Avisos del Senamhi.** Entran solo precipitaciones e incremento de temperatura en costa norte y costa centro; quedan fuera friaje, nevadas, selva y sierra sur. Se presentan como "aviso vigente en tu zona", **nunca como causados por El Niño**.
 
@@ -285,7 +285,7 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [x] Probar vías de histórico. *Andina por número de nota (completo), RPP por archivo (~83 %), La República sin vía → excluida, Exitosa como reemplazo.*
 - [x] Medir la cobertura del archivo de RPP en otras secciones y fechas. *Pasa: con su paginación y todas las secciones, 99,6 % de 1.128 notas de 7 copias de 2026 de su sitemap en Wayback y 99,5 % de 193 de la recolección diaria; las páginas "live" no están en el archivo.*
 - [x] Medir cuántas notas sobre El Niño pierde el filtro por título, usando la recolección diaria. *No pasa: 22,8 % (IC95 13-32 %). Con las candidatas ampliadas (secciones de noticias de RPP y Exitosa, todo Andina y El Tiempo) pierde 2,7 % → se aplica. Ver [docs/noticias/validacion-2026-10-24.md](docs/noticias/validacion-2026-10-24.md).*
-- [x] Asignar macro-región sin etiquetado manual. *Pasa (7 de 7 pruebas): ubigeos del WFS del INEI y nombres decididos por medición; con titular y resumen, costa norte 96 % y costa centro 90 % frente a la sección regional de RPP. Ver [docs/region/validacion-2026-10-25.md](docs/region/validacion-2026-10-25.md).*
+- [x] Asignar macro-región sin etiquetado manual. *Pasa (7 de 7 pruebas): ubigeos del WFS del INEI y nombres decididos por medición; con titular y resumen sobre el histórico completo, costa norte 96 % y costa centro 93 % frente a la sección regional de RPP. Ver [docs/region/validacion-2026-10-27.md](docs/region/validacion-2026-10-27.md).*
 - [ ] Contar notas sobre El Niño por medio en el período. *Histórico en curso.*
 - [ ] Contar notas de Andina que enlazan al PDF de un comunicado (control positivo). *Histórico en curso; Andina enlaza el PDF solo a veces (mayo), así que se cuentan también los respaldos: número citado, próximo comunicado anunciado e informe técnico.*
 - [ ] Probar el NLI con ~20 contradicciones sintéticas.
