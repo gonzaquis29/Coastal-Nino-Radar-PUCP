@@ -21,7 +21,8 @@ Los "??" de Andina vienen así en el propio HTML del sitio (pierde sus emojis); 
 2. En El Tiempo, el `<blockquote>` se quita solo si es un enlace; las citas textuales se conservan. En los otros medios también, salvo los incrustados de redes.
 3. Separa una línea en cada bloque y en cada `<br>`; el cuerpo se entrega con saltos de línea (`\n`).
 4. Quita líneas de crédito ("ANDINA/Difusión") e iniciales del editor (en mayúsculas, sin confundir "Lima" o "Piura").
-5. Quita la primera línea solo si es igual al titular (antes se cortaba por prefijo y un titular corto podía comerse letras del cuerpo).
+5. En Andina, la bajada (subtítulo `h2`, fuera de `linknotas`) va como primera línea del cuerpo: es texto de la nota. En RPP y Exitosa la bajada es la descripción de la página, que ya se lee como resumen.
+6. Quita la primera línea solo si es igual al titular (antes se cortaba por prefijo y un titular corto podía comerse letras del cuerpo).
 
 ## Validación (`python -m radar.noticias.validar_texto [--semilla S]`)
 Cada muestra: 25 notas por medio, nuevas, con su semilla. Compara con la extracción anterior sobre la misma página, pedida una sola vez. Criterios fijados antes de correr:
@@ -43,6 +44,11 @@ Cada muestra: 25 notas por medio, nuevas, con su semilla. Compara con la extracc
 | 5.ª | No pasa (1 resto) | Del detector: "en el poema puede leerse" → el detector busca las frases de interfaz solo al inicio de una línea |
 | **6.ª** | **Pasa** | Andina y RPP 0 uniones (antes 14,9 y 14,0 por 1.000 palabras), Exitosa 0 (antes 3,7); reglas de línea 100-102 %; RPP 25/25 con su `articleBody`; 0 restos. El arreglo del detector que admite "¡" (más estricto) se volvió a correr sobre la misma muestra: sigue en 0 |
 
+| Notas sobre El Niño (25 por medio, semilla propia) | **Pasa** | El corpus que usará el NLP. Sin restos ni marcas de enlace en medio de una línea; ninguna nota usó las vías de respaldo. En Andina, 4 de 25 cambiaban su "El Niño en el inicio": 1 porque la bajada había quedado fuera (→ se incluye), 2 que ahora sí cuentan el primer párrafo (antes lo tapaban el titular repetido, el crédito y un anuncio) y 2 en que El Niño estaba solo en el titular o en el pie de foto, que ya no se filtran como inicio. Ninguna deja de ser "sobre El Niño" |
+| 7.ª (tras incluir la bajada) | **Pasa** | Todos los criterios; 0 restos |
+
+Con la 6.ª, la 7.ª y la de notas sobre El Niño son 300 notas sin restos: a lo más ≈ 1 % de las notas tendría alguno (regla del tres).
+
 Los instrumentos tienen sus propias pruebas (`tests/noticias/test_validar_texto.py`).
 
 ### Efectos (informativos, en las 6 muestras)
@@ -52,6 +58,7 @@ Los instrumentos tienen sus propias pruebas (`tests/noticias/test_validar_texto.
 - Ningún incrustado ni usuario de redes queda en el cuerpo.
 
 ## Limitaciones declaradas
+- Solo RPP publica `articleBody` en su JSON-LD; en Andina, Exitosa y El Tiempo no hay una referencia externa del cuerpo y la pérdida se mide contra el propio contenedor (reglas de línea) y la extracción anterior (bloques quitados, informativo).
 - RPP publica a veces en el `articleBody` párrafos que no están en la página; se valida contra la página visible.
 - Las uniones que el medio ya escribió pegadas ("contenido.En", "2.Sección") siguen en el texto; las resuelve el partidor de frases de la capa siguiente.
 - Los selectores dependen de la plantilla de cada sitio (revisada el 28-oct-2026); si cambia, la validación lo detecta.

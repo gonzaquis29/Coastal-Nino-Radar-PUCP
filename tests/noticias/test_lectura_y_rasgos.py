@@ -128,7 +128,8 @@ RELLENO = "Texto de la nota sobre la costa. " * 15
 
 def test_andina_cuerpo_en_lineas_sin_credito_hora_ni_enlaces_a_otras():
     cuerpo = (
-        '<div class="col paddingnota"><h1 class="col">Lluvias & El Niño</h1><div class="col s12">ANDINA/Difusión</div>'
+        '<div class="col paddingnota"><h1 class="col">Lluvias & El Niño</h1><h2>Bajada sobre la costa</h2>'
+        '<div class="col s12">ANDINA/Difusión</div>'
         '<div class="col linknotas"><div class="col margin-t">08:12 | Lima, set. 7.</div>'
         f"<div>El ENFEN prevé que siga hasta enero de 2027.<br>La Comisión lo indicó. {RELLENO}</div>"
         '<div>[Lea también: <a href="https://andina.pe/agencia/noticia-otra-3.aspx">Otra</a>]</div>'
@@ -137,7 +138,11 @@ def test_andina_cuerpo_en_lineas_sin_credito_hora_ni_enlaces_a_otras():
     )
     campos = leer_html("andina", pagina(cuerpo), "https://andina.pe/agencia/noticia-x-1.aspx")
     lineas = campos["cuerpo"].split("\n")
-    assert lineas[:2] == ["El ENFEN prevé que siga hasta enero de 2027.", "La Comisión lo indicó. " + RELLENO.strip()]
+    assert lineas[:3] == [
+        "Bajada sobre la costa",
+        "El ENFEN prevé que siga hasta enero de 2027.",
+        "La Comisión lo indicó. " + RELLENO.strip(),
+    ]
     assert "ANDINA/Difusión" not in campos["cuerpo"] and "Más en Andina" not in campos["cuerpo"]
     assert "JRA" not in lineas and "googletag" not in campos["cuerpo"] and campos["enlaces"] == []
 

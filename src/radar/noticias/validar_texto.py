@@ -21,7 +21,15 @@ from radar.comun.registro import configurar
 from radar.comun.texto import ahora, norm
 from radar.noticias import rasgos
 from radar.noticias.medios import MEDIOS
-from radar.noticias.nota import CUERPO, _sin_bloques_ajenos, decodificar, leer_api, leer_html, proporcion_en_cuerpo
+from radar.noticias.nota import (
+    BAJADA,
+    CUERPO,
+    _sin_bloques_ajenos,
+    decodificar,
+    leer_api,
+    leer_html,
+    proporcion_en_cuerpo,
+)
 from radar.noticias.viabilidad import _muestra, _si, criterio, guardar, reporte
 
 log = logging.getLogger(__name__)
@@ -86,7 +94,8 @@ def _textos_de_referencia(medio, contenido, tipo, entrada=None):
     if not nuevo:
         return antes, "", original
     _sin_bloques_ajenos(nuevo[0], medio)
-    return antes, norm(nuevo[0].text_content()), original
+    bajada = " ".join(t.text_content() for t in raiz.xpath(BAJADA[medio])) if medio in BAJADA else ""
+    return antes, norm(f"{bajada} {nuevo[0].text_content()}"), original
 
 
 def _por_mil(cuenta, palabras):

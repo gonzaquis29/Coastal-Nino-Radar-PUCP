@@ -25,6 +25,9 @@ CUERPO = {
     "exitosa": (f"//article[{_clase('content')}]",),
     "eltiempo": ("//div[contains(@class, 'et_pb_post_content')]",),
 }
+# Bajada (subtítulo) que queda fuera del contenedor del cuerpo y es texto de la nota: va como su primera línea. En RPP
+# y Exitosa no hace falta (su bajada es la descripción de la página, que ya se lee como resumen).
+BAJADA = {"andina": f"//div[{_clase('paddingnota')}][.//div[{_clase('linknotas')}]]/h2"}
 # Dentro del cuerpo: código, leyendas e incrustados de redes no son texto de la nota (RPP pone el cuerpo en un <figure>)
 FUERA_DEL_CUERPO = (
     "//script|//style|//noscript|//figcaption|//iframe|//svg"
@@ -215,6 +218,9 @@ def leer_html(medio, contenido, url, tipo=""):
     if nodo is not None:
         _sin_bloques_ajenos(nodo, medio)
     cuerpo = _lineas(nodo) if nodo is not None else ""
+    bajada = limpiar(" ".join(t.text_content() for t in doc.xpath(BAJADA.get(medio, "/nada"))))
+    if bajada and cuerpo:
+        cuerpo = f"{bajada}\n{cuerpo}"
     cuerpo_ld = limpiar(ld.get("articleBody"))
     if len(cuerpo.split()) < MIN_PALABRAS and cuerpo_ld:
         cuerpo = cuerpo_ld
