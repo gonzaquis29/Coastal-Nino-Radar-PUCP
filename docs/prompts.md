@@ -227,3 +227,29 @@ También comprobó que los enlaces quitados son todos recomendados del propio me
 - párrafos de la costa y del Pacífico central sin nada que los distinguiera.
 
 Usó como referencia externa la estructura fija del resumen ejecutivo: 17 comunicados con 6 párrafos en el mismo orden. Con eso, el extractor del PDF reconoce los encabezados de tabla ya unidos y cada párrafo lleva `tipo` y `region_enso`, calculados con reglas sobre el texto. Pasan todos los criterios: 102/102, 34/34, 30/30 y 250/250. La comparación con el corpus anterior destapó que la definición del N.° 13 cambiaba de id; se corrigió, y ahora solo salen los 4 encabezados.
+
+## 2026-10-28 · Revisión de la estrategia y pendientes (Claude Code, Claude Opus 5.5)
+**Propósito:** revisar si la estrategia sigue siendo la correcta con lo encontrado, sin guiarse a ciegas por el README, y dejar el repositorio al día para seguir en otro chat.
+
+**Prompts (resumen fiel, en orden):**
+1. Sí, procedemos con la capa 3; verifica de nuevo por si acaso; ¿podemos continuar con mayor seguridad?
+2. ¿Cómo debemos continuar? ¿Otro enfoque o cambio de estrategia? ¿Seguir validando algún punto? Vamos a buen tiempo: este es el momento.
+3. ¿Necesitamos sí o sí la API de YouTube para continuar? El README puede no estar al día con lo que vamos encontrando: no te guíes a ciegas y valida.
+4. Sí seguimos con YouTube; la pregunta era si podemos avanzar con otras partes.
+5. Actualiza en el código o en algún .md lo que haga falta, súbelo al repositorio y ordena por prioridad lo que sigue, para continuar en otro chat; primero defínelo.
+
+**Resultado:** al volver a verificar la definición de la capa 3, la IA encontró cuatro problemas:
+- validaba magnitud y plazo contra datos oficiales sacados con las mismas reglas, lo que es circular;
+- la muestra era chica;
+- 10 notas ya estaban vistas;
+- faltaban el titular y el resumen.
+
+Midió además que las afirmaciones verificables son ~0,7 por nota.
+
+En la estrategia propuso:
+- apoyar el índice en reglas por dato y distancia, con el NLI acotado a un solo intento;
+- recalcular `notas.csv` y `enlaces.csv` antes de la red de enlaces, en vez de al final.
+
+Al validar qué depende de YouTube según la tabla del sílabo, concluyó que nada de lo que sigue lo necesita para avanzar. Solo depende de él el insumo de ML, si además falla el NLI, y para ese caso propuso una alternativa con Trends. También corrigió su propia afirmación sobre el cupo de la API: son 1-2 días, no semanas.
+
+Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas, capa 3) y `docs/pendientes.md` (prioridades), con avisos en el README y en CLAUDE.md.
