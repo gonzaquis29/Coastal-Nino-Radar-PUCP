@@ -62,6 +62,10 @@ LINEA_FUERA = re.compile(
 INICIALES = re.compile(r"^(\(FIN\)\s*)?[A-Z]{2,4}(/[A-Z]{2,4})*$")  # sin re.I: "Lima" o "Piura" no son iniciales
 # El Tiempo pone sus enlaces a otras notas en un <blockquote> ("PUEDES LEER ►"); las citas textuales se conservan
 CITA_QUE_ES_ENLACE = re.compile(r"^\s*(puede?s?|lee)\s*(leer|más)\b|►", re.I)
+# Y WordPress arma el resumen de El Tiempo con las primeras palabras del contenido, enlace incluido ("… PUEDES LEER ►
+# titular de otra nota …"): el resumen se corta donde empieza el enlace. Variantes medidas el 28-oct-2026, con las
+# erratas del medio ("PUEDS LEER", "PUEDES LEER4"); "puede leerse también" en prosa no es un enlace.
+ENLACE_EN_RESUMEN = re.compile(r"►|\bPUEDE?S\s+LEER\b|\b(?:[Pp]uede?s\s+[Ll]eer|[Ll]e[ae]\s+también)\s*[|:►\[]")
 SALTO = {
     "p",
     "div",
@@ -187,7 +191,14 @@ def proporcion_en_cuerpo(texto, cuerpo):
     return round(sum(p in presentes for p in palabras) / len(palabras), 3) if palabras else None
 
 
+def sin_enlace(resumen):
+    """El resumen hasta donde empieza un enlace a otra nota (el titular ajeno y lo que sigue no se conservan)."""
+    m = ENLACE_EN_RESUMEN.search(resumen or "")
+    return norm(resumen[: m.start()]) if m else resumen
+
+
 def _campos(titular, resumen, cuerpo, enlaces, **otros):
+    resumen = sin_enlace(resumen)
     lineas = (norm(linea) for linea in (cuerpo or "").split("\n"))
     cuerpo = _sin_titular("\n".join(linea for linea in lineas if linea), titular)
     return {

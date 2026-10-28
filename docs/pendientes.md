@@ -9,6 +9,10 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 
 ## 1. Recalcular las notas con el texto limpio (antes de la red de enlaces)
 `notas.csv` y `enlaces.csv` se calcularon con la extracción anterior a la capa 1: los enlaces incluyen recomendados y los rasgos usan texto pegado. La red de enlaces y citas y la co-mención los necesitan limpios.
+
+**Hecho el 28-oct:** el resumen de El Tiempo se corta donde empieza el enlace a otra nota ([noticias/texto.md](noticias/texto.md)). Antes, 39 notas eran "sobre El Niño" solo por el titular ajeno. Se corrige en el recálculo.
+
+**Regla de magnitud (en curso):** copiar tal cual las reglas del ENFEN perdía la forma más común en que los medios escriben la magnitud ("Niño costero de intensidad fuerte"), porque el ENFEN descarta la frase entera si dice "intensidad" o "lluvia". Se define una regla por cercanía (la magnitud pegada a El Niño, evento, magnitud, intensidad o nivel, salvo si esos sustantivos hablan de lluvias), compartida por `oficial.enfen` y `rasgos`. El prototipo da 19/19 en la regresión sobre `comunicados.csv`. Falta aprobar las frases sintéticas y los criterios.
 1. **Unificar la regla de magnitud:** `noticias.rasgos.magnitudes` pasa a usar, frase por frase, las reglas de `oficial.enfen`; es la definición de la capa 3. Hay que validar antes cuántas notas cambian sus magnitudes y su "sobre El Niño".
 2. **Un modo de recálculo en `noticias.historico`** (hoy solo lee notas nuevas): volver a leer las notas ya leídas y reescribir `notas.csv` y `enlaces.csv` de cada medio de forma atómica y reanudable, sin perder lo existente si se corta.
 3. **Correrlo de noche** (~10-12 h, a 1 petición por segundo por medio) y luego `region.notas`.

@@ -253,3 +253,19 @@ En la estrategia propuso:
 Al validar qué depende de YouTube según la tabla del sílabo, concluyó que nada de lo que sigue lo necesita para avanzar. Solo depende de él el insumo de ML, si además falla el NLI, y para ese caso propuso una alternativa con Trends. También corrigió su propia afirmación sobre el cupo de la API: son 1-2 días, no semanas.
 
 Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas, capa 3) y `docs/pendientes.md` (prioridades), con avisos en el README y en CLAUDE.md.
+
+## 2026-10-28 · Recálculo de las notas: definición y resumen de El Tiempo (Claude Code, Claude Opus 5.5)
+**Propósito:** el punto 1 de `docs/pendientes.md` (regla de magnitud unificada, recálculo reanudable de `notas.csv` y `enlaces.csv`, corrida nocturna), definiendo y validando antes de escribir código.
+
+**Prompts (resumen fiel, en orden):**
+1. Haz git pull y lee la documentación. Tarea: el punto 1 de los pendientes, en tres partes. Primero define y analiza con datos reales, con criterios fijados antes y muestras nuevas; los procesos largos deben poder reanudarse si la laptop se suspende o se apaga. No escribas código hasta que se apruebe.
+2. ¿Cómo procedemos, luego de haber analizado con criterio?
+3. Ejecuta la rutina diaria en segundo plano y sigue con la regla de magnitud, siendo críticos, analizando y validando.
+4. Sí, procedemos (corregir primero el resumen en la capa 1).
+5. Sí, apruebo (la definición del corte del resumen).
+
+**Resultado:**
+- Copiar la regla del ENFEN a las noticias perdía "intensidad fuerte" (26 de 41 pérdidas en los resúmenes). Se propuso una regla por cercanía; el prototipo da 19/19 en la regresión oficial.
+- Al probarla apareció un error de la capa 1: el resumen de El Tiempo traía el titular de otra nota y volvía "sobre El Niño" a 39 notas. Se corrigió en su capa y su validación pasó a la primera (60/60), con un control que muestra que el criterio sí detecta el problema.
+- La lista de notas ya vistas se reconstruyó y quedó en `config/notas_vistas.csv`.
+- La rutina diaria corrió sin `--publicar`, porque el push solo se hace cuando el usuario lo pide.

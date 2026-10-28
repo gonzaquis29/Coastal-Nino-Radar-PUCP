@@ -71,3 +71,5 @@ ARCHIVO_TERMINOS = DIR_CONFIG / "terminos_titulo.csv"
 ARCHIVO_SECCIONES_EXCLUIDAS = DIR_CONFIG / "secciones_excluidas.csv"
 ARCHIVO_ACTORES = DIR_CONFIG / "actores.csv"
 ARCHIVO_LUGARES = DIR_CONFIG / "lugares.csv"
+# Notas ya vistas en pilotos y validaciones (solo medio, id y muestra): ninguna muestra nueva las repite
+ARCHIVO_NOTAS_VISTAS = DIR_CONFIG / "notas_vistas.csv"

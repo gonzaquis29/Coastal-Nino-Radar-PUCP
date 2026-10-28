@@ -20,10 +20,14 @@ Pilotos fuera del repositorio, con notas reales leídas en memoria y sin guardar
 ## Decisiones de estrategia
 1. **El índice se apoya en las reglas por dato y la distancia semántica.** El NLI queda acotado a **un solo intento**: calibrar el umbral con los pares naturales de enero a junio y evaluarlo con los de julio a octubre y con notas nuevas. Si no mejora claramente a las reglas, se descarta y queda como análisis offline.
 2. **Flujo por capas, una a la vez,** cada una definida, aprobada, construida y validada con muestras nuevas antes de la siguiente. Si una capa destapa un error de otra, se analiza y se corrige en su capa.
-3. **Datos ya vistos no se reusan para evaluar:**
+3. **Datos ya vistos no se reusan para evaluar.** La lista está en `config/notas_vistas.csv` (solo medio, id y muestra); cada validación nueva la excluye y agrega su propia muestra (`validar_texto.notas_vistas` y `marcar_vistas`). Se reconstruyó el 28-oct reproduciendo cada muestreo con su semilla y las notas que existían a la hora en que corrió. La del piloto coincide con sus 170 ids registrados. Son 2.127 notas:
    - las 66 frases (39 notas) del control de Andina del piloto;
-   - las 200 notas al azar del piloto (semilla 656);
-   - las muestras de exploración de la capa 3 (semilla "capa3-exploracion").
+   - las 200 notas con magnitud del piloto (semilla 656);
+   - las muestras de exploración de la capa 3 (semilla "capa3-exploracion");
+   - las de la capa 1 (estructura, las 7 semillas de `validar_texto` y "capa1-sobre-nino");
+   - las de la prueba del filtro por título del 24-oct.
+
+   Las notas sobre El Niño que citan un comunicado o nombran al ENFEN quedan **reservadas** para validar la capa 3 (`validar_texto.reservada_capa3`): ninguna otra muestra las toma.
 
 ## Flujo por capas
 | Capa | Responsabilidad | Estado |

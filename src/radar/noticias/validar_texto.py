@@ -1,7 +1,8 @@
 """Validación de la capa 1 (texto limpio del cuerpo) con una muestra nueva, comparando con la extracción anterior.
 Criterios fijados antes de correrla (docs/noticias/texto.md). El HTML y los cuerpos solo viven en memoria.
 
-Uso: python -m radar.noticias.validar_texto [--semilla S]
+Uso: python -m radar.noticias.validar_texto [--semilla S]            # cuerpo, 25 notas por medio
+     python -m radar.noticias.validar_texto --resumen [--semilla S]  # resumen de El Tiempo sin enlaces
 """
 
 import argparse
@@ -15,7 +16,7 @@ from typing import NamedTuple
 from lxml import html
 
 from radar import config
-from radar.comun.archivos import leer_csv
+from radar.comun.archivos import anexar_csv, leer_csv
 from radar.comun.http import Cliente
 from radar.comun.registro import configurar
 from radar.comun.texto import ahora, norm
@@ -29,6 +30,7 @@ from radar.noticias.nota import (
     leer_api,
     leer_html,
     proporcion_en_cuerpo,
+    sin_enlace,
 )
 from radar.noticias.viabilidad import _muestra, _si, criterio, guardar, reporte
 
@@ -61,6 +63,17 @@ CUERPO_ANTERIOR = {
     "exitosa": "//article[contains(concat(' ', @class, ' '), ' content ')]",
 }
 FUERA_ANTERIOR = "//script|//style|//noscript|//blockquote|//figcaption|//iframe"
+
+
+# Resumen de El Tiempo sin enlaces a otras notas (docs/noticias/texto.md, criterios fijados el 28-oct-2026)
+PRUEBA_RESUMEN = "Resumen sin enlaces a otras notas"
+SEMILLA_RESUMEN = "resumen-eltiempo"
+RESUMEN_CON_ENLACE = 40  # notas nuevas cuyo resumen guardado trae un enlace
+RESUMEN_SIN_ENLACE = 20
+RESUMEN_EN_CUERPO_MINIMO = 0.90
+NOTAS_CON_RESUMEN_EN_CUERPO = 0.95
+# Detector independiente del corte (nota.ENLACE_EN_RESUMEN): más amplio, lo que encuentre se revisa caso por caso
+ENLACE_RESTANTE = re.compile(r"►|\bpuede?s?\s+leer\b|\ble[ae]\s+también\b", re.I)
 
 
 class Lectura(NamedTuple):
@@ -242,17 +255,140 @@ def validar(lecturas):
     return salida
 
 
+# ---------------------------------------------------------------- resumen sin enlaces a otras notas (28-oct-2026)
+
+
+def notas_vistas():
+    return {(f["medio"], f["id"]) for f in leer_csv(config.ARCHIVO_NOTAS_VISTAS)}
+
+
+def marcar_vistas(notas, muestra):
+    anexar_csv(
+        config.ARCHIVO_NOTAS_VISTAS,
+        ("medio", "id", "muestra"),
+        [{"medio": n["medio"], "id": n["id"], "muestra": muestra} for n in notas],
+    )
+
+
+def reservada_capa3(nota):
+    """Notas sobre El Niño que citan un comunicado o nombran al ENFEN: de ahí sale la validación de la capa 3."""
+    return _si(nota["sobre_nino"]) and bool(nota["comunicados"] or "ENFEN" in nota["actores"])
+
+
+def _sobre_nino(titular, resumen, cuerpo):
+    return rasgos.nino_en_inicio(resumen, cuerpo) or rasgos.menciones(titular) > 0
+
+
+def criterios_guardados():
+    """Sin red: el corte aplicado a los resúmenes ya guardados de los 4 medios."""
+    restantes, cambian_otros = [], collections.Counter()
+    for nombre in MEDIOS:
+        for n in leer_csv(config.DIR_RAW_NOTICIAS / nombre / "notas.csv"):
+            nuevo = sin_enlace(n["resumen"])
+            if m := ENLACE_RESTANTE.search(nuevo):
+                restantes.append(f"{nombre} {n['id']}: «{nuevo[max(0, m.start() - 30) : m.end() + 30]}»")
+            if nombre != "eltiempo" and nuevo != n["resumen"]:
+                cambian_otros[nombre] += 1
+    return [
+        criterio(
+            PRUEBA_RESUMEN,
+            "resúmenes guardados con un enlace tras el corte (detector independiente)",
+            len(restantes),
+            "= 0",
+            not restantes,
+            "; ".join(restantes[:20]),
+        ),
+        criterio(
+            PRUEBA_RESUMEN,
+            "resúmenes que cambian en Andina, RPP y Exitosa",
+            sum(cambian_otros.values()),
+            "= 0",
+            not cambian_otros,
+            str(dict(cambian_otros)),
+        ),
+    ]
+
+
+def muestra_resumen(semilla=SEMILLA_RESUMEN):
+    """Notas de El Tiempo nuevas (sin las vistas ni las reservadas para la capa 3), con y sin enlace en el resumen."""
+    vistas = notas_vistas()
+    notas = [
+        n
+        for n in leer_csv(config.DIR_RAW_NOTICIAS / "eltiempo" / "notas.csv")
+        if not _si(n["sin_texto"]) and ("eltiempo", n["id"]) not in vistas and not reservada_capa3(n)
+    ]
+    con = [n for n in notas if ENLACE_RESTANTE.search(n["resumen"])]
+    sin = [n for n in notas if not ENLACE_RESTANTE.search(n["resumen"])]
+    return _muestra(con, RESUMEN_CON_ENLACE, semilla, "con") + _muestra(sin, RESUMEN_SIN_ENLACE, semilla, "sin")
+
+
+def validar_resumen(lecturas):
+    """lecturas: [(fila guardada, campos leídos ahora)]."""
+    bien = [n for n, c in lecturas if (c["resumen_en_cuerpo"] or 0) >= RESUMEN_EN_CUERPO_MINIMO]
+    parte = round(len(bien) / len(lecturas), 3) if lecturas else 0.0
+    faltan = [f"{n['id']} ({c['resumen_en_cuerpo']})" for n, c in lecturas if n not in bien]
+    restos_resumen = [
+        f"{n['id']}: «{t}»"
+        for n, c in lecturas
+        for t in [m.group(0) for m in ENLACE_RESTANTE.finditer(c["resumen"])]
+        + [m.group(0) for m in RESTOS.finditer(c["resumen"])]
+    ]
+    cambios = []
+    for n, c in lecturas:
+        antes, ahora_ = _si(n["sobre_nino"]), _sobre_nino(c["titular"], c["resumen"], c["cuerpo"])
+        if antes != ahora_:
+            causa = "resumen" if _sobre_nino(c["titular"], n["resumen"], c["cuerpo"]) == antes else "cuerpo o página"
+            cambios.append(f"{n['id']} {int(antes)}→{int(ahora_)} ({causa})")
+    return [
+        criterio(
+            PRUEBA_RESUMEN,
+            f"notas con ≥ {RESUMEN_EN_CUERPO_MINIMO} del resumen en el cuerpo limpio",
+            parte,
+            f"≥ {NOTAS_CON_RESUMEN_EN_CUERPO}",
+            parte >= NOTAS_CON_RESUMEN_EN_CUERPO,
+            f"{len(bien)}/{len(lecturas)}; no: {', '.join(faltan[:20])}",
+        ),
+        criterio(
+            PRUEBA_RESUMEN,
+            "restos de enlaces en el resumen leído ahora (detector independiente)",
+            len(restos_resumen),
+            "= 0",
+            not restos_resumen,
+            "; ".join(restos_resumen[:20]),
+        ),
+        criterio(
+            PRUEBA_RESUMEN + " (informativo)",
+            "notas que cambian su 'sobre El Niño'",
+            len(cambios),
+            "",
+            True,
+            "; ".join(cambios),
+        ),
+    ]
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Validación del texto limpio del cuerpo (capa 1).")
-    ap.add_argument("--semilla", default=SEMILLA)
+    ap.add_argument("--semilla", help=f"por omisión {SEMILLA} (cuerpo) o {SEMILLA_RESUMEN} (resumen)")
+    ap.add_argument("--resumen", action="store_true", help="valida el resumen de El Tiempo sin enlaces a otras notas")
     args = ap.parse_args(argv)
     registro = configurar("noticias-validar-texto")
     inicio = ahora()
-    lecturas = list(leer_muestra(args.semilla))
-    resultado = validar(lecturas)
+    if args.resumen:
+        semilla = args.semilla or SEMILLA_RESUMEN
+        elegidas = muestra_resumen(semilla)
+        medio = MEDIOS["eltiempo"](Cliente(hosts_permitidos={config.HOSTS_MEDIOS["eltiempo"]}))
+        lecturas = [(n, c) for n, c in medio.descargar(elegidas) if isinstance(c, dict)]
+        resultado = criterios_guardados() + validar_resumen(lecturas)
+        marcar_vistas(elegidas, f"capa1-resumen-{semilla}")
+    else:
+        semilla = args.semilla or SEMILLA
+        lecturas = list(leer_muestra(semilla))
+        resultado = validar(lecturas)
+        marcar_vistas([x.nota for x in lecturas], f"capa1-{semilla}")
     guardar(resultado)
     reporte(resultado, [], inicio)
-    log.info(f"Muestra: {len(lecturas)} notas (semilla {args.semilla}) · registro: {registro.relative_to(config.RAIZ)}")
+    log.info(f"Muestra: {len(lecturas)} notas (semilla {semilla}) · registro: {registro.relative_to(config.RAIZ)}")
     return 0
 
 

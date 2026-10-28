@@ -5,7 +5,7 @@ import json
 import pytest
 
 from radar.noticias import filtro, rasgos
-from radar.noticias.nota import NotaInvalida, decodificar, leer_api, leer_html
+from radar.noticias.nota import NotaInvalida, decodificar, leer_api, leer_html, sin_enlace
 
 # ---------------------------------------------------------------- filtro
 
@@ -183,6 +183,28 @@ def test_eltiempo_conserva_citas_y_quita_puedes_leer():
     campos = leer_api(entrada)
     assert campos["cuerpo"].split("\n") == [RELLENO.strip(), "“Seguimos con tuberías antiguas”, dijo el alcalde."]
     assert campos["enlaces"] == []
+
+
+@pytest.mark.parametrize(
+    "excerpt",
+    [
+        "Vecinos piden limpiar el dren. PUEDES LEER ► Niño Costero débil generaría otoño más cálido […]",
+        "Vecinos piden limpiar el dren. Puedes Leer | Fenómeno de El Niño sería fuerte […]",
+        "Vecinos piden limpiar el dren. ► Calor extremo en Piura […]",
+        "Vecinos piden limpiar el dren. PUEDS LEER ► Otra nota […]",
+        "Vecinos piden limpiar el dren. PUEDES LEER […]",
+    ],
+)
+def test_eltiempo_resumen_sin_enlace_a_otra_nota(excerpt):
+    entrada = {"id": 9, "link": "https://eltiempo.pe/local/x/", "date_gmt": "2026-10-24T17:00:55",
+               "title": {"rendered": "T"}, "excerpt": {"rendered": f"<p>{excerpt}</p>"},
+               "content": {"rendered": f"<p>{RELLENO}</p>"}}  # fmt: skip
+    assert leer_api(entrada)["resumen"] == "Vecinos piden limpiar el dren."
+
+
+def test_resumen_en_prosa_no_se_corta():
+    resumen = "La arquitectura del siglo XX puede leerse también a través de sus archivos. Puedes leer más abajo."
+    assert sin_enlace(resumen) == resumen
 
 
 @pytest.mark.parametrize("hora_y_lugar", ["22:36 | Ciudad de México, ago. 17 (EFE).-", "14:11 | Loreto ene. 30."])

@@ -57,6 +57,30 @@ Los instrumentos tienen sus propias pruebas (`tests/noticias/test_validar_texto.
 - Se recuperan citas textuales: en Exitosa, 32 citas de declaraciones en 25 notas (antes se borraban todos los `<blockquote>`); los tuits se siguen quitando.
 - Ningún incrustado ni usuario de redes queda en el cuerpo.
 
+## Resumen sin enlaces a otras notas (28-oct-2026)
+Al probar la regla de magnitud con los titulares y resúmenes guardados apareció un error de esta capa en el **resumen** (la validación anterior solo miraba el cuerpo).
+
+**Qué se encontró:**
+- El resumen de El Tiempo es el *excerpt* que WordPress arma con las primeras palabras del contenido: el 98 % termina en "[…]".
+- WordPress lo arma antes de que se quiten los bloques ajenos. Por eso 1.473 de 4.608 resúmenes (32 %) traían el enlace a otra nota: "PUEDES LEER ► titular ajeno", "Puedes Leer |", "►" y erratas del medio como "PUEDS LEER" o "PUEDES LEER4".
+- **Efecto:** 39 de las 343 notas de El Tiempo marcadas "sobre El Niño" (11 %) lo eran solo por ese titular ajeno. Eran notas sobre un ahogado en el Chira, el papa o Jesse Jackson.
+- Ningún resumen de Andina, RPP o Exitosa tenía el problema.
+
+**Qué hace:** el resumen se corta donde empieza el enlace y se conserva lo que va antes (`nota.sin_enlace`, marcas en `ENLACE_EN_RESUMEN`). En 1.471 de los 1.473 casos quedan 15 palabras o más de la propia nota. Lo que venía después del titular ajeno también está al inicio del cuerpo, que es lo que mira "sobre El Niño". Se descartaron dos alternativas:
+- regenerar el resumen desde el cuerpo, porque copiaría una regla interna de WordPress que no conocemos;
+- borrar solo el titular ajeno, porque en un texto plano no se sabe dónde termina.
+
+**Validación** (`python -m radar.noticias.validar_texto --resumen`). Criterios fijados antes de correr:
+
+| Criterio | Pasa si | Resultado |
+|----------|---------|-----------|
+| Resúmenes guardados con un enlace tras el corte (4 medios, sin red; detector más amplio que el corte) | 0 | 0 |
+| Resúmenes que cambian en Andina, RPP y Exitosa | 0 | 0 |
+| Muestra nueva de El Tiempo por la API (semilla `resumen-eltiempo`; 40 notas con enlace y 20 sin enlace, sin las vistas ni las reservadas para la capa 3): notas con ≥ 90 % del resumen en el cuerpo limpio | ≥ 95 % | **60/60** |
+| Restos de enlaces en el resumen leído | 0 | 0 |
+
+**Pasa a la primera.** Control del instrumento: con el resumen sin cortar, solo 5 de las 40 notas con enlace llegan a ese 90 %; o sea, el criterio sí detecta el problema. Informativo: en la muestra, 1 nota deja de ser "sobre El Niño" ("Calor extremo golpea a viviendas rústicas…", que no nombra a El Niño ni en su titular ni al inicio del cuerpo).
+
 ## Limitaciones declaradas
 - Solo RPP publica `articleBody` en su JSON-LD; en Andina, Exitosa y El Tiempo no hay una referencia externa del cuerpo y la pérdida se mide contra el propio contenedor (reglas de línea) y la extracción anterior (bloques quitados, informativo).
 - RPP publica a veces en el `articleBody` párrafos que no están en la página; se valida contra la página visible.
