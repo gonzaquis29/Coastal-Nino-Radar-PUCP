@@ -175,3 +175,40 @@ Registro de la colaboración con IA generativa. Anotar fecha, propósito y promp
 4. Primero haz git pull, verifica que no nos quede nada pendiente y continúa con el commit y el push.
 
 **Resultado:** la IA vio en el registro de Windows que el histórico se había pausado por la suspensión del equipo (21:52-23:31) y que retomó solo. Luego encontró que el proceso nocturno se cortó y que la ejecución del 27-oct lo completó: 75.169 notas, sin errores pendientes salvo 20 de RPP. Las notas sin cuerpo de Andina son 1.064 no publicadas y 138 sin JSON-LD. Corrió `viabilidad resultados`: volumen pasa (2.236 notas), calidad pasa y el filtro en el histórico pasa (0 %). El control positivo no pasa con el PDF enlazado (5 notas) y pasa con el respaldo del README (número citado, 31 notas). Al revisar la pérdida de 0 % advirtió que el IC bootstrap 0-0 solo refleja que no hubo positivos, y agregó una cota conservadora (≤ ≈ 11 %). También que Exitosa de septiembre y octubre no entra en esa muestra porque llegó por la recolección diaria. No se movieron umbrales. Se incluyó el cambio de `medios.py` que no reintenta las notas sin JSON-LD (videos y galerías).
+
+## 2026-10-27/28 · Índice de discrepancia (pilotos) y capa 1 del flujo de NLP: texto limpio (Claude Code, Claude Opus 5.5)
+**Propósito:** definir cómo probar el índice de discrepancia (NLI y comparación por datos) sin guiarse solo por el README y, al encontrar que los errores venían de capas previas, ordenar el trabajo en un flujo por capas y construir la primera: el texto limpio del cuerpo.
+
+**Prompts (resumen fiel, en orden):**
+1. Analizar qué está hecho y qué falta; seguir con las pruebas pendientes, empezando por la más simple (NLI).
+2. Volver a validar y ser crítico con la propuesta para no rehacer luego; ¿hay problemas serios?; evaluar alternativas mejores, no lo simple solo por cumplir.
+3. Analizar, descartar y probar empezando por lo más adecuado; ¿esa prueba basta para concluir?; dejar de guiarse por el README si no está bien y definir cómo probar de forma eficiente y segura.
+4. ¿Estás seguro de tu análisis? Verificar.
+5. Investigar por qué el proceso es lento: detenerlo, medir tiempos, encontrar patrones y concluir; verificar que la corrección funciona.
+6. ¿Cómo avanzar: limpieza, ETL o pipeline? No mezclar responsabilidades, para tener trazabilidad de qué parte falla o dónde está el cuello de botella; mejorar velocidad o efectividad sin degradar la calidad.
+7. Definir primero, analizar, ser crítico; aprobado, siempre volviendo a revisar; recalcular `notas.csv` más adelante si hace falta para que todo sea coherente con la metodología.
+8. Si aparecen errores de otras capas, analizarlos, probarlos y testearlos para elegir la mejor opción.
+
+**Resultado:** la IA validó en su fuente el modelo NLI del README y encontró, con pilotos fuera de la prueba, lo siguiente:
+- La prueba sintética del README es demasiado fácil.
+- Comparar con "el párrafo más parecido" da falsas alarmas.
+- La versión cuantizada cambia las respuestas.
+- Con notas reales, el NLI con umbral 0,5 marca el 23-26 % de las frases de Andina que citan el comunicado (umbral de descarte 20 %), así que esa configuración se descarta.
+
+Al revisar sus propias conclusiones, encontró que la mayoría de esos errores, y también los de la comparación por datos, venían de etapas previas:
+- texto sucio;
+- frases que no afirman nada del Niño actual;
+- párrafos oficiales mal elegidos.
+
+Midió además que la lentitud se debía a que `transformers` cargaba el modelo en float16 (de 6 a 18 veces más lento en CPU, con los mismos resultados) y a los modos de ahorro de energía del equipo.
+
+Se acordó un flujo por capas, cada una con su validación, y se construyó la capa 1 en `noticias/nota.py`. Al revisar la estructura real de cada medio evitó un error de su propia propuesta: en Andina el texto viene con `<br>` y quedarse con los `<p>` perdía hasta el 96 %. La validación (`python -m radar.noticias.validar_texto`) se corrió con seis muestras nuevas de 100 notas. En las cinco primeras corrigió dos tipos de errores, sin mover umbrales:
+- de la limpieza: "[Lea también", variantes de hora y lugar (que pasó a quitar por su forma y no por patrón), "►";
+- del propio instrumento de medición: la palabra "compartir" de la redacción, uniones que ya vienen pegadas desde el medio, comillas de cierre.
+
+La sexta pasa todos los criterios:
+- 0 uniones pegadas (antes de 14 a 15 por cada 1.000 palabras);
+- 0 restos;
+- RPP con su `articleBody` en 25 de 25 notas.
+
+También comprobó que los enlaces quitados son todos recomendados del propio medio y que se recuperan las citas textuales que antes se borraban. Detalle en `docs/noticias/texto.md`.

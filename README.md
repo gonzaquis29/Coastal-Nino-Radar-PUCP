@@ -26,6 +26,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 | Corpus oficial (ENFEN y Senamhi) | `python -m radar.oficial.corpus` | tras un "Nuevo documento del ENFEN" y antes del corte |
 | Histórico y notas nuevas de los 4 medios | `python -m radar.noticias.historico --horas 7` | de noche hasta completar el histórico; luego tras la recolección diaria y antes del corte (se reanuda solo) |
 | Pruebas de viabilidad de noticias | `python -m radar.noticias.viabilidad filtro\|rpp\|resultados` | `filtro` antes del histórico; `rpp` y `resultados` al terminarlo |
+| Texto limpio del cuerpo de las notas (validación) | `python -m radar.noticias.validar_texto` | al cambiar `noticias/nota.py` o si un medio cambia su plantilla |
 | Macro-región de las notas y su validación | `python -m radar.region.notas` | tras cada ejecución del histórico (sin peticiones a los medios) |
 | Lista de lugares (ubigeos del INEI) | `python -m radar.region.lugares` | ya congelada el 27-oct-2026 (no se vuelve a correr) |
 | Pruebas | `python -m pytest` | antes de cada commit |
@@ -86,7 +87,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 ## Pipeline
 | # | Etapa | Detalle |
 |---|-------|---------|
-| 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (texto del PDF; la página HTML como control) y avisos meteorológicos del Senamhi (tipo, nivel, macro-región por el polígono oficial del aviso, vigencia), partidos en párrafos; ver "Corpus oficial". **Noticias:** 4 medios (ver "Alcance de datos"), descubriendo las notas según "Cobertura histórica" y leyendo el HTML de cada nota (El Tiempo, por su API). El cuerpo se procesa en memoria y no se guarda: solo se conservan titular, resumen, `datePublished`, sección, hipervínculos, citas a fuentes oficiales, comunicados citados, magnitudes, resultados de NLI y vectores; la etapa de NLP vuelve a leer los cuerpos. Definición: [docs/noticias/definicion.md](docs/noticias/definicion.md). Se recolecta además una muestra de notas de otros temas de los mismos medios, solo para el control negativo. **YouTube (API oficial):** título, descripción (incluidos sus enlaces), canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés semanal por departamento, exportado manualmente en CSV en una sola consulta por departamento para que las semanas sean comparables. Respeta `robots.txt` y limita la tasa de peticiones. |
+| 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (texto del PDF; la página HTML como control) y avisos meteorológicos del Senamhi (tipo, nivel, macro-región por el polígono oficial del aviso, vigencia), partidos en párrafos; ver "Corpus oficial". **Noticias:** 4 medios (ver "Alcance de datos"), descubriendo las notas según "Cobertura histórica" y leyendo el HTML de cada nota (El Tiempo, por su API). El cuerpo se procesa en memoria y no se guarda: solo se conservan titular, resumen, `datePublished`, sección, hipervínculos, citas a fuentes oficiales, comunicados citados, magnitudes, resultados de NLI y vectores; la etapa de NLP vuelve a leer los cuerpos. Definición: [docs/noticias/definicion.md](docs/noticias/definicion.md); el cuerpo se entrega en líneas y sin recomendados, promociones ni créditos ([docs/noticias/texto.md](docs/noticias/texto.md)). Se recolecta además una muestra de notas de otros temas de los mismos medios, solo para el control negativo. **YouTube (API oficial):** título, descripción (incluidos sus enlaces), canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés semanal por departamento, exportado manualmente en CSV en una sola consulta por departamento para que las semanas sean comparables. Respeta `robots.txt` y limita la tasa de peticiones. |
 | 2 | Preprocesamiento | Limpieza, tokenización, stopwords, lematización en español (spaCy / NLTK). Asignación de macro-región (ver "Alcance de datos"). |
 | 3 | Representación | TF-IDF (línea base) contra embeddings multilingües livianos (MiniLM / e5-small) con similitud coseno. |
 | 4 | Tópicos | LDA contra BERTopic, ajustados sobre todo el corpus y luego agregados por mes y macro-región (ajustar por cada grupo dejaría grupos casi vacíos); sentimiento por tópico. Los tópicos se nombran con sus palabras clave (c-TF-IDF), sin LLM. |
@@ -369,6 +370,6 @@ results/         figuras y métricas
 docs/            bibliografía, notas y registro de prompts
 docs/recoleccion/ definición de la recolección y validaciones de las fuentes
 docs/oficial/    definición y validación del corpus oficial
-docs/noticias/   definición del histórico de noticias y validación de sus pruebas de viabilidad
+docs/noticias/   definición del histórico de noticias, texto limpio del cuerpo y validación de sus pruebas
 docs/region/     definición y validación de la asignación de macro-región
 ```

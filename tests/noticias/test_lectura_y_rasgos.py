@@ -95,7 +95,7 @@ def pagina(cuerpo, ld=None, charset="utf-8", metas=""):
 
 def test_lee_html_con_fecha_enlaces_y_sin_compartir():
     cuerpo = (
-        '<div class="col paddingnota">Lluvias & El Niño Texto de la costa con El Niño. '
+        '<div class="col paddingnota"><h1>Lluvias & El Niño</h1>Texto de la costa con El Niño. '  # sin "linknotas"
         + "x " * 60
         + '<a href="https://enfen.imarpe.gob.pe/download/a/">pdf</a>'
         '<a href="http://www.facebook.com/sharer/sharer.php?u=1">f</a><script>no</script></div>'
@@ -121,6 +121,79 @@ def test_sin_fecha_no_es_nota():
         leer_html(
             "rpp", pagina("<div class='body'>x</div>", {"@type": "NewsArticle", "headline": "T"}), "https://rpp.pe/a"
         )
+
+
+RELLENO = "Texto de la nota sobre la costa. " * 15
+
+
+def test_andina_cuerpo_en_lineas_sin_credito_hora_ni_enlaces_a_otras():
+    cuerpo = (
+        '<div class="col paddingnota"><h1 class="col">Lluvias & El Niño</h1><div class="col s12">ANDINA/Difusión</div>'
+        '<div class="col linknotas"><div class="col margin-t">08:12 | Lima, set. 7.</div>'
+        f"<div>El ENFEN prevé que siga hasta enero de 2027.<br>La Comisión lo indicó. {RELLENO}</div>"
+        '<div>[Lea también: <a href="https://andina.pe/agencia/noticia-otra-3.aspx">Otra</a>]</div>'
+        '<div>Más en Andina:<br>?? <a href="https://andina.pe/agencia/noticia-otra-2.aspx">Otra nota</a></div>'
+        '<div>JRA</div><div class="Top3">googletag.cmd.push()</div></div></div>'
+    )
+    campos = leer_html("andina", pagina(cuerpo), "https://andina.pe/agencia/noticia-x-1.aspx")
+    lineas = campos["cuerpo"].split("\n")
+    assert lineas[:2] == ["El ENFEN prevé que siga hasta enero de 2027.", "La Comisión lo indicó. " + RELLENO.strip()]
+    assert "ANDINA/Difusión" not in campos["cuerpo"] and "Más en Andina" not in campos["cuerpo"]
+    assert "JRA" not in lineas and "googletag" not in campos["cuerpo"] and campos["enlaces"] == []
+
+
+def test_rpp_sin_recomendados_promociones_ni_reproductor():
+    cuerpo = (
+        '<div class="body"><div class="banner"></div><div class="player-audio">Compartir Actualidad Share</div>'
+        f"<p>Primer párrafo de la nota.</p><h2>Subtítulo</h2><p>{RELLENO}</p>"
+        '<p><strong>► <a href="https://rpp.pe/economia/otra-noticia-3">Otra nota</a></strong></p>'
+        '<div class="article__block">Te recomendamos <a href="https://rpp.pe/otra-noticia-2">otra</a></div>'
+        '<div class="gray-media">¡Mira RPP en YouTube! Noticias</div>'
+        '<figure class="media-video">Video recomendado</figure></div>'
+    )
+    campos = leer_html("rpp", pagina(cuerpo), "https://rpp.pe/peru/x-noticia-1")
+    assert campos["cuerpo"].split("\n")[:2] == ["Primer párrafo de la nota.", "Subtítulo"]
+    for basura in ("Compartir", "Te recomendamos", "YouTube", "Video recomendado"):
+        assert basura not in campos["cuerpo"]
+    assert campos["enlaces"] == []
+
+
+def test_exitosa_sin_lee_tambien():
+    cuerpo = (
+        f'<article class="content"><p>{RELLENO}</p><div class="rela">Lee también <a href="/x-n2">Otra</a></div>'
+        '<div class="module_mm"></div><p>Lee también: <a href="/y-n3">Otra más</a></p><p>Cierre.</p></article>'
+    )
+    campos = leer_html("exitosa", pagina(cuerpo), "https://www.exitosanoticias.pe/actualidad/x-n1")
+    assert campos["cuerpo"].split("\n") == [RELLENO.strip(), "Cierre."] and campos["enlaces"] == []
+
+
+def test_eltiempo_conserva_citas_y_quita_puedes_leer():
+    contenido = (
+        f"<p>{RELLENO}</p><blockquote>PUEDES LEER ► <a href='https://eltiempo.pe/otra/'>Otra</a></blockquote>"
+        "<blockquote>“Seguimos con tuberías antiguas”, dijo el alcalde.</blockquote>"
+        '<blockquote class="twitter-tweet">tuit</blockquote>'
+    )
+    entrada = {"id": 8, "link": "https://eltiempo.pe/local/x/", "date_gmt": "2026-10-24T17:00:55",
+               "title": {"rendered": "T"}, "content": {"rendered": contenido}}  # fmt: skip
+    campos = leer_api(entrada)
+    assert campos["cuerpo"].split("\n") == [RELLENO.strip(), "“Seguimos con tuberías antiguas”, dijo el alcalde."]
+    assert campos["enlaces"] == []
+
+
+@pytest.mark.parametrize("hora_y_lugar", ["22:36 | Ciudad de México, ago. 17 (EFE).-", "14:11 | Loreto ene. 30."])
+def test_hora_y_lugar_de_andina_en_sus_variantes(hora_y_lugar):
+    cuerpo = (
+        f'<div class="col paddingnota"><div class="col linknotas"><div>{hora_y_lugar}</div>'
+        f"<div>{RELLENO}</div></div></div>"
+    )
+    campos = leer_html("andina", pagina(cuerpo), "https://andina.pe/agencia/noticia-x-1.aspx")
+    assert campos["cuerpo"] == RELLENO.strip()
+
+
+def test_no_confunde_lugares_cortos_con_iniciales():
+    cuerpo = f'<div class="body"><p>{RELLENO}</p><h3>Piura</h3><p>Lima</p><p>(FIN) MAO/JRA</p></div>'
+    campos = leer_html("rpp", pagina(cuerpo), "https://rpp.pe/peru/x-noticia-1")
+    assert campos["cuerpo"].split("\n")[1:] == ["Piura", "Lima"]
 
 
 def test_lee_api_de_wordpress():

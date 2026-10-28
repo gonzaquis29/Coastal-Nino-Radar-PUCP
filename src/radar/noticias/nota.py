@@ -11,15 +11,72 @@ from radar.comun.texto import a_lima, clave, norm
 
 MIN_PALABRAS = 50  # menos que esto es una galería, un video o una página sin texto
 TIPOS_NOTA = {"NewsArticle", "Article", "ReportageNewsArticle", "BlogPosting", "AnalysisNewsArticle"}
-# Contenedor del cuerpo por medio (validado el 24-oct-2026); si no aparece, se usa el articleBody del JSON-LD
+
+
+def _clase(nombre):
+    return f"contains(concat(' ', normalize-space(@class), ' '), ' {nombre} ')"
+
+
+# Contenedor del cuerpo por medio, en orden de preferencia (validado el 24 y el 28-oct-2026); si ninguno aparece, se
+# usa el articleBody del JSON-LD. En Andina el cuerpo está en "linknotas", sin el titular ni el crédito de la foto.
 CUERPO = {
-    "andina": "//div[contains(concat(' ', @class, ' '), ' paddingnota ')]",
-    "rpp": "//div[contains(concat(' ', @class, ' '), ' body ')]",
-    "exitosa": "//article[contains(concat(' ', @class, ' '), ' content ')]",
-    "eltiempo": "//div[contains(@class, 'et_pb_post_content')]",
+    "andina": (f"//div[{_clase('paddingnota')}]//div[{_clase('linknotas')}]", f"//div[{_clase('paddingnota')}]"),
+    "rpp": (f"//div[{_clase('body')}]",),
+    "exitosa": (f"//article[{_clase('content')}]",),
+    "eltiempo": ("//div[contains(@class, 'et_pb_post_content')]",),
 }
-# Dentro del cuerpo: tuits incrustados, leyendas y código no son texto de la nota (RPP pone el cuerpo en un <figure>)
-FUERA_DEL_CUERPO = "//script|//style|//noscript|//blockquote|//figcaption|//iframe"
+# Dentro del cuerpo: código, leyendas e incrustados de redes no son texto de la nota (RPP pone el cuerpo en un <figure>)
+FUERA_DEL_CUERPO = (
+    "//script|//style|//noscript|//figcaption|//iframe|//svg"
+    "|//blockquote[contains(@class, 'twitter') or contains(@class, 'instagram') or contains(@class, 'tiktok')]"
+)
+# Bloques que no son la nota: recomendados, promociones, reproductor y anuncios (revisados el 28-oct-2026)
+FUERA_POR_MEDIO = {
+    "andina": f".//div[{_clase('Top3')}]|.//div[@data-type='_mgwidget']",
+    "rpp": (
+        f".//div[{_clase('banner')}]|.//div[{_clase('gray-media')}]|.//div[{_clase('article__block')}]"
+        f"|.//div[{_clase('player-audio')}]|.//figure[{_clase('media-video')}]"
+    ),
+    "exitosa": f".//div[{_clase('rela')}]|.//div[{_clase('module_mm')}]|.//div[{_clase('raw-html-embed')}]",
+    "eltiempo": "",
+}
+# Bloques y líneas que enlazan a otras notas: se quitan como nodo (así sus enlaces tampoco cuentan) y como línea
+ENLACE_A_OTRAS = re.compile(
+    r"^[\s\[(«\"“]*(►|lea también|lee también|puede?s? leer|lee más|leer más|te recomendamos|más en andina|mira también"
+    r"|video recomendado|¡mira rpp)",
+    re.I,
+)
+MAX_PALABRAS_ENLACES = 80  # un bloque más largo que empieza así es cuerpo, no una lista de enlaces
+# Andina abre el cuerpo con un bloque corto de hora y lugar ("14:11 | Loreto ene. 30.", "22:36 | Ciudad de México,
+# ago. 17 (EFE).-"); se reconoce por cómo empieza, no por el formato del lugar o la fecha, que varía
+HORA_Y_LUGAR = re.compile(r"^\s*\d{1,2}:\d{2}\s*\|")
+MAX_PALABRAS_HORA_Y_LUGAR = 15
+# Otras líneas que no son la nota: los créditos de agencia o de foto ("ANDINA/Difusión", "AFP")
+LINEA_FUERA = re.compile(
+    ENLACE_A_OTRAS.pattern + r"|^(andina|afp|ap|efe|reuters|europa press)(/[^/]{2,40})?$",
+    re.I,
+)
+INICIALES = re.compile(r"^(\(FIN\)\s*)?[A-Z]{2,4}(/[A-Z]{2,4})*$")  # sin re.I: "Lima" o "Piura" no son iniciales
+# El Tiempo pone sus enlaces a otras notas en un <blockquote> ("PUEDES LEER ►"); las citas textuales se conservan
+CITA_QUE_ES_ENLACE = re.compile(r"^\s*(puede?s?|lee)\s*(leer|más)\b|►", re.I)
+SALTO = {
+    "p",
+    "div",
+    "li",
+    "ul",
+    "ol",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "blockquote",
+    "figure",
+    "table",
+    "tr",
+    "section",
+}
 ENLACES_DE_COMPARTIR = re.compile(r"^(mailto:|javascript:|whatsapp:|#)|sharer|/intent/|shareArticle|share\?", re.I)
 CHARSET = re.compile(rb"charset=[\"']?([\w-]+)", re.I)
 
@@ -72,8 +129,43 @@ def limpiar(texto):
 
 
 def _sin_titular(cuerpo, titular):
-    """Andina repite el titular al inicio del contenedor: se quita para que no cuente como primer párrafo."""
-    return cuerpo[len(titular) :].strip() if titular and cuerpo.startswith(titular) else cuerpo
+    """Si la primera línea repite el titular, se quita para que no cuente como primer párrafo."""
+    primera, _, resto = cuerpo.partition("\n")
+    return resto if titular and primera == titular else cuerpo
+
+
+def _sin_bloques_ajenos(nodo, medio):
+    """Quita del cuerpo lo que no es la nota; los enlaces se toman después, sin los de recomendados."""
+    for basura in nodo.xpath(FUERA_DEL_CUERPO.replace("//", ".//")):
+        basura.drop_tree()
+    if FUERA_POR_MEDIO[medio]:
+        for basura in nodo.xpath(FUERA_POR_MEDIO[medio]):
+            basura.drop_tree()
+    for cita in nodo.xpath(".//blockquote"):
+        if CITA_QUE_ES_ENLACE.search(cita.text_content()):
+            cita.drop_tree()
+    for bloque in nodo.xpath(".//p|.//div|.//li|.//ul"):
+        texto = bloque.text_content()
+        palabras = len(texto.split())
+        if (ENLACE_A_OTRAS.match(texto) and palabras <= MAX_PALABRAS_ENLACES) or (
+            HORA_Y_LUGAR.match(texto) and palabras <= MAX_PALABRAS_HORA_Y_LUGAR
+        ):
+            bloque.drop_tree()
+
+
+def _lineas(nodo):
+    """Texto del cuerpo con un salto en cada bloque y en cada <br>: ninguna frase queda pegada a la siguiente."""
+    for el in nodo.iter():
+        if not isinstance(el.tag, str):
+            continue
+        if el.tag == "br" or el.tag in SALTO:
+            el.tail = "\n" + (el.tail or "")
+        if el.tag in SALTO:
+            el.text = "\n" + (el.text or "")
+    lineas = (norm(linea) for linea in nodo.text_content().split("\n"))
+    return "\n".join(
+        linea for linea in lineas if linea and not LINEA_FUERA.search(linea) and not INICIALES.match(linea)
+    )
 
 
 def _enlaces(nodo, url_base):
@@ -93,7 +185,8 @@ def proporcion_en_cuerpo(texto, cuerpo):
 
 
 def _campos(titular, resumen, cuerpo, enlaces, **otros):
-    cuerpo = _sin_titular(norm(cuerpo), titular)
+    lineas = (norm(linea) for linea in (cuerpo or "").split("\n"))
+    cuerpo = _sin_titular("\n".join(linea for linea in lineas if linea), titular)
     return {
         "titular": titular,
         "resumen": resumen,
@@ -118,10 +211,10 @@ def leer_html(medio, contenido, url, tipo=""):
     creacion = next((t.split(":", 1)[1] for t in _meta(doc, "mrf:tags") if t.startswith("dateCreated:")), "")
     seccion = limpiar(str(ld.get("articleSection") or "")) or next(iter(_meta(doc, "article:section")), "")
     etiquetas = _meta(doc, "article:tag") or _meta(doc, "news_keywords", "keywords")
-    for basura in doc.xpath(FUERA_DEL_CUERPO):
-        basura.drop_tree()
-    nodos = doc.xpath(CUERPO[medio])
-    cuerpo = nodos[0].text_content() if nodos else ""
+    nodo = next((n[0] for xpath in CUERPO[medio] if (n := doc.xpath(xpath))), None)
+    if nodo is not None:
+        _sin_bloques_ajenos(nodo, medio)
+    cuerpo = _lineas(nodo) if nodo is not None else ""
     cuerpo_ld = limpiar(ld.get("articleBody"))
     if len(cuerpo.split()) < MIN_PALABRAS and cuerpo_ld:
         cuerpo = cuerpo_ld
@@ -129,7 +222,7 @@ def leer_html(medio, contenido, url, tipo=""):
         titular,
         resumen,
         cuerpo,
-        _enlaces(nodos[0], url) if nodos else [],
+        _enlaces(nodo, url) if nodo is not None else [],
         fecha_publicacion=publicada,
         fecha_modificacion=a_lima(str(ld.get("dateModified") or "")),
         fecha_creacion=a_lima(creacion) if creacion else "",
@@ -151,12 +244,11 @@ def leer_api(entrada):
     if not entrada.get("date_gmt"):
         raise NotaInvalida("sin date_gmt")
     if contenido is not None:
-        for basura in contenido.xpath(FUERA_DEL_CUERPO.replace("//", ".//")):
-            basura.drop_tree()
+        _sin_bloques_ajenos(contenido, "eltiempo")
     return _campos(
         limpiar(entrada.get("title", {}).get("rendered", "")),
         limpiar(resumen.text_content()) if resumen is not None else "",
-        contenido.text_content() if contenido is not None else "",
+        _lineas(contenido) if contenido is not None else "",
         _enlaces(contenido, entrada["link"]) if contenido is not None else [],
         fecha_publicacion=a_lima(entrada["date_gmt"]),
         fecha_modificacion=a_lima(entrada.get("modified_gmt", "")),
