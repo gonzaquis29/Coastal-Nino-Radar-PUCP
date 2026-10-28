@@ -44,6 +44,11 @@ LEYENDA = re.compile(r"^(Figura|Tabla|Fuente)(\s*\d+\s*[.:)]|\s*:|$)", re.I)
 INICIO_NOTA = re.compile(r"^\d{1,2}(\s|$|https?:)")
 LINEA_ENLACE = re.compile(r"^(\d{1,2}\.?\s*)?https?://\S+$")
 ENCABEZADO_TABLA = re.compile(r"^(Magnitud del evento|Probabilidad de Ocurrencia|El Niño( Costero)?\s*\(\w+ \d{4} -)")
+# Encabezado de una tabla de probabilidad que el PDF parte en varias líneas y que, unido, parecía un párrafo:
+# "El Niño (diciembre 2026 - marzo 2027) Ocurrencia (%)" (N.° 13 a 16); se reconoce ya unido, no línea por línea
+TABLA_EN_PARRAFO = re.compile(
+    r"^(El Niño( Costero)?\s*)?([a-d]\s+)*\(\w+ \d{4}\s*-\s*\w+ \d{4}\)\s*(Ocurrencia\s*)?\(%\)$"
+)
 ROTULO_PANEL = re.compile(r"^([a-d]\)?\s+)+")
 VINETAS = "•−–"
 
@@ -160,8 +165,10 @@ def agrupar(lineas):
 
 
 def _seccionar(parrafos_brutos, tam_resumen):
-    """Asigna sección (titular, resumen, cuerpo) y descarta encabezados, leyendas y restos."""
-    parrafos, seccion = [], "cuerpo"
+    """Asigna sección (titular, resumen, cuerpo) y descarta encabezados, leyendas y restos. Cada párrafo lleva su
+    orden en el PDF; los encabezados de tabla, que antes salían como párrafo, siguen contando para que los ids de los
+    demás no cambien."""
+    parrafos, seccion, orden = [], "cuerpo", 0
     for p in parrafos_brutos:
         texto = re.sub(r"^[ab]\)\s+(?=[A-ZÁÉÍÓÚ])", "", p["texto"].lstrip(VINETAS + " ").strip())
         if texto.upper() == "RESUMEN EJECUTIVO":
@@ -176,14 +183,18 @@ def _seccionar(parrafos_brutos, tam_resumen):
             continue
         if re.fullmatch(r"[A-ZÁÉÍÓÚÑ0-9 ,.]+", texto):
             if len(texto) > LARGO_MINIMO:
-                parrafos.append({"seccion": "titular", "texto": texto})
+                orden += 1
+                parrafos.append({"seccion": "titular", "texto": texto, "orden": orden})
             continue
         if len(texto) < LARGO_MINIMO:
             continue
+        orden += 1
+        if TABLA_EN_PARRAFO.match(texto):
+            continue
         if seccion == "resumen" and p["tam"] > tam_resumen:
             seccion = "cuerpo"
-        parrafos.append({"seccion": seccion, "texto": texto})
-    return parrafos
+        parrafos.append({"seccion": seccion, "texto": texto, "orden": orden})
+    return parrafos, orden
 
 
 def _definicion_estado(notas):
@@ -203,12 +214,12 @@ def _marcar_duplicados(parrafos):
             if "duplicado_de" in previo:
                 continue
             if difflib.SequenceMatcher(None, clave(p["texto"]), clave(previo["texto"])).ratio() >= SIMILITUD_DUPLICADO:
-                p["duplicado_de"] = j
+                p["duplicado_de"] = previo["orden"]
                 break
 
 
 def extraer(ruta_pdf):
-    """Párrafos [{seccion, texto, duplicado_de?}], tablas y texto completo de un comunicado."""
+    """Párrafos [{seccion, texto, orden, duplicado_de?}], tablas y texto completo de un comunicado."""
     with pymupdf.open(ruta_pdf) as doc:
         lineas, tablas = lineas_y_tablas(doc)
         texto = norm(" ".join(pagina.get_text() for pagina in doc))
@@ -220,9 +231,10 @@ def extraer(ruta_pdf):
     tam_resumen = next(
         (cuerpo[i + 1]["tam"] for i, ln in enumerate(cuerpo[:-1]) if ln["texto"].upper() == "RESUMEN EJECUTIVO"), 0
     )
-    parrafos = _seccionar(agrupar(cuerpo), tam_resumen)
+    parrafos, ultimo = _seccionar(agrupar(cuerpo), tam_resumen)
     definicion = _definicion_estado(norm(" ".join(ln["texto"] for ln in lineas if ln["tipo"] == "nota")))
     if definicion:
-        parrafos.append({"seccion": "definicion", "texto": definicion})
+        # después de todo lo contado, incluido un encabezado de tabla final (N.° 13), para que su id no cambie
+        parrafos.append({"seccion": "definicion", "texto": definicion, "orden": ultimo + 1})
     _marcar_duplicados(parrafos)
     return parrafos, tablas, texto

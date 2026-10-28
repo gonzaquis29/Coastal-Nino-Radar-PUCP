@@ -58,6 +58,15 @@ Escalas: Niño 1+2 (ICEN) débil, moderado, fuerte, extraordinario; Niño 3.4 us
 3. Agrupación: párrafo nuevo si hay espacio vertical > 0,45 de la letra, cambia el tamaño, la línea anterior termina en punto y es corta, empieza una viñeta (•, −) o un rótulo. Entre páginas se une si el anterior no termina en puntuación. Guion al final + minúscula → se une sin espacio.
 4. El bloque número/fecha/estado/"RESUMEN EJECUTIVO" pasa a campos. Secciones: `titular`, `resumen` (bajo "RESUMEN EJECUTIVO", con su tamaño de letra), `cuerpo`, `definicion` (la nota al pie que define el estado; está en 14 de 19).
 5. `duplicado_de`: el resumen repite el cuerpo; si dos párrafos del mismo comunicado tienen similitud ≥ 0,9 se marca el segundo. ChromaDB indexa sin duplicados.
+6. Encabezados de tabla que el PDF parte en líneas y que, unidos, parecían párrafo ("El Niño (diciembre 2026 - marzo 2027) Ocurrencia (%)", N.° 13 a 16): se reconocen ya unidos y no salen. Siguen contando en el orden para que los ids de los demás no cambien (queda un hueco en la numeración).
+
+### Tipo de párrafo y región del océano (28-oct-2026)
+Dos columnas de `parrafos.csv`, calculadas con reglas sobre el texto (nunca con la posición), para saber de qué trata cada párrafo; las capas que eligen contra qué párrafo se compara una nota las usan, pero esa elección no se hace aquí.
+
+- `tipo` (vocabulario en `oficial/vocabulario.py`): `definicion` (la nota del estado); `recomendacion` ("Se recomienda", "Se exhorta"…); `seguimiento` (la apertura dice que el ENFEN "continuará monitoreando" o anuncia el próximo comunicado); por rótulo del ENFEN, `pesca` ("Pesquero:") o `impactos` ("Lluvias:", "Caudales:", "Temperatura del aire:", "Embalses:"); `pronostico` si la apertura habla del estado del sistema de alerta; si no, por los temas de la primera frase, `pesca` o `impactos` (lluvias, caudales, calor); `pronostico` si el párrafo trata de El Niño o La Niña, condiciones cálidas o frías, ICEN, ONI o magnitud; `otro` en el resto. Los avisos del Senamhi son `impactos`. No reemplaza a `temas` (categorías de interés del README).
+- `region_enso`: `nino_1+2` (costa), `nino_3.4` (Pacífico central), `ambas` o vacío, con las mismas expresiones que separan la magnitud por región (`enfen.MENCIONA_COSTERA`, `MENCIONA_CENTRAL`).
+
+**Validación (referencia externa: la estructura fija del resumen ejecutivo).** Los 17 comunicados con resumen (N.° 13-2025 a 16-2026) tienen 6 párrafos en el mismo orden: estado del sistema (costa), Pacífico central, lluvias, caudales, pesca y recomendaciones. Criterios fijados antes de correr: tipo = posición ≥ 95 %; región de las posiciones 1 y 2 ≥ 95 %; el párrafo del cuerpo que repite uno del resumen recibe la misma marca ≥ 95 %; ningún párrafo es encabezado de tabla. **Resultado (28-oct): pasan todos** — 102/102, 34/34, 30/30 y 250/250. Comparado con el corpus anterior, salen exactamente los 4 encabezados de tabla y ningún otro párrafo del ENFEN cambia de id, texto ni duplicado (una primera versión movía la definición del N.° 13 de `p15` a `p14`; se corrigió antes de aceptar). En los N.° 17 y 18 (sin resumen, sin referencia): impactos 10, pronóstico 5, pesca 4, recomendación 3 y 2 `otro` ("Ante estos escenarios de calentamiento anómalo del mar, se prevén:", que introduce la lista de impactos).
 
 Los textos se muestran tal cual y citando la fuente: el art. 9.b del D. Leg. 822 (texto consolidado en WIPO Lex, a feb-2026) excluye los textos oficiales administrativos "sin perjuicio de la obligación de respetar los textos y citar la fuente". La limpieza solo quita marcas de nota, encabezados y pies; siempre se enlaza el PDF.
 
@@ -82,7 +91,7 @@ CSV UTF-8 con saltos LF (fijado en `.gitattributes`), filas ordenadas, listas un
 | `probabilidades.csv` | `comunicado_id`, `region` (`nino_1+2`/`nino_3.4`), `periodo`, `categoria`, `probabilidad` |
 | `avisos.csv` | `id` (`senamhi-2026-432`), `anio`, `numero`, `b`, `titulo`, `tipo`, `nivel`, `estado` (`emitido`/`vigente`/`vencido`/`cancelado`), `relacion`, `aviso_relacionado`, `emision`, `inicio`, `fin`, `duracion`, `macroregiones`, `metodo_macroregion`, `url` |
 | `aviso_dias.csv` | `aviso_id`, `fecha`, `mapa`, `macroregion`, `nivel_dia`, `nivel_macroregion`, `estaciones`, `departamentos`, `metodo` |
-| `parrafos.csv` | `id` (`<doc>-p03`), `doc_id`, `fuente`, `orden`, `seccion`, `texto`, `fecha_doc`, `vigente_desde`, `vigente_hasta`, `macroregiones`, `temas`, `duplicado_de`, `sha1` |
+| `parrafos.csv` | `id` (`<doc>-p03`), `doc_id`, `fuente`, `orden`, `seccion`, `texto`, `fecha_doc`, `vigente_desde`, `vigente_hasta`, `macroregiones`, `temas`, `tipo`, `region_enso`, `duplicado_de`, `sha1` |
 | `validacion.csv` | `prueba`, `criterio`, `valor`, `umbral`, `pasa`, `detalle` |
 
 `macroregiones` de un párrafo del ENFEN son las que nombra (vacío = nacional); las de un aviso, las de su polígono. El id de párrafo es estable mientras no cambie el PDF; `sha1` cambia si cambia el texto.

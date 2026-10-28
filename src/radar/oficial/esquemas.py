@@ -65,6 +65,8 @@ PARRAFOS = (
     "vigente_hasta",
     "macroregiones",
     "temas",
+    "tipo",
+    "region_enso",
     "duplicado_de",
     "sha1",
 )

@@ -1,6 +1,8 @@
 """Reglas de extracción del corpus oficial: campos y magnitud del ENFEN, alcance y polígonos del Senamhi."""
 
-from radar.oficial import enfen, senamhi
+import pytest
+
+from radar.oficial import enfen, enfen_pdf, senamhi
 from radar.oficial.corpus import conservar
 
 
@@ -42,6 +44,54 @@ def test_magnitud_separa_regiones_y_lo_que_no_se_descarta():
 def test_temas_por_rotulo_y_palabras():
     assert enfen.temas("Pesquero: La anchoveta se observa…") == {"pesca"}
     assert enfen.temas("Se recomienda a los tomadores de decisiones considerar los avisos.") == {"prevencion"}
+
+
+@pytest.mark.parametrize(
+    "texto, tipo, region",
+    [
+        (
+            "ENFEN mantiene el estado de Alerta de El Niño Costero. Las lluvias seguirían en la costa.",
+            "pronostico",
+            "nino_1+2",
+        ),
+        (
+            "En el Pacífico central (región Niño 3.4) la condición neutra continuaría hasta mayo de 2026.",
+            "pronostico",
+            "nino_3.4",
+        ),
+        (
+            "Para el trimestre enero – marzo 2026, se prevén lluvias de moderada intensidad en la costa norte.",
+            "impactos",
+            "",
+        ),
+        (
+            "En cuanto al pronóstico hidrológico, los caudales serían normales. Asociado a El Niño costero.",
+            "impactos",
+            "nino_1+2",
+        ),
+        ("En relación a los recursos pesqueros, la anchoveta se mantendría cerca de la costa.", "pesca", ""),
+        ("Pesquero: La anchoveta se observa en su fase juvenil.", "pesca", ""),
+        ("Se recomienda a los tomadores de decisiones adoptar las medidas correspondientes.", "recomendacion", ""),
+        ("La Comisión Multisectorial del ENFEN continuará monitoreando las condiciones oceánicas.", "seguimiento", ""),
+    ],
+)
+def test_tipo_y_region_de_los_parrafos(texto, tipo, region):
+    assert enfen.tipo_parrafo(texto, "cuerpo") == tipo
+    assert enfen.region_enso(texto) == region
+    assert enfen.tipo_parrafo("Alerta de El Niño Costero: ocurre cuando…", "definicion") == "definicion"
+
+
+def test_encabezado_de_tabla_no_es_parrafo_y_no_mueve_los_ids():
+    brutos = [
+        {"tam": 11, "texto": "Primer párrafo del comunicado con texto suficiente."},
+        {"tam": 11, "texto": "El Niño (diciembre 2026 - marzo 2027) Ocurrencia (%)"},
+        {"tam": 11, "texto": "a b (diciembre 2026 - marzo 2027) (%)"},
+        {"tam": 11, "texto": "Último párrafo del comunicado con texto suficiente."},
+    ]
+    parrafos, ultimo = enfen_pdf._seccionar(brutos, 0)
+    assert [(p["orden"], p["texto"][:6]) for p in parrafos] == [(1, "Primer"), (4, "Último")] and ultimo == 4
+    _, ultimo = enfen_pdf._seccionar(brutos[:2], 0)  # encabezado al final: la definición que sigue va en el 3
+    assert ultimo == 2
 
 
 def test_tipo_y_segmentos_de_avisos():

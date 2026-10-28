@@ -16,6 +16,7 @@ from radar.oficial.senamhi_paginas import leer_detalle, leer_mapa, mapas_del_pan
 from radar.oficial.vocabulario import (
     CANCELADO,
     EMITIDO,
+    IMPACTOS,
     NIVEL_MINIMO_AVISO,
     PRECIPITACIONES,
     TEMA_DE_TIPO_AVISO,
@@ -272,6 +273,8 @@ def _parrafos(fila, detalle, ident, macros):
             "vigente_hasta": fin,
             "macroregiones": sorted(macros),
             "temas": tema,
+            "tipo": IMPACTOS,  # un aviso describe impactos (lluvias, temperatura)
+            "region_enso": "",
             "duplicado_de": "",
             "sha1": sha1_corto(texto),
         }

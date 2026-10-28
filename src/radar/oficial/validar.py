@@ -15,8 +15,18 @@ from pypdf import PdfReader
 
 from radar.comun.regiones import MACROREGIONES_COSTA
 from radar.comun.texto import clave
-from radar.oficial import enfen
-from radar.oficial.vocabulario import CANCELADO, NIVELES_AVISO, NO_ACTIVO, REGION_COSTERA
+from radar.oficial import enfen, enfen_pdf
+from radar.oficial.vocabulario import (
+    CANCELADO,
+    IMPACTOS,
+    NIVELES_AVISO,
+    NO_ACTIVO,
+    PESCA,
+    PRONOSTICO,
+    RECOMENDACION,
+    REGION_CENTRAL,
+    REGION_COSTERA,
+)
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +36,12 @@ MINIMO_ACUERDO_EXTRACTORES = 0.98
 SIMILITUD_FRASE = 0.9
 MINIMO_FRASES = 0.95
 MINIMO_ACUERDO_MACROREGION = 0.95
+MINIMO_TIPO = 0.95  # tipo y región del párrafo frente a la estructura fija del resumen
+# Estructura fija del resumen ejecutivo (N.° 13-2025 a 16-2026, 6 párrafos): referencia externa para el tipo y la
+# región del océano, que se calculan con reglas sobre el texto, nunca con la posición
+TIPO_POR_POSICION = (PRONOSTICO, PRONOSTICO, IMPACTOS, IMPACTOS, PESCA, RECOMENDACION)
+REGION_POR_POSICION = (REGION_COSTERA, REGION_CENTRAL)
+PARRAFOS_RESUMEN = len(TIPO_POR_POSICION)
 LARGO_MINIMO_FRASE = 25
 LARGO_DETALLE = 300
 
@@ -256,7 +272,82 @@ def validar_enfen(comunicados, parrafos, control, errores):
     r.criterio(
         "enfen (informativo)", "temas por palabras clave = tema de la frase de apertura", "referencia", temas, 0.0
     )
+    _validar_tipo_y_region(r, prueba, [p for p in parrafos if p["fuente"] == "enfen"])
     return r.filas
+
+
+def _resumenes(parrafos):
+    por_doc = collections.defaultdict(list)
+    for p in parrafos:
+        if p["seccion"] == "resumen":
+            por_doc[p["doc_id"]].append(p)
+    return {d: sorted(ps, key=lambda p: int(p["orden"])) for d, ps in por_doc.items() if len(ps) == PARRAFOS_RESUMEN}
+
+
+def _validar_tipo_y_region(r, prueba, parrafos):
+    resumenes = _resumenes(parrafos)
+
+    def tipo_por_posicion():
+        mal = [
+            f"{p['id']}:{p['tipo']}≠{esperado}"
+            for ps in resumenes.values()
+            for p, esperado in zip(ps, TIPO_POR_POSICION, strict=True)
+            if p["tipo"] != esperado
+        ]
+        return len(resumenes) * PARRAFOS_RESUMEN - len(mal), len(resumenes) * PARRAFOS_RESUMEN, ", ".join(mal)
+
+    r.criterio(
+        prueba, "tipo de párrafo = posición en el resumen", f"≥ {MINIMO_TIPO:.0%}", tipo_por_posicion, MINIMO_TIPO
+    )
+
+    def region_por_posicion():
+        mal = [
+            f"{p['id']}:{p['region_enso'] or '-'}≠{esperada}"
+            for ps in resumenes.values()
+            for p, esperada in zip(ps, REGION_POR_POSICION, strict=False)
+            if p["region_enso"] != esperada
+        ]
+        total = len(resumenes) * len(REGION_POR_POSICION)
+        return total - len(mal), total, ", ".join(mal)
+
+    r.criterio(
+        prueba,
+        "región del océano = posición en el resumen (1.ª costa, 2.ª Pacífico central)",
+        f"≥ {MINIMO_TIPO:.0%}",
+        region_por_posicion,
+        MINIMO_TIPO,
+    )
+
+    def igual_que_su_duplicado():
+        por_id = {p["id"]: p for p in parrafos}
+        pares = [(p, por_id[p["duplicado_de"]]) for p in parrafos if p["duplicado_de"] in por_id]
+        mal = [
+            f"{a['id']}≠{b['id']}" for a, b in pares if (a["tipo"], a["region_enso"]) != (b["tipo"], b["region_enso"])
+        ]
+        return len(pares) - len(mal), len(pares), ", ".join(mal)
+
+    r.criterio(
+        prueba,
+        "el cuerpo que repite al resumen tiene el mismo tipo y región",
+        f"≥ {MINIMO_TIPO:.0%}",
+        igual_que_su_duplicado,
+        MINIMO_TIPO,
+    )
+
+    def sin_encabezados_de_tabla():
+        mal = [p["id"] for p in parrafos if enfen_pdf.TABLA_EN_PARRAFO.match(p["texto"])]
+        return len(parrafos) - len(mal), len(parrafos), ", ".join(mal)
+
+    r.criterio(prueba, "párrafos que no son encabezado de tabla", "100 %", sin_encabezados_de_tabla)
+
+    def sin_referencia():
+        sin = [p for p in parrafos if p["doc_id"] not in resumenes and p["seccion"] != "definicion"]
+        reparto = collections.Counter(p["tipo"] for p in sin)
+        return len(sin), len(sin), "; ".join(f"{t} {n}" for t, n in reparto.most_common())
+
+    r.criterio(
+        "enfen (informativo)", "tipos en comunicados sin resumen (N.° 17 y 18)", "referencia", sin_referencia, 0.0
+    )
 
 
 # ---------------------------------------------------------------- Senamhi

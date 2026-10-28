@@ -12,7 +12,7 @@ ESTADOS_ENFEN = (
 
 # Magnitudes de El Niño, de menor a mayor. Niño 1+2 (ICEN) llega a "extraordinaria"; Niño 3.4 usa "muy fuerte".
 ESCALA_MAGNITUD = ("débil", "moderada", "fuerte", "muy fuerte", "extraordinaria")
-REGION_COSTERA, REGION_CENTRAL = "nino_1+2", "nino_3.4"
+REGION_COSTERA, REGION_CENTRAL, AMBAS_REGIONES = "nino_1+2", "nino_3.4", "ambas"
 
 # Senamhi: niveles de aviso; el índice es el número de nivel del mapa (nl) y del polígono ("Nivel N")
 NIVELES_AVISO = ("", "VERDE", "AMARILLO", "NARANJA", "ROJO")
@@ -25,6 +25,17 @@ EMITIDO, VIGENTE, VENCIDO, CANCELADO = "emitido", "vigente", "vencido", "cancela
 # Categorías de interés del README
 PESCA, LLUVIAS, CALOR, PREVENCION = "pesca", "lluvias", "calor", "prevencion"
 TEMA_DE_TIPO_AVISO = {PRECIPITACIONES: LLUVIAS, TEMPERATURA: CALOR}
+
+# Qué función cumple un párrafo oficial (docs/oficial/definicion.md, "Tipo de párrafo"); distinto de los temas
+PRONOSTICO, IMPACTOS, RECOMENDACION, SEGUIMIENTO, DEFINICION, OTRO = (
+    "pronostico",
+    "impactos",
+    "recomendacion",
+    "seguimiento",
+    "definicion",
+    "otro",
+)
+TIPOS_PARRAFO = (PRONOSTICO, IMPACTOS, PESCA, RECOMENDACION, SEGUIMIENTO, DEFINICION, OTRO)
 
 
 def orden_nivel(nivel):

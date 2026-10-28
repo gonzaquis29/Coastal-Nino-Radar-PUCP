@@ -16,14 +16,21 @@ from radar.comun.texto import MESES_CORTOS, clave, fecha_es, norm, sha1_corto
 from radar.comun.xml import NS_SITEMAP, leer_xml
 from radar.oficial import enfen_pdf
 from radar.oficial.vocabulario import (
+    AMBAS_REGIONES,
     CALOR,
+    DEFINICION,
     ESCALA_MAGNITUD,
     ESTADOS_ENFEN,
+    IMPACTOS,
     LLUVIAS,
+    OTRO,
     PESCA,
     PREVENCION,
+    PRONOSTICO,
+    RECOMENDACION,
     REGION_CENTRAL,
     REGION_COSTERA,
+    SEGUIMIENTO,
 )
 from radar.recoleccion.urls import filas_de_notas
 
@@ -239,6 +246,51 @@ def temas(texto):
     return {TEMA_DE_ROTULO[m.group(1).lower()]} if m else temas_por_palabras(texto)
 
 
+# ---------------------------------------------------------------- tipo y región del océano de cada párrafo
+
+RECOMIENDA = re.compile(r"^((Asimismo|Por otro lado|Además),?\s*)?se (recomienda|sugiere|exhorta|insta)\b", re.I)
+SIGUE = re.compile(r"continuará (monitoreando|vigilando|evaluando)|próximo [Cc]omunicado|actualizando las perspectivas")
+ESTADO_DEL_SISTEMA = re.compile(r"estado del? sistema de alerta|ENFEN (mantiene|cambia|dispone|activa|desactiva)", re.I)
+SOBRE_ENOS = re.compile(
+    r"El Niño|La Niña|condici(ón|ones) (cálida|fría|neutra)|región Niño|Pacífico (ecuatorial )?central|\bICEN\b"
+    r"|\bONI\b|magnitud",
+    re.I,
+)
+APERTURA = re.compile(r"(?<=[^\s][.;])\s+(?=[A-ZÁÉÍÓÚ])")  # fin de la primera frase (también tras una cifra)
+
+
+def tipo_parrafo(texto, seccion):
+    """Qué función cumple el párrafo. Se decide por cómo empieza: el ENFEN abre cada párrafo con su tema."""
+    if seccion == "definicion":
+        return DEFINICION
+    if RECOMIENDA.match(texto):
+        return RECOMENDACION
+    apertura = APERTURA.split(texto, maxsplit=1)[0]
+    if SIGUE.search(apertura):
+        return SEGUIMIENTO
+    rotulo = enfen_pdf.ROTULO.match(texto)
+    if rotulo:
+        return PESCA if rotulo.group(1).lower() == "pesquero" else IMPACTOS
+    if ESTADO_DEL_SISTEMA.search(apertura):
+        return PRONOSTICO
+    temas_apertura = temas_por_palabras(apertura)
+    if PESCA in temas_apertura:
+        return PESCA
+    if temas_apertura & {LLUVIAS, CALOR}:
+        return IMPACTOS
+    if SOBRE_ENOS.search(texto):
+        return PRONOSTICO
+    return OTRO
+
+
+def region_enso(texto):
+    """Región del océano que nombra el párrafo: costa (Niño 1+2), Pacífico central (Niño 3.4), ambas o ninguna."""
+    central, costera = MENCIONA_CENTRAL.search(texto), MENCIONA_COSTERA.search(texto)
+    if central and costera:
+        return AMBAS_REGIONES
+    return REGION_CENTRAL if central else REGION_COSTERA if costera else ""
+
+
 # ---------------------------------------------------------------- página de descarga (referencia para validar)
 
 LARGO_MINIMO_WEB = 30
@@ -349,7 +401,8 @@ def _fila_comunicado(slug, lectura, ident, web, textos, estado):
 
 def _filas_parrafos(lectura, ident):
     filas = []
-    for orden, parrafo in enumerate(lectura.parrafos, start=1):
+    for i, parrafo in enumerate(lectura.parrafos, start=1):
+        orden = parrafo.get("orden", i)  # la vía de respaldo (resumen de la página web) no trae el orden del PDF
         duplicado = parrafo.get("duplicado_de")
         filas.append(
             {
@@ -362,7 +415,9 @@ def _filas_parrafos(lectura, ident):
                 "fecha_doc": lectura.campos["fecha_emision"],
                 "macroregiones": regiones_mencionadas(parrafo["texto"]),
                 "temas": temas(parrafo["texto"]) if parrafo["seccion"] != "definicion" else set(),
-                "duplicado_de": f"{ident}-p{duplicado + 1:02d}" if duplicado is not None else "",
+                "tipo": tipo_parrafo(parrafo["texto"], parrafo["seccion"]),
+                "region_enso": region_enso(parrafo["texto"]),
+                "duplicado_de": f"{ident}-p{duplicado:02d}" if duplicado is not None else "",
                 "sha1": sha1_corto(parrafo["texto"]),
             }
         )

@@ -212,3 +212,18 @@ La sexta pasa todos los criterios:
 - RPP con su `articleBody` en 25 de 25 notas.
 
 También comprobó que los enlaces quitados son todos recomendados del propio medio y que se recuperan las citas textuales que antes se borraban. Detalle en `docs/noticias/texto.md`.
+
+## 2026-10-28 · Capa 2 del flujo de NLP: corpus oficial limpio (Claude Code, Claude Opus 5.5)
+**Propósito:** que cada párrafo oficial sea texto real y diga de qué trata, para las capas que comparan notas con lo oficial.
+
+**Prompts (resumen fiel, en orden):**
+1. ¿Estás seguro de tu análisis como para continuar de una vez? (verificar la capa 1 antes de seguir).
+2. Si el enfoque está bien, continuar; si no, seguir probando.
+3. Sí, continuamos (aprobación de la definición de la capa 2).
+
+**Resultado:** al verificar la capa 1 sobre notas sobre El Niño, la IA encontró que había dejado fuera la bajada de Andina. La corrigió y revisó caso por caso los cambios de "El Niño en el inicio": ninguna nota deja de ser sobre El Niño. Para la capa 2 midió el corpus:
+- 4 encabezados de tabla que salían como párrafo;
+- 41 párrafos de recomendaciones y seguimiento;
+- párrafos de la costa y del Pacífico central sin nada que los distinguiera.
+
+Usó como referencia externa la estructura fija del resumen ejecutivo: 17 comunicados con 6 párrafos en el mismo orden. Con eso, el extractor del PDF reconoce los encabezados de tabla ya unidos y cada párrafo lleva `tipo` y `region_enso`, calculados con reglas sobre el texto. Pasan todos los criterios: 102/102, 34/34, 30/30 y 250/250. La comparación con el corpus anterior destapó que la definición del N.° 13 cambiaba de id; se corrigió, y ahora solo salen los 4 encabezados.
