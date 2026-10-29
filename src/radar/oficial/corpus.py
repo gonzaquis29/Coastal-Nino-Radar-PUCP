@@ -9,6 +9,7 @@ import sys
 
 from radar import config
 from radar.comun.archivos import EstadoDescargas, escribir_csv, guardar_gz, leer_csv, leer_gz
+from radar.comun.candado import exclusivo
 from radar.comun.http import Cliente
 from radar.comun.registro import configurar, describir
 from radar.comun.texto import ahora
@@ -143,6 +144,7 @@ def _reporte(salida, filas_validacion, alertas, inicio, prueba):
     log.info(f"\nDuración: {(ahora() - inicio).total_seconds() / 60:.1f} min")
 
 
+@exclusivo("radar.oficial.corpus")
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Construye el corpus oficial (ENFEN y Senamhi).")
     ap.add_argument("--solo", choices=FUENTES)

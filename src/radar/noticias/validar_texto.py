@@ -17,6 +17,7 @@ from lxml import html
 
 from radar import config
 from radar.comun.archivos import anexar_csv, leer_csv
+from radar.comun.candado import exclusivo
 from radar.comun.http import Cliente
 from radar.comun.registro import configurar
 from radar.comun.texto import ahora, norm
@@ -367,6 +368,7 @@ def validar_resumen(lecturas):
     ]
 
 
+@exclusivo("radar.noticias.validar_texto")
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Validación del texto limpio del cuerpo (capa 1).")
     ap.add_argument("--semilla", help=f"por omisión {SEMILLA} (cuerpo) o {SEMILLA_RESUMEN} (resumen)")

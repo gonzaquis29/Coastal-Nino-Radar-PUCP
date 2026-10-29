@@ -3,7 +3,7 @@
 Orden según dependencias reales y fechas, revisado con lo aprendido en los pilotos; el calendario del README es orientativo. Cada tarea se define, se aprueba, se construye y se valida con muestras nuevas, una a la vez. Estado del índice de discrepancia y del flujo de NLP: [nlp/discrepancia.md](nlp/discrepancia.md).
 
 ## Siempre (rutina hasta el corte del 20-nov)
-- Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. Luego `python -m radar.noticias.historico` (solo notas nuevas) y `python -m radar.region.notas`.
+- Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. Un solo proceso a la vez pide páginas (`data/red.lock`): si el recálculo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo. Luego `python -m radar.noticias.historico` (solo notas nuevas) y `python -m radar.region.notas`.
 - Si la recolección avisa "Nuevo documento del ENFEN", `python -m radar.oficial.corpus`. El 28-oct el aviso eran solo ediciones de las páginas web de los N.° 14 a 18; los PDF no cambiaron.
 - Próximo comunicado del ENFEN anunciado: jueves 30-oct.
 
@@ -16,8 +16,8 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 
 **Hecho el 28-oct (regla de magnitud):** una sola regla por cercanía para el ENFEN y las notas ([nlp/magnitud.md](nlp/magnitud.md)). Con `comunicados.csv` sin cambios, pasa la 1.ª y la 3.ª muestra; la 2.ª no pasó y se corrigió en la regla y en el instrumento. Quedan sin ver solo 16 notas con magnitud, todas de Andina: la medición previa al recálculo mide "sobre El Niño" con muestra nueva, y el efecto completo en las magnitudes lo da el recálculo, nota por nota.
 1. ~~**Unificar la regla de magnitud:**~~ (hecho) `noticias.rasgos.magnitudes` pasa a usar, frase por frase, las reglas de `oficial.enfen`; es la definición de la capa 3. Hay que validar antes cuántas notas cambian sus magnitudes y su "sobre El Niño".
-2. **Un modo de recálculo en `noticias.historico`** (hoy solo lee notas nuevas): volver a leer las notas ya leídas y reescribir `notas.csv` y `enlaces.csv` de cada medio de forma atómica y reanudable, sin perder lo existente si se corta.
-3. **Correrlo de noche** (~10-12 h, a 1 petición por segundo por medio) y luego `region.notas`.
+2. ~~**Un modo de recálculo en `noticias.historico`**~~ (hecho el 28-oct, [noticias/recalculo.md](noticias/recalculo.md)) (hoy solo lee notas nuevas): volver a leer las notas ya leídas y reescribir `notas.csv` y `enlaces.csv` de cada medio de forma atómica y reanudable, sin perder lo existente si se corta.
+3. **Correrlo:** la fase 1 (~45 min) llega al punto de control y se revisa su informe; después, de noche, la fase 2 (`--todo`), `--aplicar` (~10-12 h, a 1 petición por segundo por medio) y luego `region.notas`.
 4. **Volver a correr `viabilidad resultados`** y actualizar las cifras del README si cambian (volumen, control positivo, calidad).
 
 ## 2. Pruebas de viabilidad pendientes (esta semana; son las que deciden el alcance)

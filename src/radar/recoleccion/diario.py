@@ -17,6 +17,7 @@ from lxml.etree import ParserError
 
 from radar import config
 from radar.comun.archivos import anexar_csv, leer_csv
+from radar.comun.candado import exclusivo
 from radar.comun.http import Cliente, ErrorDescarga
 from radar.comun.registro import configurar, describir
 from radar.comun.texto import a_lima, ahora
@@ -386,6 +387,7 @@ def alertas_de(resumen, momento, ultima):
     return alertas
 
 
+@exclusivo("radar.recoleccion.diario")
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Recolección diaria de direcciones de notas.")
     ap.add_argument("--persona", required=True, choices=config.PERSONAS)

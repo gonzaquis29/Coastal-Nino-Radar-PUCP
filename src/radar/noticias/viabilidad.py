@@ -17,6 +17,7 @@ import threading
 
 from radar import config
 from radar.comun.archivos import EstadoDescargas, escribir_csv, leer_csv
+from radar.comun.candado import exclusivo
 from radar.comun.http import Cliente
 from radar.comun.registro import configurar, describir
 from radar.comun.texto import a_lima, ahora
@@ -562,6 +563,7 @@ def reporte(filas, alertas, inicio):
     log.info(f"Duración: {(ahora() - inicio).total_seconds() / 60:.1f} min")
 
 
+@exclusivo("radar.noticias.viabilidad")
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Pruebas de viabilidad de noticias.")
     ap.add_argument("prueba", choices=("filtro", "rpp", "resultados"))

@@ -40,6 +40,33 @@ NOTAS = (
     "recolectado",
 )
 ENLACES = ("medio", "id", "url", "dominio", "oficial", "comunicado")
+# data/raw/noticias/<medio>/recalculo/cambios.csv: antes y después de cada nota recalculada, sin texto
+# (docs/noticias/recalculo.md)
+CAMBIOS = (
+    "medio",
+    "id",
+    "fase",
+    "generacion",
+    "estado",
+    "motivo",
+    "sobre_antes",
+    "sobre_ahora",
+    "sobre_texto_nuevo",
+    "menciona_antes",
+    "menciona_ahora",
+    "magnitudes_antes",
+    "magnitudes_ahora",
+    "magnitudes_texto_nuevo",
+    "comunicados_antes",
+    "comunicados_ahora",
+    "n_enlaces_antes",
+    "n_enlaces_ahora",
+    "resumen_cambia",
+    "pagina_editada",
+    "causa_sobre",
+    "causa_magnitudes",
+    "recalculado",
+)
 CONTROL_NEGATIVO = ("medio", "id", "url", "mes", "estrato")
 ARCHIVOS = {
     "notas.csv": NOTAS,

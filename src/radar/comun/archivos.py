@@ -24,12 +24,15 @@ def ruta_segura(base, nombre):
 
 
 def escribir_atomico(ruta, datos):
-    """Escribe en un temporal de la misma carpeta y lo renombra: si se corta, queda el archivo anterior."""
+    """Escribe en un temporal de la misma carpeta y lo renombra: si se corta, queda el archivo anterior. Los datos se
+    fuerzan al disco antes de renombrar, para que un apagón no deje el archivo nuevo vacío."""
     ruta.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporal = tempfile.mkstemp(dir=ruta.parent, prefix=".tmp-")
     try:
         with os.fdopen(descriptor, "wb") as archivo:
             archivo.write(datos)
+            archivo.flush()
+            os.fsync(archivo.fileno())
         os.replace(temporal, ruta)
     except BaseException:
         if os.path.exists(temporal):
@@ -71,14 +74,37 @@ def escribir_csv(ruta, columnas, filas):
 
 
 def anexar_csv(ruta, columnas, filas):
-    """Agrega filas (con encabezado si el archivo es nuevo)."""
-    nuevo = not ruta.exists()
+    """Agrega filas (con encabezado si el archivo es nuevo o quedó vacío) y las fuerza al disco."""
+    nuevo = not ruta.exists() or ruta.stat().st_size == 0
     ruta.parent.mkdir(parents=True, exist_ok=True)
     with open(ruta, "a", encoding="utf-8", newline="") as archivo:
         escritor = csv.DictWriter(archivo, fieldnames=columnas, lineterminator="\n")
         if nuevo:
             escritor.writeheader()
         escritor.writerows({k: a_celda(v) for k, v in fila.items()} for fila in filas)
+        archivo.flush()
+        os.fsync(archivo.fileno())
+
+
+def reparar_csv(ruta, columnas):
+    """Quita la última línea si un corte la dejó a medias (sin salto final o con otro número de columnas). Los
+    textos no llevan saltos de línea internos (se normalizan al leer la nota). Devuelve cuántas líneas quitó."""
+    if not ruta.exists():
+        return 0
+    datos = ruta.read_bytes()
+    if not datos:
+        return 0
+    lineas = datos.split(b"\n")
+    ultima = lineas[-2] if datos.endswith(b"\n") else lineas[-1]
+    completa = datos.endswith(b"\n") and len(next(csv.reader([ultima.decode("utf-8", "replace")]))) == len(columnas)
+    if completa:
+        return 0
+    corte = datos.rfind(b"\n", 0, len(datos) - 1 if datos.endswith(b"\n") else len(datos)) + 1
+    with open(ruta, "r+b") as archivo:
+        archivo.truncate(corte)
+        archivo.flush()
+        os.fsync(archivo.fileno())
+    return 1
 
 
 def leer_csv(ruta):

@@ -73,3 +73,5 @@ ARCHIVO_ACTORES = DIR_CONFIG / "actores.csv"
 ARCHIVO_LUGARES = DIR_CONFIG / "lugares.csv"
 # Notas ya vistas en pilotos y validaciones (solo medio, id y muestra): ninguna muestra nueva las repite
 ARCHIVO_NOTAS_VISTAS = DIR_CONFIG / "notas_vistas.csv"
+# Un solo proceso a la vez pide páginas (medios y fuentes oficiales): así se respeta el ritmo por host entre procesos
+ARCHIVO_CANDADO = DIR_DATOS / "red.lock"

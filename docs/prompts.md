@@ -284,3 +284,16 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
   Esto último se corrigió en la capa 2.
 - La regla por cercanía se construyó en `oficial.enfen` y la usa `rasgos`. La regresión oficial da 0 diferencias. De las tres muestras nuevas, la 2.ª no pasó (7/35): se diagnosticó caso por caso y se corrigieron la regla y el instrumento sin mover umbrales. La 3.ª pasa (0/28, 0/28, 0/26). Las notas con magnitud sin ver quedaron agotadas.
 - También se encontró que `corpus --solo enfen` borra las filas del Senamhi de `validacion.csv` (pendiente).
+9. Sí, sigue (con la medición previa al recálculo). ¿Estás seguro de que es la única manera? ¿Cuál es lo más adecuado? Hay que validar y analizar. Sí, apruebo (medir sobre el propio recálculo, con un punto de control).
+10. Revísalo tú y me informas. Sí, apruebo (la definición corregida del recálculo).
+
+**Resultado (recálculo):**
+- La IA midió sin red el efecto del resumen y de la regla, y propuso medir sobre el propio recálculo, antes de reemplazar los archivos, en lugar de una muestra. Así se mide todo y no se gastan notas sin ver.
+- Al revisar su propia definición encontró supuestos falsos:
+  - las filas guardadas vienen de dos generaciones de código;
+  - la `fecha_modificacion` de Andina no sirve para detectar ediciones;
+  - el punto de control no ve todos los cambios.
+
+  También encontró huecos: errores de red sin tope, el candado sin `oficial.corpus`.
+- Construyó el recálculo reanudable con `cambios.csv`, el candado entre procesos y la antisuspensión. Las pruebas B1 a B4 y M1a pasan.
+- La primera corrida real destapó que M1b pasaba sin datos; se corrigió.

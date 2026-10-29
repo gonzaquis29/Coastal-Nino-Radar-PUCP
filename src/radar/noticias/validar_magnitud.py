@@ -14,6 +14,7 @@ import sys
 
 from radar import config
 from radar.comun.archivos import leer_csv
+from radar.comun.candado import exclusivo
 from radar.comun.http import Cliente
 from radar.comun.registro import configurar
 from radar.comun.texto import ahora, clave
@@ -214,6 +215,7 @@ def leer(elegidas):
                 log.info("%s %s: %s", nombre, fila["id"], campos)
 
 
+@exclusivo("radar.noticias.validar_magnitud")
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Validación de la regla de magnitud por cercanía.")
     ap.add_argument("--semilla", default=SEMILLA)
