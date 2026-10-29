@@ -55,10 +55,24 @@ Pasos:
 | B3 | Un segundo proceso se niega a correr y un candado de un proceso muerto se toma | sí | Pasa (código 2; el candado se tomó tras cada corte) |
 | B4 | El estado de ejecución de Windows pide no suspender mientras corre y lo libera al salir | sí | Pasa (0x1 mientras corre, 0x0 antes y después) |
 | M1a | La regla de magnitud anterior reproducida da lo mismo que el código anterior (git 7fc3477) en todos los titulares y resúmenes | 100 % | Pasa (228.741/228.741) |
-| M1b | Las 183 filas guardadas ya con el cuerpo limpio, sin edición, se reproducen con el resumen y la regla anteriores. Sin filas de control no pasa | ≥ 99 % | Punto de control |
-| M2 | Cambios con causa identificada | 100 % | Punto de control |
-| M3 | Cambio neto en "sobre El Niño", sin el resumen de El Tiempo. En el punto de control es parcial (la fase 1 se elige con el "menciona" guardado); antes de `--aplicar`, completo | ≤ 5 % | Punto de control |
-| M4 | Notas sin releer, por medio | ≤ 1 % | Punto de control |
+| M1b | Las 183 filas guardadas ya con el cuerpo limpio, sin edición, se reproducen con el resumen y la regla anteriores. Sin filas de control no pasa | ≥ 99 % | Pasa (24/24 en la fase 1) |
+| M2 | Cambios con causa identificada | 100 % | Pasa (fase 1) |
+| M3 | Cambio neto en "sobre El Niño", sin el resumen de El Tiempo. En el punto de control es parcial (la fase 1 se elige con el "menciona" guardado); antes de `--aplicar`, completo | ≤ 5 % | Pasa en la fase 1 (1,3 %) |
+| M4 | Notas sin releer, por medio | ≤ 1 % | Pasa en la fase 1 (0) |
 | M5 | Integridad: cada id del archivo actual una vez, enlaces con nota, columnas del esquema | 100 % | Al aplicar |
+
+### Punto de control (29-oct, fase 1: 9.402 notas, 42,6 min)
+Pasan M1b (24/24), M2 (0 sin causa), M3 (neto +30 de 2.326 = 1,3 %) y M4 (0 sin releer en los 4 medios). M5 queda pendiente de la fase 2. Además: 0 errores, 0 errores de red; ningún comunicado citado cambia; enlaces de 19.319 a 9.163, porque se quitan los recomendados.
+
+| Cambio | Notas | Diagnóstico (muestra de 3 por grupo, releyendo la página y reproduciendo la extracción anterior) |
+|---|---|---|
+| "Sobre El Niño" 1→0 por el resumen (El Tiempo) | 34 | El titular ajeno del resumen; la estimación sin red daba como máximo 37 |
+| "Sobre El Niño" 0→1, Andina | 42 | El titular repetido, el subtítulo, el crédito "ANDINA/Archivo" y la hora y lugar empujaban a El Niño fuera de las primeras 60 palabras |
+| "Sobre El Niño" 1→0, Andina | 22 | El Niño estaba en el pie de foto o en un bloque que ya no es cuerpo; en Andina no se distingue de una edición |
+| "Sobre El Niño" 0→1 y 1→0, RPP | 15 y 6 | "Compartir … Share" y el titular repetido empujaban a El Niño fuera del inicio; y al revés, El Niño estaba solo en títulos del reproductor de video o de recomendados ("Burneo advirtió que el Fenómeno del Niño…" en una nota del JNE) |
+| Magnitudes que se pierden por el texto | 237 | Venían de titulares de otras notas ("Te recomendamos", "Lee también: ENFEN alerta que El Niño podría alcanzar una magnitud extraordinaria") o, en Andina, de "frases" de 64 a 250 palabras con párrafos pegados que mezclaban El Niño con vientos o temperatura |
+| Magnitudes por la regla | 198 | 141 ganan (127 notas pasan de ninguna a alguna) y 53 pierden: el efecto validado en [../nlp/magnitud.md](../nlp/magnitud.md) |
+
+Notas con magnitud: de 600 a 454.
 
 La primera corrida real mostró que M1b pasaba sin datos (0/0): las filas de control están al final del archivo. Se corrigió antes de seguir. Sin filas de control, M1b no pasa, y la fase 1 las relee primero.
