@@ -269,3 +269,18 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 - Al probarla apareció un error de la capa 1: el resumen de El Tiempo traía el titular de otra nota y volvía "sobre El Niño" a 39 notas. Se corrigió en su capa y su validación pasó a la primera (60/60), con un control que muestra que el criterio sí detecta el problema.
 - La lista de notas ya vistas se reconstruyó y quedó en `config/notas_vistas.csv`.
 - La rutina diaria corrió sin `--publicar`, porque el push solo se hace cuando el usuario lo pide.
+6. Sigue (con las frases sintéticas y los criterios de la regla de magnitud).
+7. ¿Estás seguro de tu análisis? Vuelve a verificar por si acaso.
+8. ¿Cuál sería lo adecuado según tu análisis? Sí, realicemos eso y validemos.
+
+**Resultado (continuación):**
+- Al revisar su propio análisis, la IA encontró varios problemas:
+  - las frases sintéticas salían del diseño;
+  - el instrumento compartía listas con la regla;
+  - la muestra de validación repetía frases del diseño (el cuerpo contiene el resumen);
+  - "El Niño global" contradecía la definición aprobada de la capa 3;
+  - el resumen HTML del ENFEN traía las llamadas de nota pegadas ("fuerte2").
+
+  Esto último se corrigió en la capa 2.
+- La regla por cercanía se construyó en `oficial.enfen` y la usa `rasgos`. La regresión oficial da 0 diferencias. De las tres muestras nuevas, la 2.ª no pasó (7/35): se diagnosticó caso por caso y se corrigieron la regla y el instrumento sin mover umbrales. La 3.ª pasa (0/28, 0/28, 0/26). Las notas con magnitud sin ver quedaron agotadas.
+- También se encontró que `corpus --solo enfen` borra las filas del Senamhi de `validacion.csv` (pendiente).

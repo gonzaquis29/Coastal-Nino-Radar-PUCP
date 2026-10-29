@@ -34,7 +34,7 @@ Pilotos fuera del repositorio, con notas reales leídas en memoria y sin guardar
 |------|-----------------|--------|
 | 1. Texto limpio | Cuerpo en líneas y sin bloques ajenos (`noticias/nota.py`) | **Hecha** (28-oct): [../noticias/texto.md](../noticias/texto.md) |
 | 2. Corpus oficial limpio | Sin encabezados de tabla; `tipo` y `region_enso` por párrafo (`oficial/`) | **Hecha** (28-oct): [../oficial/definicion.md](../oficial/definicion.md) |
-| 3. Frases y afirmaciones | Qué dato afirma cada frase, quién lo dice, de cuándo, con qué seguridad | **Definida** (abajo), sin construir |
+| 3. Frases y afirmaciones | Qué dato afirma cada frase, quién lo dice, de cuándo, con qué seguridad | **Definida** (abajo), sin construir; la regla de magnitud ya está hecha ([magnitud.md](magnitud.md)) |
 | 4. Referencia oficial | Comunicado vigente y anterior de cada nota, con datos comparables (plazos en mes y año) | Por definir; `radar.oficial.vigencia.Corpus` ya da el vigente |
 | 5. Comparación | Reglas por dato + distancia (+ NLI acotado) → índice y semáforo | Por definir; evaluación descrita abajo |
 
@@ -43,7 +43,7 @@ Pilotos fuera del repositorio, con notas reales leídas en memoria y sin guardar
 
 1. **Frases** de titular, resumen y cuerpo, marcadas con su origen. Se parte por línea y luego por fin de frase, también tras cifras y comillas. Las líneas de menos de 5 palabras son subtítulos y no cuentan como afirmación.
 2. **Afirmación:** frase que nombra El Niño (o el Niño costero, o el ENFEN) y tiene al menos un dato:
-   - **magnitud,** solo pegada a El Niño o a "magnitud" o "evento", con las reglas de `oficial/enfen.py`, que separan lo principal de lo posible. `rasgos.magnitudes`, la regla laxa, pasa a usar esa misma: una sola definición;
+   - **magnitud,** con la regla por cercanía `oficial.enfen.magnitudes_de_frase`, que separa lo principal de lo posible y es la misma de `rasgos.magnitudes` y de `comunicados.csv`. **Hecha y validada el 28-oct** ([magnitud.md](magnitud.md));
    - **estado** (No Activo, Vigilancia, Alerta);
    - **plazo,** convertido a mes y año con una función compartida, que también convierte el `plazo` de `comunicados.csv` ("hasta mediados de otoño de 2027" → mayo de 2027; "del presente año" → año de la nota);
    - **probabilidad,** solo junto a El Niño o a una condición (cálida, neutra, fría): un "%" económico no cuenta;

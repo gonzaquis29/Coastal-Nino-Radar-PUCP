@@ -8,9 +8,10 @@ from urllib.parse import unquote, urlsplit
 
 from radar import config
 from radar.comun.archivos import leer_csv
-from radar.comun.texto import fecha_es, sin_tildes
+from radar.comun.texto import fecha_es
 from radar.noticias.filtro import palabras, terminos
-from radar.oficial.vocabulario import ESCALA_MAGNITUD
+from radar.oficial import enfen
+from radar.oficial.vocabulario import ESCALA_MAGNITUD, REGION_CENTRAL, REGION_COSTERA
 
 PALABRAS_PRIMER_PARRAFO = 60  # "sobre El Niño" = lo nombran el titular, el resumen o este inicio del cuerpo
 DIAS_INFORME_A_COMUNICADO = 3  # el informe técnico sale entre 0 y 3 días antes de su comunicado
@@ -23,9 +24,6 @@ NINO = re.compile(
 )
 # "Hospital del Niño", "Instituto Nacional de Salud del Niño", "Día del Niño": no son el fenómeno
 NO_ES_EL_FENOMENO = re.compile(r"(?:Hospital|Salud|Día|Dia|Instituto|Derechos|Casa|Juzgado)\s+$", re.I)
-MAGNITUD = re.compile(r"\b(muy fuertes?|extraordinari[oa]s?|fuertes?|moderad[oa]s?|d[ée]bil(?:es)?)\b", re.I)
-CONTEXTO_MAGNITUD = re.compile(r"magnitud|intensidad|categor[íi]a", re.I)
-FRASE = re.compile(r"(?<=[.!?])\s+")
 CITA_NUMERO = re.compile(
     r"[Cc]omunicado\s+(?:(?P<tipo>[Oo]ficial|[Ee]xtraordinario)\s+)?(?:(?:del?\s+)?(?:ENFEN|Enfen)\s+)?"
     r"(?:N\.?\s*[°º]?\s*|n[úu]mero\s+)?0?(?P<numero>\d{1,2})\s*[-–]\s*(?P<anio>20\d\d)"
@@ -63,21 +61,20 @@ def actores(texto):
 
 
 def magnitudes(texto):
-    """Magnitudes de El Niño en frases que lo nombran y hablan de magnitud, intensidad o categoría."""
+    """Magnitudes de El Niño que menciona el texto, con la regla del ENFEN (enfen.magnitudes_de_frase). Cuenta la frase
+    que nombra a El Niño o sigue a una que lo nombra en la misma línea; no las del Pacífico central ("Niño global")."""
     encontradas = set()
-    for frase in FRASE.split(texto or ""):
-        if NINO.search(frase) and CONTEXTO_MAGNITUD.search(frase):
-            for m in MAGNITUD.finditer(frase):
-                encontradas.add(_a_escala(m.group(1)))
+    for linea in (texto or "").split("\n"):
+        region, nombra = None, False
+        for frase in enfen.FRASE.split(linea):
+            if enfen.MENCIONA_CENTRAL.search(frase):
+                region = REGION_CENTRAL
+            elif enfen.MENCIONA_COSTERA.search(frase):
+                region = REGION_COSTERA
+            nombra = nombra or menciones(frase) > 0
+            if nombra and region != REGION_CENTRAL:
+                encontradas.update(valor for valor, _ in enfen.magnitudes_de_frase(frase))
     return sorted(encontradas, key=ESCALA_MAGNITUD.index)
-
-
-def _a_escala(palabra):
-    raiz = sin_tildes(palabra.lower())
-    for escala in ESCALA_MAGNITUD:
-        if raiz.startswith(sin_tildes(escala)[:5]) and ("muy" in raiz) == ("muy" in escala):
-            return escala
-    raise ValueError(palabra)
 
 
 def oficial(url):

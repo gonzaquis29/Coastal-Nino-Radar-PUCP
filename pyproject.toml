@@ -16,6 +16,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
+# NLP: instrumentos de validación con spaCy (modelo: python -m spacy download es_core_news_sm)
+nlp = ["spacy>=3.8"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

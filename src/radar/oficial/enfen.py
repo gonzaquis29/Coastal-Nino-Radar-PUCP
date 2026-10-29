@@ -127,13 +127,76 @@ def campos(texto):
     return datos
 
 
+# ---------------------------------------------------------------- magnitud (una sola regla para el ENFEN y las notas)
+# Una magnitud cuenta solo si va pegada a El Niño o a su grado, no por estar en la misma frase: "lluvias de moderada a
+# fuerte intensidad" no es la magnitud del evento y "El Niño costero de intensidad fuerte" sí (definición y validación
+# en docs/nlp/magnitud.md, 28-oct-2026).
 TERMINO = re.compile(r"\b(débil(?:es)?|moderad[ao]s?|muy fuertes?|fuertes?|extraordinari[ao]s?)\b", re.I)
-MENCIONA_CENTRAL = re.compile(r"Niño 3\.4|Pacífico (ecuatorial )?central|\bONI\b|\bRONI\b", re.I)
+# "El Niño global" es el del Pacífico central (Niño 3.4), como en la capa 3; el ENFEN no usa "global"
+MENCIONA_CENTRAL = re.compile(r"Niño 3\.4|Pacífico (ecuatorial )?central|\bONI\b|\bRONI\b|Niño\s+global", re.I)
 MENCIONA_COSTERA = re.compile(r"Niño 1\+2|Niño Costero|costa peruana|costero", re.I)
-NO_ES_MAGNITUD = re.compile(r"lluvia|precipitaci|intensidad|caudal|crecida|viento", re.I)
-HABLA_DE_MAGNITUD = re.compile(r"magnitud|cálidas? débil|evento", re.I)
 POSIBLE = re.compile(r"no se descarta|podría alcanzar|pudiendo|aunque podría|sin descartar|sin embargo", re.I)
 ANTES_DEL_TERMINO = 80  # caracteres antes de una magnitud donde se busca "no se descarta" y similares
+FRASE = re.compile(r"(?<=[.;!?])\s+(?=[A-ZÁÉÍÓÚ¿¡•\"“])")
+_T = r"(?:muy\s+)?(?:d[ée]bil(?:es)?|moderad[oa]s?|fuertes?|extraordinari[oa]s?)"
+_PORCENTAJE = r"(?:\s*\(\s*[≥>]?\s*\d+\s*%\s*\))?"  # "entre fuerte (48 %) y moderada (46 %)"
+# Cadena de magnitudes: "débil a moderada", "moderado, fuerte y muy fuerte", "de 'fuerte' o 'extraordinario'"
+CADENA = re.compile(
+    rf"\b{_T}{_PORCENTAJE}(?:\s*[\"”“»«']?\s*(?:,|a|y|o|e incluso|hasta|entre)\s+[\"“«']?\s*{_T}{_PORCENTAJE})*\b", re.I
+)
+SUJETO = r"Niño(?:\s+(?:[Cc]ostero|[Gg]lobal))?(?:\s*\(FEN\))?|eventos?|episodios?|fen[óo]menos?|FEN\)?"
+GRADO = r"magnitud(?:es)?|intensidad(?:es)?|categor[íi]as?|nivel(?:es)?|fases?|condici(?:ón|ones)(?:\s+cálidas?)?"
+# Palabras que pueden ir entre el ancla y la cadena ("El Niño sería", "una magnitud más probable entre")
+PUENTE = (
+    r"(?:de|del|el|la|las|los|un|una|en|a|al|entre|con|como|se|que|más\s+probable|costero|global|sería|será|sea|es"
+    r"|ser|fue|podría|pudiendo|pasará|pasaría|pasar|alcanzaría|alcanzará|alcance|alcanzar|alcanzando|llegaría|llegar"
+    r"|llegarían|presentaría|presente|mantenga|tendría|tipo|posible|cuya|considerad[oa]s?|\d{4}|\w+mente"
+    r"|ENOS|ENSO|modo|primero)"  # "los eventos ENOS como débiles…", "de modo primero débil" (validación, 28-oct)
+)
+MAX_PUENTE = 4
+ANCLA_ANTES = re.compile(
+    rf"(?:\b(?:{SUJETO}|{GRADO})(?![\wáéíóúñ]))(?:\s*[\"“«']?\s*{PUENTE}\b){{0,{MAX_PUENTE}}}\s*[\"“«']?\s*$", re.I
+)
+GRADO_DESPUES = re.compile(rf"^\s*[\"”»]?\s*(?:{GRADO})\b", re.I)  # "de fuerte intensidad"
+SUJETO_DESPUES = re.compile(rf"^\s*(?:El\s+)?(?:{SUJETO})\b")  # "un fuerte fenómeno El Niño"
+# El grado o la cadena pegados a esto no son la magnitud del evento: "lluvias de fuerte intensidad"
+CLIMA = re.compile(r"lluvi|precipitaci|caudal|crecid|viento|olea|temperatura|sismo|calor", re.I)
+PALABRAS_HASTA_CLIMA = 3
+COMPARATIVO = re.compile(r"\b(?:más|menos|tan)\s*$", re.I)  # "el más fuerte en décadas" no es una categoría
+# "…para luego disminuir a", "primero débil, ahora moderado"
+CONTINUA = re.compile(r"\b(?:a|hasta|entre|ser|será|sería|sea|ahora|luego|después)\s*[\"“«']?\s*$", re.I)
+CARACTERES_CONTINUA = 15
+
+
+def _ultimas(texto, n=PALABRAS_HASTA_CLIMA):
+    return " ".join(texto.split()[-n:])
+
+
+def _anclada(antes, despues, hay_anterior):
+    """La cadena va pegada a El Niño o a su grado (antes o después), o continúa una magnitud ya anclada."""
+    ancla = ANCLA_ANTES.search(antes)
+    if ancla and not CLIMA.search(ancla.group(0)):
+        es_grado = re.match(GRADO, ancla.group(0), re.I)
+        if not (es_grado and CLIMA.search(_ultimas(antes[: ancla.start()]))):
+            return True
+    if GRADO_DESPUES.search(despues) and not CLIMA.search(_ultimas(antes)):
+        return True
+    if SUJETO_DESPUES.search(despues) and not CLIMA.search(_ultimas(antes, 2)):
+        return True
+    return bool(hay_anterior and CONTINUA.search(antes[-CARACTERES_CONTINUA:]) and not CLIMA.search(_ultimas(antes)))
+
+
+def magnitudes_de_frase(frase):
+    """[(magnitud, posible)] de las cadenas ancladas de una frase; posible = tras "no se descarta" y similares."""
+    salida, hay_anterior = [], False
+    for m in CADENA.finditer(frase):
+        antes, despues = frase[: m.start()], frase[m.end() :]
+        if COMPARATIVO.search(antes) or not _anclada(antes, despues, hay_anterior):
+            continue
+        hay_anterior = True
+        posible = bool(POSIBLE.search(antes[-ANTES_DEL_TERMINO:]))
+        salida += [(magnitud_canonica(t.group(1)), posible) for t in TERMINO.finditer(m.group(0))]
+    return salida
 
 
 def magnitud_canonica(termino):
@@ -148,7 +211,7 @@ def _frases_costeras(parrafos):
     """Frases de la región Niño 1+2 (la que no nombra región hereda la de la frase anterior del mismo párrafo)."""
     for p in parrafos:
         region = None
-        for frase in re.split(r"(?<=[.;])\s+(?=[A-ZÁÉÍÓÚ¿•])", p):
+        for frase in FRASE.split(p):
             if MENCIONA_CENTRAL.search(frase):
                 region = REGION_CENTRAL
             elif MENCIONA_COSTERA.search(frase):
@@ -161,12 +224,9 @@ def magnitud(parrafos):
     """(máxima prevista en el escenario principal, todas las mencionadas) para El Niño Costero."""
     principal, mencionadas = [], set()
     for frase in _frases_costeras(parrafos):
-        if NO_ES_MAGNITUD.search(frase) or not HABLA_DE_MAGNITUD.search(frase):
-            continue
-        for m in TERMINO.finditer(frase):
-            valor = magnitud_canonica(m.group(1))
+        for valor, posible in magnitudes_de_frase(frase):
             mencionadas.add(valor)
-            if not POSIBLE.search(frase[: m.start()][-ANTES_DEL_TERMINO:]):
+            if not posible:
                 principal.append(valor)
     maxima = max(principal, key=ESCALA_MAGNITUD.index) if principal else None
     return maxima, sorted(mencionadas, key=ESCALA_MAGNITUD.index)
