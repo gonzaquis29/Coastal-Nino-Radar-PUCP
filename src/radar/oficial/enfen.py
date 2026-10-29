@@ -294,6 +294,10 @@ def region_enso(texto):
 # ---------------------------------------------------------------- página de descarga (referencia para validar)
 
 LARGO_MINIMO_WEB = 30
+# En la página web la llamada de nota va como texto pegado a la palabra ("Niño Costero1", "magnitud fuerte2",
+# "INDECI12"); en el PDF es un superíndice y ya se quita. Solo se limpia en los párrafos: el estado se lee del texto
+# completo, donde la cifra marca su final ("No activo1"). Revisado el 28-oct-2026: 82 marcas, ninguna unidad.
+MARCA_DE_NOTA = re.compile(r"(?<=[A-Za-zÁÉÍÓÚáéíóúÑñ])\d{1,2}\b")
 
 
 def pagina(ruta_html, anio):
@@ -315,7 +319,7 @@ def pagina(ruta_html, anio):
         else None
     )
     estado = re.search(r"Estado de sistema de alerta:\s*([^0-9]+?)\d", texto)
-    parrafos = [norm(x.text_content()) for x in articulo[0].xpath(".//p|.//li")]
+    parrafos = [MARCA_DE_NOTA.sub("", norm(x.text_content())) for x in articulo[0].xpath(".//p|.//li")]
     parrafos = [
         p for p in parrafos if len(p) > LARGO_MINIMO_WEB and "Tamaño del archivo" not in p and "Posted at" not in p
     ]

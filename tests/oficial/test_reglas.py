@@ -145,3 +145,21 @@ def test_cobertura_punto_en_poligono():
 def test_conservar_no_empeora_el_corpus():
     anteriores = [{"id": "a", "v": 1}, {"id": "b", "v": 1}]
     assert conservar([{"id": "a", "v": 2}], anteriores, {"b"}) == [{"id": "a", "v": 2}, {"id": "b", "v": 1}]
+
+
+def test_pagina_quita_las_marcas_de_nota_pegadas_y_conserva_el_estado(tmp_path):
+    ruta = tmp_path / "comunicado.html"
+    ruta.write_text(
+        '<html><head><meta charset="utf-8"></head><body><article>'
+        "15 ago 2026 Estado de sistema de alerta: Alerta de El Niño Costero1 "
+        "<p>En la región Niño 1+2, El Niño Costero1 alcanzaría una magnitud extraordinaria2 hasta enero.</p>"
+        "<p>Se recomienda a los gobiernos y al INDECI12 seguir los avisos meteorológicos6 y la gestión del "
+        "riesgo11.</p></article></body></html>",
+        encoding="utf-8",
+    )
+    web = enfen.pagina(ruta, 2026)
+    assert web["estado_web"] == "Alerta de El Niño Costero"
+    assert web["parrafos_web"] == [
+        "En la región Niño 1+2, El Niño Costero alcanzaría una magnitud extraordinaria hasta enero.",
+        "Se recomienda a los gobiernos y al INDECI seguir los avisos meteorológicos y la gestión del riesgo.",
+    ]

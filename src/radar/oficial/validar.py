@@ -43,6 +43,8 @@ TIPO_POR_POSICION = (PRONOSTICO, PRONOSTICO, IMPACTOS, IMPACTOS, PESCA, RECOMEND
 REGION_POR_POSICION = (REGION_COSTERA, REGION_CENTRAL)
 PARRAFOS_RESUMEN = len(TIPO_POR_POSICION)
 LARGO_MINIMO_FRASE = 25
+# Detector independiente de enfen.MARCA_DE_NOTA: cualquier palabra terminada en cifras (se compara con el PDF)
+PALABRA_CON_CIFRA = re.compile(r"\b[^\W\d_]+\d+\b")
 LARGO_DETALLE = 300
 
 RESTOS = (
@@ -248,6 +250,24 @@ def validar_enfen(comunicados, parrafos, control, errores):
     r.criterio(
         prueba, "frases del resumen HTML presentes en los párrafos (similitud ≥ 0,9)", "≥ 95 %", frases, MINIMO_FRASES
     )
+
+    def marcas_html():
+        """Palabras con una cifra pegada en el resumen HTML que no están así en el PDF: llamadas de nota sin quitar."""
+        ok, mal = 0, []
+        for c in del_pdf:
+            texto_pdf = " ".join(control[c["id"]]["parrafos"])
+            sobran = {
+                m.group(0)
+                for p in control[c["id"]]["web"]["parrafos_web"]
+                for m in PALABRA_CON_CIFRA.finditer(p)
+                if m.group(0) not in texto_pdf
+            }
+            ok += not sobran
+            if sobran:
+                mal.append(f"{c['id']}: {sorted(sobran)}")
+        return ok, len(del_pdf), "; ".join(mal)
+
+    r.criterio(prueba, "resumen HTML sin llamadas de nota pegadas a las palabras", "100 %", marcas_html)
 
     def restos():
         de_texto = [p for p in parrafos if p["fuente"] == "enfen" and p["seccion"] != "definicion"]

@@ -68,6 +68,17 @@ Dos columnas de `parrafos.csv`, calculadas con reglas sobre el texto (nunca con 
 
 **Validación (referencia externa: la estructura fija del resumen ejecutivo).** Los 17 comunicados con resumen (N.° 13-2025 a 16-2026) tienen 6 párrafos en el mismo orden: estado del sistema (costa), Pacífico central, lluvias, caudales, pesca y recomendaciones. Criterios fijados antes de correr: tipo = posición ≥ 95 %; región de las posiciones 1 y 2 ≥ 95 %; el párrafo del cuerpo que repite uno del resumen recibe la misma marca ≥ 95 %; ningún párrafo es encabezado de tabla. **Resultado (28-oct): pasan todos** — 102/102, 34/34, 30/30 y 250/250. Comparado con el corpus anterior, salen exactamente los 4 encabezados de tabla y ningún otro párrafo del ENFEN cambia de id, texto ni duplicado (una primera versión movía la definición del N.° 13 de `p15` a `p14`; se corrigió antes de aceptar). En los N.° 17 y 18 (sin resumen, sin referencia): impactos 10, pronóstico 5, pesca 4, recomendación 3 y 2 `otro` ("Ante estos escenarios de calentamiento anómalo del mar, se prevén:", que introduce la lista de impactos).
 
+### Resumen HTML sin llamadas de nota (28-oct-2026)
+En la página de descarga la llamada de nota va como texto pegado a la palabra ("El Niño Costero1", "magnitud extraordinaria2", "INDECI12"). En el PDF es un superíndice y ya se quitaba. Eran 82 marcas en los 19 resúmenes HTML, y la regla de magnitud no reconocía "fuerte2" como magnitud.
+
+- **Qué hace:** `enfen.pagina` las quita de los párrafos (`MARCA_DE_NOTA`: 1 o 2 cifras pegadas a una letra). El estado se sigue leyendo del texto completo, donde la cifra marca su final ("No activo1").
+- **Criterios, fijados antes de correr:**
+  - marcas restantes = 0, con un detector independiente: palabras con cifra pegada que no están así en el PDF. Queda como criterio permanente en `validacion.csv`;
+  - ninguna de las cifras quitadas estaba así en el PDF (unidades, siglas);
+  - `comunicados.csv` y `parrafos.csv` sin cambios;
+  - los criterios del ENFEN pasan.
+- **Resultado: pasa.** Hay 19/19 resúmenes sin marcas; las 35 formas quitadas son todas llamadas de nota y ninguna está así en el PDF; los CSV salen idénticos. "Magnitudes del resumen HTML ⊆ PDF" pasa de 16/16 a 17/17: un resumen más aporta magnitud y sigue coincidiendo con el PDF.
+
 Los textos se muestran tal cual y citando la fuente: el art. 9.b del D. Leg. 822 (texto consolidado en WIPO Lex, a feb-2026) excluye los textos oficiales administrativos "sin perjuicio de la obligación de respetar los textos y citar la fuente". La limpieza solo quita marcas de nota, encabezados y pies; siempre se enlaza el PDF.
 
 ## Avisos: macro-región y nivel
@@ -112,7 +123,7 @@ CSV UTF-8 con saltos LF (fijado en `.gitattributes`), filas ordenadas, listas un
 ## Pruebas de viabilidad (criterios fijados antes de correrlas)
 Se calculan en cada ejecución y quedan en `validacion.csv`.
 
-**ENFEN — pasa si:** 100 % descargados y extraídos del PDF; número y año = slug; fecha de emisión a ±1 día de la página de descarga; emisión real a ±1 día de la anunciada en el comunicado anterior en ≥ 90 %; estado = el de la página de descarga; magnitud extraída en todos los de vigilancia o alerta; magnitudes del resumen HTML ⊆ las del PDF; categoría más probable de la tabla ∈ magnitudes mencionadas; acuerdo PyMuPDF/pypdf ≥ 0,98 por documento; ≥ 95 % de las frases del resumen HTML en los párrafos (similitud ≥ 0,9); 0 párrafos con URL, encabezado, leyenda o marca de nota. *Si no pasa:* fecha o estado del HTML; magnitud solo de la frase "más probable" y la tabla; otro extractor.
+**ENFEN — pasa si:** 100 % descargados y extraídos del PDF; número y año = slug; fecha de emisión a ±1 día de la página de descarga; emisión real a ±1 día de la anunciada en el comunicado anterior en ≥ 90 %; estado = el de la página de descarga; magnitud extraída en todos los de vigilancia o alerta; magnitudes del resumen HTML ⊆ las del PDF; categoría más probable de la tabla ∈ magnitudes mencionadas; acuerdo PyMuPDF/pypdf ≥ 0,98 por documento; ≥ 95 % de las frases del resumen HTML en los párrafos (similitud ≥ 0,9); resumen HTML sin llamadas de nota pegadas; 0 párrafos con URL, encabezado, leyenda o marca de nota. *Si no pasa:* fecha o estado del HTML; magnitud solo de la frase "más probable" y la tabla; otro extractor.
 
 **Senamhi — pasa si:** 100 % de los candidatos con panel de detalle; número, nivel, título, emisión, inicio y fin = tabla; nivel máximo de los mapas = nivel de la tabla; polígono y regla coinciden en ≥ 95 % de los aviso-días por macro-región; ningún aviso sin costa en el título toca estaciones de la costa; los días de cada cancelado los cubre otro aviso del mismo tipo. *Si no pasa:* macro-región solo por la regla y se declara.
 
