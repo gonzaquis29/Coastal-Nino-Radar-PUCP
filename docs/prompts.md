@@ -297,3 +297,10 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
   También encontró huecos: errores de red sin tope, el candado sin `oficial.corpus`.
 - Construyó el recálculo reanudable con `cambios.csv`, el candado entre procesos y la antisuspensión. Las pruebas B1 a B4 y M1a pasan.
 - La primera corrida real destapó que M1b pasaba sin datos; se corrigió.
+11. Procede a ejecutarlo, ya tengo la laptop cargando. ¿Cómo va el proceso? Se suspendió la laptop un rato, ¿cómo va? ¿Termino de ejecutarse?
+12. Procede sin problemas. Revisa primero, analiza, y si está todo conforme procedes. Corregimos.
+
+**Resultado (corrida y revisión antes de aplicar):**
+- La fase 2 terminó con los criterios en verde, y sobrevivió a una suspensión de la laptop sin perder notas.
+- Antes de aplicar, la IA revisó lo que ningún criterio medía. Encontró que 47 notas ganaban "menciona El Niño" por titulares de otras notas sin rótulo dentro del cuerpo, y midió en una muestra nueva que la fuga afectaba a ~7 % de las notas de Andina. No aplicó.
+- Corrigió la capa 1 y validó con tres muestras nuevas. La 1.ª no pasó por la regla: quitaba la continuación de una frase partida en dos bloques. La 2.ª no pasó por el instrumento: titulares editados por el medio. La 3.ª pasa; `validar_texto` también. El recálculo se relanzó completo.

@@ -1,4 +1,4 @@
-# Pendientes, por prioridad (actualizado el 28-oct-2026)
+# Pendientes, por prioridad (actualizado el 29-oct-2026)
 
 Orden según dependencias reales y fechas, revisado con lo aprendido en los pilotos; el calendario del README es orientativo. Cada tarea se define, se aprueba, se construye y se valida con muestras nuevas, una a la vez. Estado del índice de discrepancia y del flujo de NLP: [nlp/discrepancia.md](nlp/discrepancia.md).
 
@@ -17,7 +17,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 **Hecho el 28-oct (regla de magnitud):** una sola regla por cercanía para el ENFEN y las notas ([nlp/magnitud.md](nlp/magnitud.md)). Con `comunicados.csv` sin cambios, pasa la 1.ª y la 3.ª muestra; la 2.ª no pasó y se corrigió en la regla y en el instrumento. Quedan sin ver solo 16 notas con magnitud, todas de Andina: la medición previa al recálculo mide "sobre El Niño" con muestra nueva, y el efecto completo en las magnitudes lo da el recálculo, nota por nota.
 1. ~~**Unificar la regla de magnitud:**~~ (hecho) `noticias.rasgos.magnitudes` pasa a usar, frase por frase, las reglas de `oficial.enfen`; es la definición de la capa 3. Hay que validar antes cuántas notas cambian sus magnitudes y su "sobre El Niño".
 2. ~~**Un modo de recálculo en `noticias.historico`**~~ (hecho el 28-oct, [noticias/recalculo.md](noticias/recalculo.md)) (hoy solo lee notas nuevas): volver a leer las notas ya leídas y reescribir `notas.csv` y `enlaces.csv` de cada medio de forma atómica y reanudable, sin perder lo existente si se corta.
-3. **Correrlo:** la fase 1 (~45 min) llega al punto de control y se revisa su informe; después, de noche, la fase 2 (`--todo`), `--aplicar` (~10-12 h, a 1 petición por segundo por medio) y luego `region.notas`.
+3. **Correrlo:** la fase 1 y la fase 2 corrieron el 29-oct y pasaron los criterios, pero al revisarlas antes de aplicar apareció una fuga de titulares ajenos en el cuerpo (Andina y RPP), que ya se corrigió en la capa 1 ([noticias/recalculo.md](noticias/recalculo.md)). Se relanzó completo esa noche (~10 h). Falta revisar su informe, `--aplicar` (con aprobación) y luego `region.notas`.
 4. **Volver a correr `viabilidad resultados`** y actualizar las cifras del README si cambian (volumen, control positivo, calidad).
 
 ## 2. Pruebas de viabilidad pendientes (esta semana; son las que deciden el alcance)

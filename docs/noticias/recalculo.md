@@ -36,7 +36,8 @@ La causa sale **paso a paso**, con el código que produjo la fila guardada. La g
 - anterior: hasta el 28-oct a las 12:45;
 - capa1: cuerpo limpio;
 - resumen: resumen sin enlaces;
-- actual: regla de magnitud única.
+- regla: regla de magnitud única;
+- actual: sin titulares ajenos en el cuerpo (29-oct a las 21:55).
 
 Pasos:
 1. **Cuerpo:** antes frente a lo que da el código anterior sobre el texto nuevo. Se clasifica como:
@@ -44,8 +45,9 @@ Pasos:
    - "capa1";
    - "capa1_o_edicion", en Andina;
    - "sin_causa", si el cuerpo ya era el limpio y cambió sin edición.
-2. **Regla:** regla de magnitud anterior frente a la nueva.
-3. **Resumen:** resumen viejo frente al nuevo.
+2. **Titulares ajenos** ("ajenos"): el cuerpo como salía antes de quitarlos (`cuerpo_con_ajenos`, en memoria) frente al nuevo. El paso 1 usa ese cuerpo previo, así que una nota cuyo cuerpo solo cambió por esto no se toma por editada, y M1b mide lo mismo que antes ([texto.md](texto.md#titulares-ajenos-sin-rótulo-29-oct-2026)).
+3. **Regla:** regla de magnitud anterior frente a la nueva.
+4. **Resumen:** resumen viejo frente al nuevo.
 
 ## Criterios (fijados antes de correr)
 | | Criterio | Pasa si | Resultado (28-oct) |
@@ -76,3 +78,12 @@ Pasan M1b (24/24), M2 (0 sin causa), M3 (neto +30 de 2.326 = 1,3 %) y M4 (0 sin 
 Notas con magnitud: de 600 a 454.
 
 La primera corrida real mostró que M1b pasaba sin datos (0/0): las filas de control están al final del archivo. Se corrigió antes de seguir. Sin filas de control, M1b no pasa, y la fase 1 las relee primero.
+
+### Corrida completa sin aplicar (29-oct, 582 min) y segunda corrida
+La fase 2 terminó con M1b a M5 en verde (M1b 178/178; M3 neto +31 de 2.334; 0 sin releer; integridad completa). Revisada antes de aplicar:
+- **Bien:** `via`, `muestra`, `candidata_por` y `recolectado` idénticos; las 14 notas que pasan a `sin_texto` son notas reales de 40 a 50 palabras (o, en RPP, páginas cuyo "texto" anterior eran recomendados); las 1.135 que pierden "menciona El Niño" la tenían por "Lea/Lee también", listas de recomendados o el resumen de El Tiempo (muestra de 7, releídas); Exitosa gana 31 por citas textuales que antes se perdían.
+- **Mal:** ningún criterio medía "menciona El Niño". De las 80 notas que la ganaban, 47 (Andina y RPP) la ganaban por un titular de otra nota sin rótulo dentro del cuerpo. Se corrigió en la capa 1 y se validó ([texto.md](texto.md#titulares-ajenos-sin-rótulo-29-oct-2026)).
+
+No se aplicó. Lo recalculado quedó aparte en `recalculo.29oct-con-ajenos/`, y el recálculo se relanzó completo (los 4 medios) con el código corregido.
+
+Antes de aplicar la segunda corrida se revisan también, caso por caso, los cambios de "menciona El Niño" y de `sin_texto`. Es una revisión informativa, sin umbral.
