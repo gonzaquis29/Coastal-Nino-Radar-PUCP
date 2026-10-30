@@ -207,6 +207,56 @@ def test_resumen_en_prosa_no_se_corta():
     assert sin_enlace(resumen) == resumen
 
 
+def test_titulares_ajenos_sin_rotulo_se_quitan_y_los_enlaces_en_prosa_se_quedan():
+    otra = "https://andina.pe/agencia/noticia-mef-dispone-fondos-para-el-nino-2.aspx"
+    cuerpo = (
+        f'<div class="col paddingnota"><div class="col linknotas"><div>{RELLENO}</div>'
+        f'<div>-<a class="ApplyClass" href="{otra}">MEF dispone fondos para atender El Niño</a></div>'
+        f'<a class="ApplyClass" href="{otra}"><strong><div><div>Gobierno transfiere fondos al Minedu</div></div>'
+        "</strong></a>"
+        f'<div>Lo dijo en la <a href="{otra}">cumbre organizada por la Contraloría</a> del lunes.</div>'
+        '<div><a href="https://www.gob.pe/institucion/enfen/informes-publicaciones/1">Informe técnico del Ministerio '
+        "N.° 18</a></div>"
+        f'<div><a href="{otra}">Ver aquí</a></div>'
+        f'<div>-Ley que reconoce a la raza canina perro </div><a href="{otra}"><div>pastor de los Andes '
+        "como patrimonio cultural.</div></a>"
+        '<div><a href="https://andina.pe/agencia/noticia-x-1.aspx">Esta misma nota completa aquí</a></div>'
+        "</div></div>"
+    )
+    campos = leer_html("andina", pagina(cuerpo), "https://andina.pe/agencia/noticia-x-1.aspx")
+    assert campos["titulares_ajenos"] == [
+        "MEF dispone fondos para atender El Niño",
+        "Gobierno transfiere fondos al Minedu",
+    ]
+    assert campos["cuerpo"].split("\n")[1:] == [
+        "Lo dijo en la cumbre organizada por la Contraloría del lunes.",
+        "Informe técnico del Ministerio N.° 18",
+        "Ver aquí",
+        "-Ley que reconoce a la raza canina perro",
+        "pastor de los Andes como patrimonio cultural.",
+        "Esta misma nota completa aquí",
+    ]
+    assert rasgos.menciones(campos["cuerpo"]) == 0 and rasgos.menciones(campos["cuerpo_con_ajenos"]) == 1
+    assert otra in campos["enlaces"]  # el de la prosa se queda
+
+
+def test_tarjetas_de_otras_notas_en_rpp():
+    tarjeta = (
+        '<article class="news"><div class="news__data"><h2 class="news__title">'
+        '<a href="https://rpp.pe/peru/actualidad/igp-activo-alerta-noticia-2">IGP activó alerta en 12 quebradas</a>'
+        "</h2></div></article>"
+    )
+    cuerpo = f'<div class="body"><p>{RELLENO}</p>{tarjeta}<p>Cierre de la nota.</p></div>'
+    campos = leer_html("rpp", pagina(cuerpo), "https://rpp.pe/peru/x-noticia-1")
+    assert campos["cuerpo"].split("\n")[1:] == ["Cierre de la nota."] and campos["enlaces"] == []
+    assert campos["titulares_ajenos"] == ["IGP activó alerta en 12 quebradas"]
+
+
+def test_sin_titulares_ajenos_el_cuerpo_previo_es_el_mismo():
+    campos = leer_html("rpp", pagina(f'<div class="body"><p>{RELLENO}</p></div>'), "https://rpp.pe/peru/x-noticia-1")
+    assert campos["titulares_ajenos"] == [] and campos["cuerpo_con_ajenos"] == campos["cuerpo"]
+
+
 @pytest.mark.parametrize("hora_y_lugar", ["22:36 | Ciudad de México, ago. 17 (EFE).-", "14:11 | Loreto ene. 30."])
 def test_hora_y_lugar_de_andina_en_sus_variantes(hora_y_lugar):
     cuerpo = (

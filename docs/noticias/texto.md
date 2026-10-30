@@ -81,6 +81,42 @@ Al probar la regla de magnitud con los titulares y resúmenes guardados apareci�
 
 **Pasa a la primera.** Control del instrumento: con el resumen sin cortar, solo 5 de las 40 notas con enlace llegan a ese 90 %; o sea, el criterio sí detecta el problema. Informativo: en la muestra, 1 nota deja de ser "sobre El Niño" ("Calor extremo golpea a viviendas rústicas…", que no nombra a El Niño ni en su titular ni al inicio del cuerpo).
 
+## Titulares ajenos sin rótulo (29-oct-2026)
+**Cómo se encontró:** al revisar el recálculo antes de aplicarlo. "Menciona El Niño" cambiaba en 1.220 notas y ningún criterio lo medía. De las 80 que ganaban la mención, 47 (44 de Andina, 3 de RPP) la ganaban por el titular de otra nota dentro del cuerpo: "Credicorp destaca anuncio del MEF… ante fenómeno El Niño" aparecía en 4 notas distintas.
+
+**Qué es:** un bloque cuyo único texto es un enlace a otra nota del mismo medio:
+- en Andina, un `a.ApplyClass` suelto bajo "Más en Andina", que sí se quitaba como rótulo, o un enlace que envuelve un `div`;
+- en RPP, tarjetas `article.news` ("Lo último en…") dentro del cuerpo.
+
+En una muestra de diseño (60 notas de Andina y 59 de RPP, semilla `fuga-enlaces-29oct`) lo tenían 4 notas de Andina (~7 %) y 1 de RPP, con una lista de 10. Entraban al cuerpo y a `enlaces.csv`. Los enlaces dentro de una frase ("…la cumbre organizada por la Contraloría…") no son fuga.
+
+**Qué hace** (`nota._sin_titulares_ajenos`, después de los bloques ajenos): se quita el bloque más grande cuyo texto entero, sin signos de lista, es el de un enlace a otra nota del mismo medio que cumple:
+- tiene 4 palabras o más (`MIN_PALABRAS_TITULAR_AJENO`);
+- empieza como un titular: mayúscula, cifra o signo de apertura (`EMPIEZA_COMO_TITULAR`).
+
+Se quita como nodo, así que su enlace tampoco cuenta. Se conservan los enlaces dentro de una frase, los enlaces a otros sitios (gob.pe), las anclas cortas ("Ver aquí") y los enlaces a la misma nota. En memoria, la lectura devuelve además `titulares_ajenos`, los textos quitados, y `cuerpo_con_ajenos`, el cuerpo como salía antes, que el recálculo usa para separar esta causa de una edición.
+
+**Validación.** Criterios fijados antes de correr:
+
+| | Criterio | Pasa si |
+|---|---|---|
+| V1 | Se quitan las 47 fugas conocidas y las 5 de la muestra de diseño | 100 % |
+| V2 | Muestra nueva: de los bloques quitados, los que son el titular de la nota enlazada (≥ 80 % de sus palabras en ese titular, tomado de `notas.csv` o de su página) | ≥ 95 % |
+| V3 | Líneas del cuerpo previo que faltan en el nuevo y no son un titular quitado | 0 |
+| V4 | Notas de Exitosa y El Tiempo que cambian | 0; si no, caso por caso |
+| V5 | `validar_texto` con semilla nueva | sus criterios pasan |
+
+Resultados, en orden (cada muestra sin las notas vistas ni las reservadas para la capa 3, y registrada después):
+
+| Muestra (semilla) | V1 | V2 | V3 | V4 | Diagnóstico |
+|---|---|---|---|---|---|
+| 1.ª `titulares-ajenos-v-29oct` (150 de Andina, 150 de RPP, 40 de Exitosa, 40 de El Tiempo) | 52/52 | **5/6, no pasa** | 27, mal medido | 0 | **Falla la regla:** un enlace que envolvía la continuación de una frase partida en dos bloques ("… la raza canina perro" / "pastor Chiribaya como patrimonio…"). Se agrega `EMPIEZA_COMO_TITULAR`. **Falla el instrumento en V3:** contaba enlaces que ya quitaban otras reglas; se mide como líneas del cuerpo previo que faltan en el nuevo |
+| 2.ª `titulares-ajenos-v2-29oct` (300 de Andina) | 52/52 | **50/53 = 0,943, no pasa** | 0 de 7.380 | 0 | **Falla el instrumento:** los 3 son titulares ajenos de verdad, cuyo titular el medio editó después ("Confiep respalda…" → "Gremios empresariales respaldan…"); uno se contaba dos veces (tarjeta para móvil y para escritorio), y no se decodificaban entidades (`V&oacute;ley`). Se corrige: también vale el *slug* de la URL enlazada, que lleva el titular original; un bloque por nota; entidades decodificadas |
+| 3.ª `titulares-ajenos-v3-29oct` (igual que la 2.ª) | 52/52 | **22/22** | 0 de 7.265 | 0 | Pasa |
+| V5: `validar_texto --semilla texto-ajenos-29oct` | | | | | Pasa en los 4 medios; 0 restos de bloques ajenos |
+
+Los umbrales no se movieron. La regla se corrigió una vez (después de la 1.ª) y el instrumento dos.
+
 ## Limitaciones declaradas
 - Solo RPP publica `articleBody` en su JSON-LD; en Andina, Exitosa y El Tiempo no hay una referencia externa del cuerpo y la pérdida se mide contra el propio contenedor (reglas de línea) y la extracción anterior (bloques quitados, informativo).
 - RPP publica a veces en el `articleBody` párrafos que no están en la página; se valida contra la página visible.

@@ -47,7 +47,8 @@ GENERACIONES = (
     ("anterior", ""),  # extracción, resumen y regla de magnitud anteriores
     ("capa1", "2026-10-28T12:45"),  # cuerpo limpio (91c1aa0); resumen y regla anteriores
     ("resumen", "2026-10-28T18:23"),  # resumen sin enlaces (7fc3477); regla anterior
-    ("actual", "2026-10-28T22:40"),  # regla de magnitud única (333c413)
+    ("regla", "2026-10-28T22:40"),  # regla de magnitud única (333c413)
+    ("actual", "2026-10-29T21:55"),  # sin titulares ajenos en el cuerpo
 )
 MAX_INTENTOS = 3  # respuestas con error (HTTP, contenido) antes de dejar la nota como estaba
 MAX_EJECUCIONES_CON_ERROR_DE_RED = 3  # un error de red cuenta una vez por ejecución (una suspensión no la descarta)
@@ -130,7 +131,9 @@ class Archivos:
 
 
 def comparar(vieja, nueva, campos, enlaces_nuevos, medio, momento):
-    """Fila de cambios.csv: antes, después y la causa, separando cuerpo, regla y resumen paso a paso."""
+    """Fila de cambios.csv: antes, después y la causa, separando cuerpo, titulares ajenos, regla y resumen paso a
+    paso. El paso del cuerpo usa el cuerpo como salía antes de quitar los titulares ajenos ("previo"): así se compara
+    con lo guardado y el control (M1b) mide lo mismo que antes."""
     gen = generacion(vieja["recolectado"])
     cuerpo, resumen_nuevo, resumen_viejo, titular = (
         campos["cuerpo"],
@@ -138,12 +141,13 @@ def comparar(vieja, nueva, campos, enlaces_nuevos, medio, momento):
         vieja["resumen"],
         campos["titular"],
     )
+    previo = cuerpo if gen == "actual" else campos.get("cuerpo_con_ajenos", cuerpo)
     if medio in MEDIOS_SIN_FECHA_DE_EDICION:
-        editada = sha1_corto(cuerpo) != vieja["sha1_cuerpo"] if gen != "anterior" else None
+        editada = sha1_corto(previo) != vieja["sha1_cuerpo"] if gen != "anterior" else None
     else:
         editada = bool(vieja["fecha_modificacion"]) and campos["fecha_modificacion"] > vieja["fecha_modificacion"]
         if gen != "anterior":
-            editada = editada or sha1_corto(cuerpo) != vieja["sha1_cuerpo"]
+            editada = editada or sha1_corto(previo) != vieja["sha1_cuerpo"]
 
     def causa_del_cuerpo():
         if editada:
@@ -155,21 +159,30 @@ def comparar(vieja, nueva, campos, enlaces_nuevos, medio, momento):
     def causas(pasos):
         return "+".join(c for c, cambia in pasos if cambia)
 
-    # "sobre El Niño": antes → (cuerpo y titular nuevos, resumen viejo) → (resumen nuevo)
-    s_antes = _si(vieja["sobre_nino"])
-    s_medio = _sobre(titular, resumen_viejo if gen in ("anterior", "capa1") else resumen_nuevo, cuerpo)
-    s_ahora = _si(nueva["sobre_nino"])
-    causa_sobre = causas([(causa_del_cuerpo(), s_antes != s_medio), ("resumen", s_medio != s_ahora)])
-
-    # magnitudes: antes → regla anterior sobre el texto nuevo (resumen viejo) → regla nueva → resumen nuevo
-    m_antes = [m for m in vieja["magnitudes"].split("|") if m]
+    # "sobre El Niño": antes → cuerpo previo (titular nuevo, resumen viejo) → sin titulares ajenos → resumen nuevo
     resumen_de_antes = resumen_viejo if gen in ("anterior", "capa1") else resumen_nuevo
-    regla_de_antes = gen in ("anterior", "capa1", "resumen")
-    m_texto = magnitudes_regla_anterior(f"{resumen_de_antes} {cuerpo}") if regla_de_antes else m_antes
+    s_antes = _si(vieja["sobre_nino"])
+    s_previo = _sobre(titular, resumen_de_antes, previo)
+    s_medio = _sobre(titular, resumen_de_antes, cuerpo)
+    s_ahora = _si(nueva["sobre_nino"])
+    causa_sobre = causas(
+        [(causa_del_cuerpo(), s_antes != s_previo), ("ajenos", s_previo != s_medio), ("resumen", s_medio != s_ahora)]
+    )
+
+    # magnitudes: antes → regla de antes sobre el cuerpo previo → sin titulares ajenos → regla nueva → resumen nuevo
+    m_antes = [m for m in vieja["magnitudes"].split("|") if m]
+    regla_de_antes = magnitudes_regla_anterior if gen in ("anterior", "capa1", "resumen") else rasgos.magnitudes
+    m_previo = regla_de_antes(f"{resumen_de_antes} {previo}")
+    m_texto = regla_de_antes(f"{resumen_de_antes} {cuerpo}")
     m_regla = rasgos.magnitudes(f"{resumen_de_antes} {cuerpo}")
     m_ahora = nueva["magnitudes"]
     causa_magnitudes = causas(
-        [(causa_del_cuerpo(), m_antes != m_texto), ("regla", m_texto != m_regla), ("resumen", m_regla != m_ahora)]
+        [
+            (causa_del_cuerpo(), m_antes != m_previo),
+            ("ajenos", m_previo != m_texto),
+            ("regla", m_texto != m_regla),
+            ("resumen", m_regla != m_ahora),
+        ]
     )
     return {
         "medio": medio,
@@ -180,12 +193,12 @@ def comparar(vieja, nueva, campos, enlaces_nuevos, medio, momento):
         "motivo": "",
         "sobre_antes": s_antes,
         "sobre_ahora": s_ahora,
-        "sobre_texto_nuevo": s_medio,
+        "sobre_texto_nuevo": s_previo,
         "menciona_antes": _si(vieja["menciona_nino"]),
         "menciona_ahora": nueva["menciona_nino"],
         "magnitudes_antes": "|".join(m_antes),
         "magnitudes_ahora": _lista(m_ahora),
-        "magnitudes_texto_nuevo": _lista(m_texto),
+        "magnitudes_texto_nuevo": _lista(m_previo),
         "comunicados_antes": vieja["comunicados"],
         "comunicados_ahora": _lista(nueva["comunicados"]),
         "n_enlaces_antes": vieja["n_enlaces"],

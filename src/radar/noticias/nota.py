@@ -1,5 +1,6 @@
 """Lectura de una nota (HTML o API de WordPress) en campos. El cuerpo vive solo en memoria: nunca se guarda."""
 
+import copy
 import html as html_texto
 import json
 import re
@@ -50,6 +51,14 @@ ENLACE_A_OTRAS = re.compile(
     re.I,
 )
 MAX_PALABRAS_ENLACES = 80  # un bloque más largo que empieza así es cuerpo, no una lista de enlaces
+# Titulares ajenos sin rótulo: un bloque cuyo texto entero es el de un enlace a otra nota del mismo medio (Andina pone
+# "a.ApplyClass" sueltos bajo "Más en Andina"; RPP, tarjetas "article.news"). Un enlace dentro de una frase se queda.
+# Medido el 29-oct-2026: ~7 % de las notas de Andina y ~2 % de las de RPP.
+MIN_PALABRAS_TITULAR_AJENO = 4  # menos es un "aquí" o un nombre, no un titular
+SIGNOS_DE_LISTA = " -–—•|»"
+# Un titular empieza con mayúscula, cifra o signo de apertura; un bloque que empieza en minúscula es la continuación de
+# una frase que el redactor partió en dos bloques ("… la raza canina perro" / enlace "pastor Chiribaya como …").
+EMPIEZA_COMO_TITULAR = re.compile(r"^[¿¡\"“«'(\[]*[A-ZÁÉÍÓÚÑ0-9]")
 # Andina abre el cuerpo con un bloque corto de hora y lugar ("14:11 | Loreto ene. 30.", "22:36 | Ciudad de México,
 # ago. 17 (EFE).-"); se reconoce por cómo empieza, no por el formato del lugar o la fecha, que varía
 HORA_Y_LUGAR = re.compile(r"^\s*\d{1,2}:\d{2}\s*\|")
@@ -160,6 +169,40 @@ def _sin_bloques_ajenos(nodo, medio):
             bloque.drop_tree()
 
 
+def _otra_nota(href, url_base):
+    destino, propia = urlsplit(urljoin(url_base, href)), urlsplit(url_base)
+    return destino.netloc.removeprefix("www.") == propia.netloc.removeprefix("www.") and destino.path.strip(
+        "/"
+    ) not in ("", propia.path.strip("/"))
+
+
+def _texto_de_bloque(nodo):
+    return norm(nodo.text_content()).strip(SIGNOS_DE_LISTA)
+
+
+def _sin_titulares_ajenos(nodo, url_base):
+    """Quita los bloques que son solo el enlace a otra nota del mismo medio (el bloque más grande cuyo texto es el del
+    enlace) y devuelve sus textos."""
+    quitados = []
+    for a in list(nodo.iter("a")):
+        texto = _texto_de_bloque(a)
+        if (
+            len(texto.split()) < MIN_PALABRAS_TITULAR_AJENO
+            or not EMPIEZA_COMO_TITULAR.match(texto)
+            or not _otra_nota(a.get("href") or "", url_base)
+            or nodo not in a.iterancestors()  # ya se fue con un bloque anterior
+        ):
+            continue
+        bloque = a
+        while (padre := bloque.getparent()) is not None and padre is not nodo and _texto_de_bloque(padre) == texto:
+            bloque = padre
+        es_bloque = bloque.tag in SALTO | {"article"} or any(d.tag in SALTO for d in a.iterdescendants())
+        if es_bloque:
+            bloque.drop_tree()
+            quitados.append(texto)
+    return quitados
+
+
 def _lineas(nodo):
     """Texto del cuerpo con un salto en cada bloque y en cada <br>: ninguna frase queda pegada a la siguiente."""
     for el in nodo.iter():
@@ -197,11 +240,18 @@ def sin_enlace(resumen):
     return norm(resumen[: m.start()]) if m else resumen
 
 
-def _campos(titular, resumen, cuerpo, enlaces, **otros):
-    resumen = sin_enlace(resumen)
+def _normalizar(cuerpo, titular):
     lineas = (norm(linea) for linea in (cuerpo or "").split("\n"))
-    cuerpo = _sin_titular("\n".join(linea for linea in lineas if linea), titular)
+    return _sin_titular("\n".join(linea for linea in lineas if linea), titular)
+
+
+def _campos(titular, resumen, cuerpo, enlaces, cuerpo_con_ajenos=None, **otros):
+    """cuerpo_con_ajenos: el cuerpo como salía antes de quitar los titulares ajenos (solo para separar causas en el
+    recálculo); si no se quitó ninguno, es el mismo cuerpo."""
+    resumen = sin_enlace(resumen)
+    cuerpo = _normalizar(cuerpo, titular)
     return {
+        "cuerpo_con_ajenos": _normalizar(cuerpo_con_ajenos, titular) if cuerpo_con_ajenos is not None else cuerpo,
         "titular": titular,
         "resumen": resumen,
         "cuerpo": cuerpo,
@@ -226,20 +276,29 @@ def leer_html(medio, contenido, url, tipo=""):
     seccion = limpiar(str(ld.get("articleSection") or "")) or next(iter(_meta(doc, "article:section")), "")
     etiquetas = _meta(doc, "article:tag") or _meta(doc, "news_keywords", "keywords")
     nodo = next((n[0] for xpath in CUERPO[medio] if (n := doc.xpath(xpath))), None)
+    bajada = limpiar(" ".join(t.text_content() for t in doc.xpath(BAJADA.get(medio, "/nada"))))
+    cuerpo_ld = limpiar(ld.get("articleBody"))
+
+    def armar(n):
+        cuerpo = _lineas(n) if n is not None else ""
+        if bajada and cuerpo:
+            cuerpo = f"{bajada}\n{cuerpo}"
+        return cuerpo_ld if len(cuerpo.split()) < MIN_PALABRAS and cuerpo_ld else cuerpo
+
+    ajenos, con_ajenos = [], None
     if nodo is not None:
         _sin_bloques_ajenos(nodo, medio)
-    cuerpo = _lineas(nodo) if nodo is not None else ""
-    bajada = limpiar(" ".join(t.text_content() for t in doc.xpath(BAJADA.get(medio, "/nada"))))
-    if bajada and cuerpo:
-        cuerpo = f"{bajada}\n{cuerpo}"
-    cuerpo_ld = limpiar(ld.get("articleBody"))
-    if len(cuerpo.split()) < MIN_PALABRAS and cuerpo_ld:
-        cuerpo = cuerpo_ld
+        previo = copy.deepcopy(nodo)
+        if ajenos := _sin_titulares_ajenos(nodo, url):
+            con_ajenos = armar(previo)
+    cuerpo = armar(nodo)
     return _campos(
         titular,
         resumen,
         cuerpo,
         _enlaces(nodo, url) if nodo is not None else [],
+        titulares_ajenos=ajenos,
+        cuerpo_con_ajenos=con_ajenos,
         fecha_publicacion=publicada,
         fecha_modificacion=a_lima(str(ld.get("dateModified") or "")),
         fecha_creacion=a_lima(creacion) if creacion else "",
@@ -260,13 +319,19 @@ def leer_api(entrada):
     resumen = _texto_html(entrada.get("excerpt", {}).get("rendered", ""))
     if not entrada.get("date_gmt"):
         raise NotaInvalida("sin date_gmt")
+    ajenos, con_ajenos = [], None
     if contenido is not None:
         _sin_bloques_ajenos(contenido, "eltiempo")
+        previo = copy.deepcopy(contenido)
+        if ajenos := _sin_titulares_ajenos(contenido, entrada["link"]):
+            con_ajenos = _lineas(previo)
     return _campos(
         limpiar(entrada.get("title", {}).get("rendered", "")),
         limpiar(resumen.text_content()) if resumen is not None else "",
         _lineas(contenido) if contenido is not None else "",
         _enlaces(contenido, entrada["link"]) if contenido is not None else [],
+        titulares_ajenos=ajenos,
+        cuerpo_con_ajenos=con_ajenos,
         fecha_publicacion=a_lima(entrada["date_gmt"]),
         fecha_modificacion=a_lima(entrada.get("modified_gmt", "")),
         fecha_creacion="",

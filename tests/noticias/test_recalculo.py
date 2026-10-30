@@ -26,6 +26,8 @@ def resumen(i):
 
 def entrada(i, cuerpo):
     contenido = f"<p>{cuerpo} {RELLENO}</p><p><a href='https://www.gob.pe/{i}'>x</a></p>"
+    if i == 4:  # un titular ajeno sin rótulo: con la extracción de antes daba magnitud
+        contenido += "<p><a href='https://rpp.pe/peru/otra-noticia-9'>El Niño costero de intensidad fuerte</a></p>"
     return {"id": i, "link": f"https://rpp.pe/peru/x-noticia-{i}", "date_gmt": "2026-10-20T15:00:00",
             "modified_gmt": "2026-10-20T15:00:00", "title": {"rendered": f"Titular {i}"},
             "excerpt": {"rendered": f"<p>{resumen(i)}</p>"}, "content": {"rendered": contenido}}  # fmt: skip
@@ -75,7 +77,7 @@ def raiz(tmp_path, monkeypatch):
         campos = leer_api(entrada(int(i), CUERPOS.get(i, "Texto de El Niño.")))
         nota, links = filas_de_nota("rpp", medio.lista[i], campos, "candidata")
         # lo que daba el código anterior: la regla laxa ("lluvias de fuerte intensidad" contaba) y el resumen entero
-        antes = recalculo.magnitudes_regla_anterior(f"{resumen(int(i))} {campos['cuerpo']}")
+        antes = recalculo.magnitudes_regla_anterior(f"{resumen(int(i))} {campos['cuerpo_con_ajenos']}")
         nota.update(recolectado=ANTES, magnitudes=antes, resumen=resumen(int(i)), menciona_nino=True,
                     sobre_nino=recalculo._sobre(nota["titular"], resumen(int(i)), campos["cuerpo"]))  # fmt: skip
         notas.append(nota)
@@ -145,6 +147,8 @@ def test_causas_y_notas_sin_releer(raiz):
     # nota 3: era "sobre El Niño" por el titular ajeno del resumen
     assert cambios["3"]["sobre_ahora"] == "0" and cambios["3"]["causa_sobre"] == "resumen"
     assert cambios["3"]["resumen_cambia"] == "1"
+    # nota 4: la magnitud venía del titular ajeno
+    assert cambios["4"]["magnitudes_antes"] == "fuerte" and cambios["4"]["causa_magnitudes"] == "ajenos"
     nuevas = {n["id"]: n for n in leer_csv(raiz / "raw/rpp/recalculo/notas.csv")}
     viejas = {n["id"]: n for n in leer_csv(raiz / "raw/rpp/notas.csv")}
     assert nuevas[NO_EXISTE] == viejas[NO_EXISTE]  # se conserva la fila anterior

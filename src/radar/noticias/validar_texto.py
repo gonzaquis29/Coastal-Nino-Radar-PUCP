@@ -27,6 +27,7 @@ from radar.noticias.nota import (
     BAJADA,
     CUERPO,
     _sin_bloques_ajenos,
+    _sin_titulares_ajenos,
     decodificar,
     leer_api,
     leer_html,
@@ -92,7 +93,7 @@ def _raiz(contenido, tipo, entrada):
     return html.fromstring(decodificar(contenido, tipo))
 
 
-def _textos_de_referencia(medio, contenido, tipo, entrada=None):
+def _textos_de_referencia(medio, contenido, tipo, entrada=None, url=None):
     """(antes, referencia, original) de la misma página. La referencia aísla las reglas de línea: lo que falte ahí lo
     quitaron ellas, no los selectores de bloques."""
     raiz = _raiz(contenido, tipo, entrada)
@@ -108,6 +109,8 @@ def _textos_de_referencia(medio, contenido, tipo, entrada=None):
     if not nuevo:
         return antes, "", original
     _sin_bloques_ajenos(nuevo[0], medio)
+    if url or entrada is not None:
+        _sin_titulares_ajenos(nuevo[0], entrada["link"] if entrada is not None else url)
     bajada = " ".join(t.text_content() for t in raiz.xpath(BAJADA[medio])) if medio in BAJADA else ""
     return antes, norm(f"{bajada} {nuevo[0].text_content()}"), original
 
@@ -147,7 +150,7 @@ def leer_muestra(semilla=SEMILLA):
             except Exception as e:  # una nota que falla no detiene la muestra
                 log.info("%s %s: %s", nombre, nota["id"], e)
                 continue
-            yield Lectura(nombre, nota, campos, *_textos_de_referencia(nombre, r.content, tipo))
+            yield Lectura(nombre, nota, campos, *_textos_de_referencia(nombre, r.content, tipo, url=r.url))
 
 
 def uniones_de_la_extraccion(lectura):
