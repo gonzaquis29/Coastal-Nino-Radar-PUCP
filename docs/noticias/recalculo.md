@@ -131,6 +131,7 @@ Los criterios M1b a M5 y sus umbrales no cambian. Antes de aplicar se revisan, c
 Control previo con 6 notas reales ya vistas: el cuerpo sin rescate reproduce el `sha1` guardado en 6/6, y solo cambia el de las 2 rescatadas.
 
 Lo recalculado de la primera pasada, ya aplicado, queda en `recalculo.31oct-aplicado/`.
+Los archivos de antes de la primera pasada se renombraron a `*.antes-del-recalculo.csv`: `--aplicar` solo crea `*.anterior.csv` si no existe, y sin el cambio el segundo reemplazo no habría guardado los archivos vigentes.
 
 ```bash
 python -m radar.noticias.historico --recalcular --medio rpp --todo --horas 7
