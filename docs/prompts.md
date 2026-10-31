@@ -304,3 +304,10 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 - La fase 2 terminó con los criterios en verde, y sobrevivió a una suspensión de la laptop sin perder notas.
 - Antes de aplicar, la IA revisó lo que ningún criterio medía. Encontró que 47 notas ganaban "menciona El Niño" por titulares de otras notas sin rótulo dentro del cuerpo, y midió en una muestra nueva que la fuga afectaba a ~7 % de las notas de Andina. No aplicó.
 - Corrigió la capa 1 y validó con tres muestras nuevas. La 1.ª no pasó por la regla: quitaba la continuación de una frase partida en dos bloques. La 2.ª no pasó por el instrumento: titulares editados por el medio. La 3.ª pasa; `validar_texto` también. El recálculo se relanzó completo.
+13. Continúa con el proceso, ya prendí la laptop. ¿Cómo va el proceso, cuánto falta? ¿Estás totalmente seguro, para proceder? Entonces procedemos.
+
+**Resultado (aplicación):**
+- La segunda corrida reanudó tras el apagado sin repetir notas y pasó los criterios.
+- La IA revisó caso por caso los cambios frente a la corrida 1: las 35 notas que no estaban explicadas, releídas, perdían la mención solo por un titular ajeno.
+- Ante la pregunta de si estaba seguro, separó lo comprobado de lo no comprobado (las ~1.175 pérdidas de mención revisadas por muestra, la corrección de cada magnitud) y señaló que `--aplicar` se puede deshacer. También ordenó la rutina para no perder notas nuevas: la recolección antes de aplicar y el histórico después.
+- Después de aplicar, la baja en la coincidencia de RPP con su `articleBody` destapó un error de la capa 1 (bloque de recomendados sin cerrar). Quedó como pendiente, sin código hasta su aprobación.

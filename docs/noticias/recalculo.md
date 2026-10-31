@@ -87,3 +87,30 @@ La fase 2 terminó con M1b a M5 en verde (M1b 178/178; M3 neto +31 de 2.334; 0 s
 No se aplicó. Lo recalculado quedó aparte en `recalculo.29oct-con-ajenos/`, y el recálculo se relanzó completo (los 4 medios) con el código corregido.
 
 Antes de aplicar la segunda corrida se revisan también, caso por caso, los cambios de "menciona El Niño" y de `sin_texto`. Es una revisión informativa, sin umbral.
+
+### Segunda corrida y aplicación (30 y 31-oct, 526 min)
+Corrió del 29-oct en la noche al 30-oct, con un apagado de la laptop en medio (reanudó sin notas repetidas). Pasa M1b a M5 sin alertas: M1b 178/178; M2 0; M3 neto +30 de 2.334 (1,3 %); 0 notas sin releer; integridad completa en los 4 medios.
+
+Revisión antes de aplicar, frente a la corrida 1:
+- Exitosa, El Tiempo y `sin_texto` (14 notas) quedan idénticos.
+- 82 notas de Andina y RPP dejan de mencionar El Niño. 47 son las de `gana.txt`, que vuelven a su valor anterior. Las otras 35 ya la tenían en la extracción anterior; releídas una por una, en las 35 la mención estaba solo en un titular ajeno quitado y en ninguna en el texto propio. El único cambio en "sobre El Niño" (Andina 1076761) tiene la misma causa. Las 35 quedaron en `notas_vistas.csv`.
+
+Se aplicó el 31-oct. Los archivos aplicados son iguales, fila por fila, a los recalculados. Los enlaces bajan de 292.921 a 124.451 (ya no entran los recomendados).
+
+Después del recálculo (`viabilidad resultados`, notas del 1-ene al 24-oct):
+
+| Medida | Antes | Después |
+|---|---|---|
+| Notas sobre El Niño | 2.236 (Andina 1.119, RPP 452, Exitosa 336, El Tiempo 329) | 2.230 (Andina 1.135, RPP 461, Exitosa 337, El Tiempo 297) |
+| Control positivo (enlace / número / extensiones) | 5 / 31 / 41 | 5 / 31 / 41 |
+| Cuerpo con ≥ 40 % del resumen | 99,25 % | 99,33 % |
+| RPP: cuerpo con ≥ 90 % del `articleBody` | 99,97 % (5 no) | 99,77 % (44 no) |
+
+`region.notas` pasa sus 7 pruebas. De las 2.370 notas sobre El Niño (todo el período), 62 % quedan "nacional", 25 % costa norte, 11 % Lima y 4 % costa centro.
+
+**La baja en RPP frente al `articleBody` se diagnosticó caso por caso (6 notas releídas).** Muestra un error de la capa 1, anterior a la regla de titulares ajenos:
+- En ~25 notas de RPP (sobre todo de enero y febrero, de la serie del Rotafono), el HTML no cierra el bloque "Te recomendamos". El resto de la nota y la barra lateral quedan dentro de él, así que al quitarlo se pierde prosa real y entran rótulos como "Lo más leído" o "En Vivo".
+- No toca "sobre El Niño", las magnitudes ni los comunicados. Pierden "menciona El Niño" 3 notas que no son sobre El Niño.
+- En otras notas el cuerpo crece y no falta ninguna frase del `articleBody`. Ahí la baja es del instrumento y está por revisar.
+
+Pendiente en [pendientes.md](../pendientes.md).

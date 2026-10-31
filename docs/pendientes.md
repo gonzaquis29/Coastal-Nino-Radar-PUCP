@@ -1,14 +1,14 @@
-# Pendientes, por prioridad (actualizado el 29-oct-2026)
+# Pendientes, por prioridad (actualizado el 31-oct-2026)
 
 Orden según dependencias reales y fechas, revisado con lo aprendido en los pilotos; el calendario del README es orientativo. Cada tarea se define, se aprueba, se construye y se valida con muestras nuevas, una a la vez. Estado del índice de discrepancia y del flujo de NLP: [nlp/discrepancia.md](nlp/discrepancia.md).
 
 ## Siempre (rutina hasta el corte del 20-nov)
 - Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. Un solo proceso a la vez pide páginas (`data/red.lock`): si el recálculo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo. Luego `python -m radar.noticias.historico` (solo notas nuevas) y `python -m radar.region.notas`.
 - Si la recolección avisa "Nuevo documento del ENFEN", `python -m radar.oficial.corpus`. El 28-oct el aviso eran solo ediciones de las páginas web de los N.° 14 a 18; los PDF no cambiaron.
-- Próximo comunicado del ENFEN anunciado: jueves 30-oct.
+- El comunicado N.° 19 del ENFEN (30-oct) ya está en el corpus (31-oct).
 
-## 1. Recalcular las notas con el texto limpio (antes de la red de enlaces)
-`notas.csv` y `enlaces.csv` se calcularon con la extracción anterior a la capa 1: los enlaces incluyen recomendados y los rasgos usan texto pegado. La red de enlaces y citas y la co-mención los necesitan limpios.
+## 1. ~~Recalcular las notas con el texto limpio~~ (aplicado el 31-oct, [noticias/recalculo.md](noticias/recalculo.md))
+`notas.csv` y `enlaces.csv` se calculaban con la extracción anterior a la capa 1: los enlaces incluyen recomendados y los rasgos usan texto pegado. La red de enlaces y citas y la co-mención los necesitan limpios.
 
 **Hecho el 28-oct:** el resumen de El Tiempo se corta donde empieza el enlace a otra nota ([noticias/texto.md](noticias/texto.md)). Antes, 39 notas eran "sobre El Niño" solo por el titular ajeno. Se corrige en el recálculo.
 
@@ -17,8 +17,9 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 **Hecho el 28-oct (regla de magnitud):** una sola regla por cercanía para el ENFEN y las notas ([nlp/magnitud.md](nlp/magnitud.md)). Con `comunicados.csv` sin cambios, pasa la 1.ª y la 3.ª muestra; la 2.ª no pasó y se corrigió en la regla y en el instrumento. Quedan sin ver solo 16 notas con magnitud, todas de Andina: la medición previa al recálculo mide "sobre El Niño" con muestra nueva, y el efecto completo en las magnitudes lo da el recálculo, nota por nota.
 1. ~~**Unificar la regla de magnitud:**~~ (hecho) `noticias.rasgos.magnitudes` pasa a usar, frase por frase, las reglas de `oficial.enfen`; es la definición de la capa 3. Hay que validar antes cuántas notas cambian sus magnitudes y su "sobre El Niño".
 2. ~~**Un modo de recálculo en `noticias.historico`**~~ (hecho el 28-oct, [noticias/recalculo.md](noticias/recalculo.md)) (hoy solo lee notas nuevas): volver a leer las notas ya leídas y reescribir `notas.csv` y `enlaces.csv` de cada medio de forma atómica y reanudable, sin perder lo existente si se corta.
-3. **Correrlo:** la fase 1 y la fase 2 corrieron el 29-oct y pasaron los criterios, pero al revisarlas antes de aplicar apareció una fuga de titulares ajenos en el cuerpo (Andina y RPP), que ya se corrigió en la capa 1 ([noticias/recalculo.md](noticias/recalculo.md)). Se relanzó completo esa noche (~10 h). Falta revisar su informe, `--aplicar` (con aprobación) y luego `region.notas`.
-4. **Volver a correr `viabilidad resultados`** y actualizar las cifras del README si cambian (volumen, control positivo, calidad).
+3. ~~**Correrlo:**~~ (hecho) la primera corrida destapó la fuga de titulares ajenos, que se corrigió en la capa 1. La segunda pasó M1b a M5, se revisó caso por caso y se aplicó el 31-oct. Después corrieron `region.notas` (pasa) y el histórico de las notas nuevas.
+4. ~~**Volver a correr `viabilidad resultados`**~~ (hecho): 2.230 notas sobre El Niño (antes 2.236); el control positivo no cambia.
+5. **Capa 1, bloque "Te recomendamos" sin cerrar en RPP** (encontrado al revisar `viabilidad`): en ~25 notas, sobre todo de la serie del Rotafono de enero y febrero, el bloque de recomendados envuelve el resto de la nota y la barra lateral. Quitarlo pierde prosa real y deja entrar rótulos ("Lo más leído", "En Vivo"). No cambia "sobre El Niño", las magnitudes ni los comunicados. Falta definir el arreglo (por ejemplo, quitar del bloque solo las tarjetas y no la prosa que lo sigue), validarlo con una muestra nueva y releer solo esas notas. Revisar también por qué baja la coincidencia en notas cuyo cuerpo crece sin que falte ninguna frase (posible error del instrumento).
 
 ## 2. Pruebas de viabilidad pendientes (esta semana; son las que deciden el alcance)
 | Prueba | Qué falta | Decide |
