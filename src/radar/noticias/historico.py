@@ -110,7 +110,7 @@ def recalcular(args, parar, inicio, registro):
     from radar.noticias.viabilidad import guardar, reporte
 
     if args.aplicar:
-        filas, aplicado = recalculo.aplicar()
+        filas, aplicado = recalculo.aplicar(args.medio)
         guardar(filas)
         reporte(filas, [], inicio)
         if not aplicado:
@@ -133,7 +133,7 @@ def recalcular(args, parar, inicio, registro):
                 f"{m:10}{r['pendientes']:>11}{r['releidas']:>10}{r['sin_releer']:>11}{r['errores']:>9}"
                 f"{r['errores_red']:>8}  {r.get('detalle', '')}"
             )
-    filas, completo = recalculo.informe()
+    filas, completo = recalculo.informe(args.medio)
     guardar(filas)
     reporte(filas, [], inicio)
     if not completo:

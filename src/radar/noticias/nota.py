@@ -39,8 +39,7 @@ FUERA_POR_MEDIO = {
     "andina": f".//div[{_clase('Top3')}]|.//div[@data-type='_mgwidget']",
     "rpp": (
         f".//div[{_clase('banner')}]|.//div[{_clase('gray-media')}]|.//div[{_clase('article__block')}]"
-        f"|.//div[{_clase('player-audio')}]|.//figure[{_clase('media-video')}]|.//div[{_clase('rotafono-report-box')}]"
-        f"|.//div[{_clase('article__follow')}]|.//div[{_clase('column-fixed')}]"
+        f"|.//div[{_clase('player-audio')}]|.//figure[{_clase('media-video')}]"
     ),
     "exitosa": f".//div[{_clase('rela')}]|.//div[{_clase('module_mm')}]|.//div[{_clase('raw-html-embed')}]",
     "eltiempo": "",
@@ -48,6 +47,13 @@ FUERA_POR_MEDIO = {
 # RPP a veces no cierra la lista de "Te recomendamos": lo que sigue a la última tarjeta es el resto de la nota (y a
 # veces la barra lateral). Se saca del bloque antes de quitarlo. Medido el 31-oct-2026: ~2 % de las notas del Rotafono.
 LISTA_SIN_CERRAR = {"rpp": ("article__block", "article__block-list", "article__block-item")}  # bloque, lista, tarjeta
+# Lo que el rescate deja a la vista y tampoco es la nota: la caja del Rotafono, "síguenos" y la barra lateral
+FUERA_CON_RESCATE = {
+    "rpp": (
+        f".//div[{_clase('rotafono-report-box')}]|.//div[{_clase('article__follow')}]"
+        f"|.//div[{_clase('column-fixed')}]"
+    )
+}
 # Bloques y líneas que enlazan a otras notas: se quitan como nodo (así sus enlaces tampoco cuentan) y como línea
 ENLACE_A_OTRAS = re.compile(
     r"^[\s\[(«\"“]*(►|lea también|lee también|puede?s? leer|lee más|leer más|te recomendamos|más en andina|mira también"
@@ -154,13 +160,17 @@ def _sin_titular(cuerpo, titular):
     return resto if titular and primera == titular else cuerpo
 
 
-def _sin_bloques_ajenos(nodo, medio):
-    """Quita del cuerpo lo que no es la nota; los enlaces se toman después, sin los de recomendados."""
+def _sin_bloques_ajenos(nodo, medio, rescate=True):
+    """Quita del cuerpo lo que no es la nota; los enlaces se toman después, sin los de recomendados. Con
+    rescate=False reproduce la capa 1 anterior al 31-oct-2026 (solo para separar causas en el recálculo)."""
     for basura in nodo.xpath(FUERA_DEL_CUERPO.replace("//", ".//")):
         basura.drop_tree()
-    _fuera_de_listas_sin_cerrar(nodo, medio)
-    if FUERA_POR_MEDIO[medio]:
-        for basura in nodo.xpath(FUERA_POR_MEDIO[medio]):
+    fuera = FUERA_POR_MEDIO[medio]
+    if rescate and medio in LISTA_SIN_CERRAR:
+        _fuera_de_listas_sin_cerrar(nodo, medio)
+        fuera = f"{fuera}|{FUERA_CON_RESCATE[medio]}"
+    if fuera:
+        for basura in nodo.xpath(fuera):
             basura.drop_tree()
     for cita in nodo.xpath(".//blockquote"):
         if CITA_QUE_ES_ENLACE.search(cita.text_content()):
@@ -176,8 +186,6 @@ def _sin_bloques_ajenos(nodo, medio):
 
 def _fuera_de_listas_sin_cerrar(nodo, medio):
     """Lo que sigue a la última tarjeta de una lista de recomendados pasa a quedar después de su bloque."""
-    if medio not in LISTA_SIN_CERRAR:
-        return
     clase_bloque, clase_lista, clase_tarjeta = LISTA_SIN_CERRAR[medio]
     for lista in nodo.xpath(f".//div[{_clase(clase_lista)}]"):
         hijos = list(lista)
@@ -274,13 +282,14 @@ def _normalizar(cuerpo, titular):
     return _sin_titular("\n".join(linea for linea in lineas if linea), titular)
 
 
-def _campos(titular, resumen, cuerpo, enlaces, cuerpo_con_ajenos=None, **otros):
-    """cuerpo_con_ajenos: el cuerpo como salía antes de quitar los titulares ajenos (solo para separar causas en el
-    recálculo); si no se quitó ninguno, es el mismo cuerpo."""
+def _campos(titular, resumen, cuerpo, enlaces, cuerpo_con_ajenos=None, cuerpo_sin_rescate=None, **otros):
+    """Solo para separar causas en el recálculo: cuerpo_con_ajenos, el cuerpo como salía antes de quitar los titulares
+    ajenos, y cuerpo_sin_rescate, antes de rescatar los recomendados sin cerrar; si no cambia, es el mismo cuerpo."""
     resumen = sin_enlace(resumen)
     cuerpo = _normalizar(cuerpo, titular)
     return {
         "cuerpo_con_ajenos": _normalizar(cuerpo_con_ajenos, titular) if cuerpo_con_ajenos is not None else cuerpo,
+        "cuerpo_sin_rescate": _normalizar(cuerpo_sin_rescate, titular) if cuerpo_sin_rescate is not None else cuerpo,
         "titular": titular,
         "resumen": resumen,
         "cuerpo": cuerpo,
@@ -314,12 +323,17 @@ def leer_html(medio, contenido, url, tipo=""):
             cuerpo = f"{bajada}\n{cuerpo}"
         return cuerpo_ld if len(cuerpo.split()) < MIN_PALABRAS and cuerpo_ld else cuerpo
 
-    ajenos, con_ajenos = [], None
+    ajenos, con_ajenos, sin_rescate = [], None, None
     if nodo is not None:
+        crudo = copy.deepcopy(nodo) if medio in LISTA_SIN_CERRAR else None
         _sin_bloques_ajenos(nodo, medio)
         previo = copy.deepcopy(nodo)
         if ajenos := _sin_titulares_ajenos(nodo, url):
             con_ajenos = armar(previo)
+        if crudo is not None:
+            _sin_bloques_ajenos(crudo, medio, rescate=False)
+            _sin_titulares_ajenos(crudo, url)
+            sin_rescate = armar(crudo)
     cuerpo = armar(nodo)
     return _campos(
         titular,
@@ -328,6 +342,7 @@ def leer_html(medio, contenido, url, tipo=""):
         _enlaces(nodo, url) if nodo is not None else [],
         titulares_ajenos=ajenos,
         cuerpo_con_ajenos=con_ajenos,
+        cuerpo_sin_rescate=sin_rescate,
         fecha_publicacion=publicada,
         fecha_modificacion=a_lima(str(ld.get("dateModified") or "")),
         fecha_creacion=a_lima(creacion) if creacion else "",

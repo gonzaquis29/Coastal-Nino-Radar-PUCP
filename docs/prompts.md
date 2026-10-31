@@ -318,3 +318,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 - Midió la prevalencia en una muestra de diseño. Su propio detector falló primero; lo diagnosticó y lo corrigió antes de proponer nada.
 - Construyó el instrumento y la regla y los validó con criterios fijados antes. C3 no pasó en dos muestras; en las dos, caso por caso, fallaba el instrumento (rótulos cortos, una sola palabra), nunca la regla. La 3.ª muestra pasa.
 - Al preparar la segunda pasada del recálculo encontró que la generación de cada fila ya no es fiable; lo definió antes de tocar el código.
+15. Apruebo (la adaptación del recálculo). ¿Me indicas cuánto demorará aprox.?
+
+**Resultado:** la IA adaptó el recálculo (piso de generación, paso "rescate" y control M1b). Antes de lanzar 5,5 h comprobó con 6 notas reales que el cuerpo sin rescate reproduce el `sha1` guardado.

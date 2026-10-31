@@ -13,7 +13,7 @@ from radar.comun import archivos
 from radar.comun.archivos import escribir_csv, leer_csv
 from radar.noticias import esquemas, recalculo
 from radar.noticias.medios import NoExiste, filas_de_nota
-from radar.noticias.nota import leer_api
+from radar.noticias.nota import LISTA_SIN_CERRAR, leer_api, leer_html
 
 RELLENO = " ".join(["palabra"] * 60)
 ANTES = "2026-10-26T10:00:00-05:00"
@@ -71,6 +71,7 @@ def raiz(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DIR_RAW_NOTICIAS", tmp_path / "raw")
     monkeypatch.setattr(recalculo, "MEDIOS", {"rpp": MedioFalso})
     monkeypatch.setattr(recalculo, "Cliente", lambda **_: None)
+    monkeypatch.setattr(recalculo, "PISO_DE_GENERACION", {})  # archivos de antes de cualquier recálculo aplicado
     medio = MedioFalso(None)
     notas, enlaces = [], []
     for i in [*CUERPOS, RED, NO_EXISTE]:
@@ -192,10 +193,38 @@ def test_regla_anterior_reproducida():
 def test_sin_filas_de_control_el_instrumento_no_pasa_y_se_releen_primero(raiz):
     correr()
     m1b = next(f for f in recalculo.informe()[0] if f["criterio"].startswith("M1b"))
-    assert not m1b["pasa"]  # todas las filas son de la generación anterior: no hay con qué controlar
+    assert not m1b["pasa"]  # todas las filas son de la generación "anterior": no hay con qué controlar
     viejas = leer_csv(raiz / "raw/rpp/notas.csv")
-    viejas[-1]["recolectado"] = "2026-10-28T18:09:52-05:00"  # la última, con el cuerpo limpio ya guardado
+    viejas[-1]["recolectado"] = "2026-10-30T09:00:00-05:00"  # la última, de la generación de control
     escribir_csv(raiz / "raw/rpp/notas.csv", esquemas.NOTAS, viejas)
     shutil.rmtree(raiz / "raw/rpp/recalculo")
     pendientes, _ = recalculo.Recalculo("rpp", threading.Event(), "e1", recalculo.FASE_RESTO).pendientes(set())
     assert pendientes[0]["id"] == viejas[-1]["id"]
+
+
+def test_segunda_pasada_separa_el_rescate_de_una_edicion(monkeypatch, tmp_path):
+    """Archivos ya recalculados ("actual", por el piso aunque la nota se recolectó antes): el cuerpo cambia solo por
+    el rescate de los recomendados sin cerrar, y eso no es una edición de la página."""
+    tarjeta = ("<div class='article__block-item'><article class='news'><h2><a href='https://rpp.pe/lima/otra-noticia-2'>"
+               "Vecinos piden ayuda</a></h2></article></div>")  # fmt: skip
+    pagina = ('<html><head><script type="application/ld+json">{"@type": "NewsArticle", "headline": "Titular",'
+              ' "datePublished": "2026-02-01T10:00:00-05:00"}</script></head><body><div class="body">'
+              f"<p>{RELLENO}</p><div class='article__block'><div class='article__block-list'>{tarjeta}"
+              "<p>El Niño costero de intensidad fuerte llegaría en verano.</p></div></div></div></body></html>"
+              ).encode()  # fmt: skip
+    url = "https://rpp.pe/lima/esta-noticia-1"
+    fila = {"medio": "rpp", "id": "noticia-1", "url": url, "titulo": "Titular", "seccion": "lima",
+            "fecha_lista": "", "via": "archivo", "http": 200}  # fmt: skip
+    with monkeypatch.context() as m:  # lo que guardó el código "actual", sin rescate
+        m.setattr("radar.noticias.nota.LISTA_SIN_CERRAR", {})
+        vieja, _ = filas_de_nota("rpp", fila, leer_html("rpp", pagina, url), "candidata")
+    vieja["recolectado"] = "2026-10-20T10:00:00-05:00"
+    escribir_csv(tmp_path / "notas.csv", esquemas.NOTAS, [vieja])
+    vieja = leer_csv(tmp_path / "notas.csv")[0]  # como queda guardada
+    assert "rpp" in LISTA_SIN_CERRAR and vieja["magnitudes"] == ""
+    campos = leer_html("rpp", pagina, url)
+    nueva, enlaces = filas_de_nota("rpp", fila, campos, "candidata")
+    cambio = recalculo.comparar(vieja, nueva, campos, enlaces, "rpp", "ahora")
+    assert cambio["generacion"] == "actual" and cambio["pagina_editada"] is False
+    assert cambio["magnitudes_ahora"] == "fuerte" and cambio["causa_magnitudes"] == "rescate"
+    assert cambio["magnitudes_texto_nuevo"] == ""  # el control: el cuerpo de antes reproduce lo guardado

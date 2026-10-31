@@ -37,7 +37,10 @@ La causa sale **paso a paso**, con el código que produjo la fila guardada. La g
 - capa1: cuerpo limpio;
 - resumen: resumen sin enlaces;
 - regla: regla de magnitud única;
-- actual: sin titulares ajenos en el cuerpo (29-oct a las 21:55).
+- actual: sin titulares ajenos en el cuerpo (29-oct a las 21:55);
+- rescate: RPP, recomendados sin cerrar (31-oct a las 11:41).
+
+Como `recolectado` se conserva al recalcular, después de aplicar ya no dice con qué código se calculó la fila. `PISO_DE_GENERACION` lo fija: los archivos aplicados el 31-oct se calcularon enteros con "actual", y ninguna fila es más vieja.
 
 Pasos:
 1. **Cuerpo:** antes frente a lo que da el código anterior sobre el texto nuevo. Se clasifica como:
@@ -46,6 +49,7 @@ Pasos:
    - "capa1_o_edicion", en Andina;
    - "sin_causa", si el cuerpo ya era el limpio y cambió sin edición.
 2. **Titulares ajenos** ("ajenos"): el cuerpo como salía antes de quitarlos (`cuerpo_con_ajenos`, en memoria) frente al nuevo. El paso 1 usa ese cuerpo previo, así que una nota cuyo cuerpo solo cambió por esto no se toma por editada, y M1b mide lo mismo que antes ([texto.md](texto.md#titulares-ajenos-sin-rótulo-29-oct-2026)).
+   En las filas "actual" este paso es **"rescate"**: el cuerpo como lo sacaba el código "actual" (`cuerpo_sin_rescate`, en memoria: sin el rescate ni los tres selectores nuevos de RPP) frente al nuevo ([texto.md](texto.md#recomendados-sin-cerrar-en-rpp-31-oct-2026)).
 3. **Regla:** regla de magnitud anterior frente a la nueva.
 4. **Resumen:** resumen viejo frente al nuevo.
 
@@ -114,3 +118,21 @@ Después del recálculo (`viabilidad resultados`, notas del 1-ene al 24-oct):
 - En otras notas el cuerpo crece y no falta ninguna frase del `articleBody`. Ahí la baja es del instrumento y está por revisar.
 
 Pendiente en [pendientes.md](../pendientes.md).
+
+## Segunda pasada: RPP con el rescate (31-oct)
+Adaptación aprobada antes de correr:
+- `PISO_DE_GENERACION`: las filas aplicadas son de la generación "actual".
+- La generación "rescate" y su paso de causa, con `cuerpo_sin_rescate`.
+- M1b controla con las filas de `GENERACION_DE_CONTROL` ("actual") sin edición. Antes eran las de "capa1". En una segunda pasada son todas las filas, así que el control es el más amplio posible.
+- `--informe` y `--aplicar` respetan `--medio`.
+
+Los criterios M1b a M5 y sus umbrales no cambian. Antes de aplicar se revisan, caso por caso, los cambios de "menciona El Niño" y de `sin_texto`.
+
+Control previo con 6 notas reales ya vistas: el cuerpo sin rescate reproduce el `sha1` guardado en 6/6, y solo cambia el de las 2 rescatadas.
+
+Lo recalculado de la primera pasada, ya aplicado, queda en `recalculo.31oct-aplicado/`.
+
+```bash
+python -m radar.noticias.historico --recalcular --medio rpp --todo --horas 7
+python -m radar.noticias.historico --recalcular --medio rpp --aplicar   # con aprobación
+```

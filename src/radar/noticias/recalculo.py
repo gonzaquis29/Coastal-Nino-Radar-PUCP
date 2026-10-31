@@ -49,7 +49,11 @@ GENERACIONES = (
     ("resumen", "2026-10-28T18:23"),  # resumen sin enlaces (7fc3477); regla anterior
     ("regla", "2026-10-28T22:40"),  # regla de magnitud única (333c413)
     ("actual", "2026-10-29T21:55"),  # sin titulares ajenos en el cuerpo
+    ("rescate", "2026-10-31T11:41"),  # RPP: recomendados sin cerrar (a45e690)
 )
+# "recolectado" se conserva al recalcular: los archivos aplicados el 31-oct-2026 se calcularon enteros con "actual"
+PISO_DE_GENERACION = {"andina": "actual", "rpp": "actual", "exitosa": "actual", "eltiempo": "actual"}
+GENERACION_DE_CONTROL = "actual"  # M1b: filas con el cuerpo de la generación anterior a la vigente
 MAX_INTENTOS = 3  # respuestas con error (HTTP, contenido) antes de dejar la nota como estaba
 MAX_EJECUCIONES_CON_ERROR_DE_RED = 3  # un error de red cuenta una vez por ejecución (una suspensión no la descarta)
 PAUSA_TRAS_SUSPENSION = 600  # segundos que espera un medio suspendido por fallos seguidos antes de reintentar
@@ -76,8 +80,11 @@ def magnitudes_regla_anterior(texto):
     return [e for e in enfen.ESCALA_MAGNITUD if e in encontradas]
 
 
-def generacion(recolectado):
-    return next(g for g, desde in reversed(GENERACIONES) if recolectado[:16] >= desde)
+def generacion(recolectado, medio=None):
+    """Código con que se calculó la fila: el de su "recolectado", o el del último recálculo aplicado si es posterior."""
+    nombres = [g for g, _ in GENERACIONES]
+    por_fecha = next(g for g, desde in reversed(GENERACIONES) if recolectado[:16] >= desde)
+    return max(por_fecha, PISO_DE_GENERACION.get(medio, "anterior"), key=nombres.index)
 
 
 def fase(nota):
@@ -131,17 +138,23 @@ class Archivos:
 
 
 def comparar(vieja, nueva, campos, enlaces_nuevos, medio, momento):
-    """Fila de cambios.csv: antes, después y la causa, separando cuerpo, titulares ajenos, regla y resumen paso a
-    paso. El paso del cuerpo usa el cuerpo como salía antes de quitar los titulares ajenos ("previo"): así se compara
-    con lo guardado y el control (M1b) mide lo mismo que antes."""
-    gen = generacion(vieja["recolectado"])
+    """Fila de cambios.csv: antes, después y la causa, separando cuerpo, titulares ajenos o rescate, regla y resumen
+    paso a paso. El paso del cuerpo usa el cuerpo como lo sacaba el código de la fila ("previo"): así se compara con lo
+    guardado y el control (M1b) mide lo mismo que antes."""
+    gen = generacion(vieja["recolectado"], medio)
     cuerpo, resumen_nuevo, resumen_viejo, titular = (
         campos["cuerpo"],
         campos["resumen"],
         vieja["resumen"],
         campos["titular"],
     )
-    previo = cuerpo if gen == "actual" else campos.get("cuerpo_con_ajenos", cuerpo)
+    # el paso del cuerpo intermedio: lo que cambió el código desde la generación de la fila
+    if gen == "rescate":
+        previo, paso = cuerpo, "rescate"
+    elif gen == "actual":
+        previo, paso = campos.get("cuerpo_sin_rescate", cuerpo), "rescate"
+    else:
+        previo, paso = campos.get("cuerpo_con_ajenos", cuerpo), "ajenos"
     if medio in MEDIOS_SIN_FECHA_DE_EDICION:
         editada = sha1_corto(previo) != vieja["sha1_cuerpo"] if gen != "anterior" else None
     else:
@@ -166,7 +179,7 @@ def comparar(vieja, nueva, campos, enlaces_nuevos, medio, momento):
     s_medio = _sobre(titular, resumen_de_antes, cuerpo)
     s_ahora = _si(nueva["sobre_nino"])
     causa_sobre = causas(
-        [(causa_del_cuerpo(), s_antes != s_previo), ("ajenos", s_previo != s_medio), ("resumen", s_medio != s_ahora)]
+        [(causa_del_cuerpo(), s_antes != s_previo), (paso, s_previo != s_medio), ("resumen", s_medio != s_ahora)]
     )
 
     # magnitudes: antes → regla de antes sobre el cuerpo previo → sin titulares ajenos → regla nueva → resumen nuevo
@@ -179,7 +192,7 @@ def comparar(vieja, nueva, campos, enlaces_nuevos, medio, momento):
     causa_magnitudes = causas(
         [
             (causa_del_cuerpo(), m_antes != m_previo),
-            ("ajenos", m_previo != m_texto),
+            (paso, m_previo != m_texto),
             ("regla", m_texto != m_regla),
             ("resumen", m_regla != m_ahora),
         ]
@@ -217,7 +230,7 @@ def sin_releer(vieja, motivo, momento):
         "medio": vieja["medio"],
         "id": vieja["id"],
         "fase": fase(vieja),
-        "generacion": generacion(vieja["recolectado"]),
+        "generacion": generacion(vieja["recolectado"], vieja["medio"]),
         "estado": "sin_releer",
         "motivo": motivo[:200],
         "recalculado": momento,
@@ -243,7 +256,7 @@ class Recalculo:
         orden = {f: i for i, f in enumerate(self.fases)}
         filas = [n for n in viejas if n["id"] not in hechas and fase(n) in orden]
         # estable: dentro de cada fase, primero las filas de control del instrumento (M1b) y luego el orden del archivo
-        filas.sort(key=lambda n: (orden[fase(n)], generacion(n["recolectado"]) != "capa1"))
+        filas.sort(key=lambda n: (orden[fase(n)], generacion(n["recolectado"], self.nombre) != GENERACION_DE_CONTROL))
         return filas[: self.limite] if self.limite else filas, viejas
 
     def correr(self):
@@ -334,11 +347,11 @@ class Recalculo:
 PRUEBA = "Recálculo de las notas"
 
 
-def informe():
+def informe(medios=None):
     """Criterios M1b a M5 sobre lo ya releído (docs/noticias/recalculo.md). Devuelve (filas, completo)."""
     filas, completo, integridad, sin_releer_por_medio = [], True, [], {}
     todos = []
-    for nombre in MEDIOS:
+    for nombre in medios or MEDIOS:
         a = Archivos(nombre)
         cambios = leer_csv(a.cambios)
         todos += cambios
@@ -357,7 +370,7 @@ def informe():
     releidas = [c for c in todos if c["estado"] == "releida"]
     # control del instrumento: filas guardadas ya con el cuerpo limpio y sin edición; con el resumen y la regla de
     # antes sobre el texto nuevo deben dar lo guardado
-    control = [c for c in releidas if c["generacion"] == "capa1" and c["pagina_editada"] == "0"]
+    control = [c for c in releidas if c["generacion"] == GENERACION_DE_CONTROL and c["pagina_editada"] == "0"]
     reproducidas = [
         c
         for c in control
@@ -427,12 +440,12 @@ def _marcar(archivos, fase_aplicado):
     guardar_json(archivos.estado, estado)
 
 
-def aplicar():
+def aplicar(medios=None):
     """Solo si todo está releído y pasan los criterios. Devuelve (filas del informe, aplicado)."""
-    filas, completo = informe()
+    filas, completo = informe(medios)
     if not completo or not all(f["pasa"] for f in filas):
         return filas, False
-    for nombre in MEDIOS:
+    for nombre in medios or MEDIOS:
         _cambiar(nombre)
     return filas, True
 

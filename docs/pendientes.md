@@ -20,7 +20,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 3. ~~**Correrlo:**~~ (hecho) la primera corrida destapó la fuga de titulares ajenos, que se corrigió en la capa 1. La segunda pasó M1b a M5, se revisó caso por caso y se aplicó el 31-oct. Después corrieron `region.notas` (pasa) y el histórico de las notas nuevas.
 4. ~~**Volver a correr `viabilidad resultados`**~~ (hecho): 2.230 notas sobre El Niño (antes 2.236); el control positivo no cambia.
 5. ~~**Capa 1, bloque "Te recomendamos" sin cerrar en RPP**~~ (hecho y validado el 31-oct, [noticias/texto.md](noticias/texto.md#recomendados-sin-cerrar-en-rpp-31-oct-2026)), junto con el instrumento de `cuerpo_vs_ld` (ítems de lista pegados en el `articleBody`). No cambia "sobre El Niño", las magnitudes ni los comunicados.
-6. **Volver a recalcular RPP** (~19.700 notas, ~5,5 h) con la regla nueva. Antes hay que adaptar el recálculo a una segunda pasada: la generación de cada fila sale de `recolectado`, que se conserva al recalcular, así que ya no dice con qué código se calculó la fila.
+6. **Volver a recalcular RPP** (~19.850 notas, ~5,5 h) con la regla nueva. El recálculo ya está adaptado a una segunda pasada ([noticias/recalculo.md](noticias/recalculo.md#segunda-pasada-rpp-con-el-rescate-31-oct)); se lanzó el 31-oct. Falta revisar su informe, `--aplicar` (con aprobación), `region.notas` y `viabilidad resultados`.
 
 ## 2. Pruebas de viabilidad pendientes (esta semana; son las que deciden el alcance)
 | Prueba | Qué falta | Decide |
