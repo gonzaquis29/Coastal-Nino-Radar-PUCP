@@ -321,3 +321,12 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 15. Apruebo (la adaptación del recálculo). ¿Me indicas cuánto demorará aprox.?
 
 **Resultado:** la IA adaptó el recálculo (piso de generación, paso "rescate" y control M1b). Antes de lanzar 5,5 h comprobó con 6 notas reales que el cuerpo sin rescate reproduce el `sha1` guardado.
+
+    Al terminar, también evitó que el segundo `--aplicar` se quedara sin respaldo: renombró los archivos de la primera pasada, que ocupaban `*.anterior.csv`.
+16. ¿Cómo va el proceso? Sí, procede (aplicar el recálculo de RPP).
+
+**Resultado:**
+- La IA revisó el informe: M1b a M5 pasan, y ninguna nota cambia magnitudes, "sobre El Niño", "menciona" ni comunicados.
+- Explicó los 3.061 cambios de cuerpo por grupo: recuadros de seguir al medio, la caja del Rotafono, la barra lateral y 10 rescates. También separó 9 ediciones reales de RPP.
+- Aplicó y verificó fila por fila. `region.notas` no cambia, y en `viabilidad` la cobertura de RPP sube de 99,77 % a 99,94 %.
+- Dejó como pendiente aparte las 13 notas que el rescate no cubre.

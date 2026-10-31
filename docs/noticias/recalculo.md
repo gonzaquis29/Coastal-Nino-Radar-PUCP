@@ -137,3 +137,25 @@ Los archivos de antes de la primera pasada se renombraron a `*.antes-del-recalcu
 python -m radar.noticias.historico --recalcular --medio rpp --todo --horas 7
 python -m radar.noticias.historico --recalcular --medio rpp --aplicar   # con aprobación
 ```
+
+### Resultado y aplicación (31-oct)
+La corrida terminó a las 17:44: 19.849 notas en 332 min, 0 errores de red. M1b 19.840/19.840, M2 0, M3 neto +0 de 492, M4 0/19.849, M5 sí.
+
+Ninguna nota cambia magnitudes, "sobre El Niño", "menciona El Niño" ni comunicados. Cambia el cuerpo de 3.061 notas:
+
+| Notas | Palabras | Enlaces | Qué es |
+|---|---|---|---|
+| 2.141 | −8 | −2 | recuadro "Síguenos en Google News / WhatsApp" (`article__follow`) |
+| 838 | −40 | −3 | ese recuadro y la caja del Rotafono |
+| ~60 | −18 a −27 | −8 a −13 | recuadro y etiquetas de la barra lateral (`column-fixed`) |
+| 10 | +25 a +173 | — | texto rescatado de los recomendados sin cerrar; `cuerpo_vs_ld` de 0,49–0,88 a 1,0 |
+
+`cuerpo_vs_ld` sube en 11.287 notas por la tolerancia de ítems pegados (instrumento) y baja apenas en 2 notas del Rotafono, 1672096 (0,647 → 0,640) y 1674393 (0,513 → 0,509), por la caja y la barra lateral que se quitan.
+9 páginas fueron editadas por RPP desde la primera lectura (titulares y fechas). Una, `live-3679`, pasa a `sin_texto` porque el en vivo se volvió un historial de 7 palabras.
+
+Aplicado con aprobación y verificado fila por fila: notas 19.849 y enlaces 49.639, iguales a lo recalculado.
+`notas.anterior.csv` y `enlaces.anterior.csv` son los vigentes de antes, y lo recalculado queda en `recalculo.31oct-rescate-aplicado/`.
+`region.notas` da los mismos resultados que antes.
+En `viabilidad resultados`, RPP con ≥ 0,9 del articleBody pasa de 0,9977 a 0,9994 (18.735/18.747), y `sin texto` de 382 a 383. Las 2.230 notas sobre El Niño no cambian.
+
+Quedan 13 notas de RPP con cobertura menor a 0,9 (8 del Rotafono). Su texto no queda después de la lista de recomendados, así que el rescate no las cubre: ver `docs/pendientes.md`.

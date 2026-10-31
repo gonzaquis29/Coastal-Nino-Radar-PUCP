@@ -20,7 +20,8 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 3. ~~**Correrlo:**~~ (hecho) la primera corrida destapó la fuga de titulares ajenos, que se corrigió en la capa 1. La segunda pasó M1b a M5, se revisó caso por caso y se aplicó el 31-oct. Después corrieron `region.notas` (pasa) y el histórico de las notas nuevas.
 4. ~~**Volver a correr `viabilidad resultados`**~~ (hecho): 2.230 notas sobre El Niño (antes 2.236); el control positivo no cambia.
 5. ~~**Capa 1, bloque "Te recomendamos" sin cerrar en RPP**~~ (hecho y validado el 31-oct, [noticias/texto.md](noticias/texto.md#recomendados-sin-cerrar-en-rpp-31-oct-2026)), junto con el instrumento de `cuerpo_vs_ld` (ítems de lista pegados en el `articleBody`). No cambia "sobre El Niño", las magnitudes ni los comunicados.
-6. **Volver a recalcular RPP** (~19.850 notas, ~5,5 h) con la regla nueva. El recálculo ya está adaptado a una segunda pasada ([noticias/recalculo.md](noticias/recalculo.md#segunda-pasada-rpp-con-el-rescate-31-oct)); se lanzó el 31-oct. Falta revisar su informe, `--aplicar` (con aprobación), `region.notas` y `viabilidad resultados`.
+6. ~~**Volver a recalcular RPP** con la regla nueva~~. Hecho y aplicado el 31-oct: solo cambian cuerpos y enlaces (recuadros, caja del Rotafono, barra lateral y 10 rescates), ninguna nota cambia magnitudes ni "sobre El Niño" ([noticias/recalculo.md](noticias/recalculo.md#resultado-y-aplicación-31-oct)).
+7. **13 notas de RPP con menos de 0,9 del articleBody** (8 del Rotafono, como 1672096 y 1674393). El texto que falta no queda después de la lista de recomendados, así que el rescate no lo cubre. Es un análisis de capa 1 aparte: diagnosticar caso por caso con muestra nueva antes de proponer una regla.
 
 ## 2. Pruebas de viabilidad pendientes (esta semana; son las que deciden el alcance)
 | Prueba | Qué falta | Decide |
