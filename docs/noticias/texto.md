@@ -117,6 +117,34 @@ Resultados, en orden (cada muestra sin las notas vistas ni las reservadas para l
 
 Los umbrales no se movieron. La regla se corrigió una vez (después de la 1.ª) y el instrumento dos.
 
+## Recomendados sin cerrar en RPP (31-oct-2026)
+**Cómo se encontró:** después de aplicar el recálculo, la coincidencia de RPP con su `articleBody` bajó de 99,97 % a 99,77 %. Detrás había dos causas distintas.
+
+**1. El instrumento.** El `articleBody` pega los ítems de lista sin espacio ("HBO Max**The** Office", "Perú**Partido**"). El cuerpo viejo venía pegado igual y coincidía por casualidad; el cuerpo limpio los separa. `proporcion_en_cuerpo(..., pegadas=True)`, que solo se usa para `cuerpo_vs_ld`, cuenta también la unión de dos palabras seguidas del cuerpo. **I1** (muestra nueva `instrumento-articlebody-i1-31oct`, 300 notas de RPP): cada nota que siga bajo 0,9 debe ser una pérdida real. Pasa: quedaron 0 bajo 0,9. Es un pase casi vacío, y se declara así.
+
+**2. La regla.** En algunas notas el HTML de RPP no cierra `article__block-list` ni el bloque "Te recomendamos" después de la última tarjeta. El resto de la nota queda dentro del bloque (y a veces la caja del Rotafono, los tags y la barra lateral `column-fixed`), y al quitar el bloque se perdía la prosa. Prevalencia en una muestra de diseño (`recomendados-mal-cerrados-31oct`, 950 notas): 3 de 150 del Rotafono; 0 de 300 del resto de RPP; 0 de 300 de Andina y 0 de 200 de Exitosa. El detector de esa medición falló primero: descartaba los párrafos con un `<article>` como ancestro, y en RPP toda la página lo tiene. Se corrigió y se volvió a medir la misma muestra (es de diseño, sin umbral).
+
+**Qué hace** (`nota._fuera_de_listas_sin_cerrar`, antes de quitar los bloques de RPP): lo que sigue a la última tarjeta (`article__block-item`) dentro de una lista se saca del bloque más externo y se deja justo después; luego pasan las reglas de siempre. A lo que se quita en RPP se suman la caja del Rotafono, `article__follow` y `column-fixed`. Para un bloque bien cerrado no cambia nada. No usa el `articleBody`, que es la referencia de la validación.
+
+**Validación.** Criterios fijados antes de correr:
+
+| | Criterio | Pasa si |
+|---|---|---|
+| C1 | En las notas donde rescata algo, `cuerpo_vs_ld` sube; y queda ≥ 0,9 | 100 %; ≥ 95 % |
+| C2 | Líneas agregadas con < 50 % de sus palabras en el `articleBody` | 0 |
+| C3 | Líneas quitadas que son texto de la nota (en el `articleBody`) | 0 |
+| C4 | `validar_texto` con semilla nueva | sus criterios pasan |
+| C5 | Andina, Exitosa y El Tiempo | sin cambios (pruebas con HTML sintético) |
+
+| Muestra (semilla) | C1 | C2 | C3 | Diagnóstico |
+|---|---|---|---|---|
+| 1.ª `recomendados-sin-cerrar-c-31oct` (300 del Rotafono, 300 del resto) | 2/2 suben, 2/2 ≥ 0,9 | 0 | **280, no pasa** | **Falla el instrumento:** las 280 son rótulos ("Hablar con Rotafono" 263, "RPP TV", "Únete a nuestro canal en WhatsApp", "Cuéntanos qué está pasando", "Más sobre…"), que la regla quita bien. Contar palabras no sirve en líneas tan cortas. Se mide si la línea está entera y seguida en el `articleBody` |
+| 2.ª `recomendados-sin-cerrar-c2-31oct` (las 449 del Rotafono que quedaban, 300 del resto) | 2/2, 2/2 | 0 | **1, no pasa** | **Falla el instrumento:** "Gobierno", la sección de una tarjeta de "Lo más leído" en la barra lateral; una sola palabra aparece en cualquier nota. Se exigen ≥ 4 palabras, como un titular ajeno |
+| 3.ª `recomendados-sin-cerrar-c3-31oct` (400 del resto; el Rotafono ya estaba agotado) | sin casos | 0 | **0** | Pasa C2 y C3 |
+| C4: `validar_texto --semilla texto-recomendados-31oct` | | | | Pasa en los 4 medios; 0 restos |
+
+Los umbrales no se movieron. La regla no se corrigió; el instrumento de C3, dos veces. C1 pasa en las 4 notas con rescate de las dos primeras muestras: son pocas, porque el problema es raro (~2 % del Rotafono). De paso, la regla quita el botón "Hablar con Rotafono", que estaba en el cuerpo de casi todas las notas del Rotafono.
+
 ## Limitaciones declaradas
 - Solo RPP publica `articleBody` en su JSON-LD; en Andina, Exitosa y El Tiempo no hay una referencia externa del cuerpo y la pérdida se mide contra el propio contenedor (reglas de línea) y la extracción anterior (bloques quitados, informativo).
 - RPP publica a veces en el `articleBody` párrafos que no están en la página; se valida contra la página visible.
@@ -124,4 +152,4 @@ Los umbrales no se movieron. La regla se corrigió una vez (después de la 1.ª)
 - Los selectores dependen de la plantilla de cada sitio (revisada el 28-oct-2026); si cambia, la validación lo detecta.
 
 ## Pendiente
-`data/processed/noticias/notas.csv` y `enlaces.csv` se calcularon con la extracción anterior. Se recalculan una sola vez al final, con el flujo completo ya validado, para que todo sea coherente con la metodología.
+`notas.csv` y `enlaces.csv` se recalcularon con el texto limpio el 31-oct ([recalculo.md](recalculo.md)), antes de la regla de recomendados sin cerrar. Las notas de RPP se vuelven a recalcular con ella ([pendientes.md](../pendientes.md)).

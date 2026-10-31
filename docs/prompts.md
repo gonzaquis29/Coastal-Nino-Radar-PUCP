@@ -311,3 +311,10 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 - La IA revisó caso por caso los cambios frente a la corrida 1: las 35 notas que no estaban explicadas, releídas, perdían la mención solo por un titular ajeno.
 - Ante la pregunta de si estaba seguro, separó lo comprobado de lo no comprobado (las ~1.175 pérdidas de mención revisadas por muestra, la corrección de cada magnitud) y señaló que `--aplicar` se puede deshacer. También ordenó la rutina para no perder notas nuevas: la recolección antes de aplicar y el histórico después.
 - Después de aplicar, la baja en la coincidencia de RPP con su `articleBody` destapó un error de la capa 1 (bloque de recomendados sin cerrar). Quedó como pendiente, sin código hasta su aprobación.
+14. Sí, defínelo. Apruebo (instrumento, regla y recálculo completo de RPP). Puedes validar.
+
+**Resultado (recomendados sin cerrar en RPP):**
+- La IA separó dos causas en la baja frente al `articleBody`: una del instrumento (ítems de lista pegados) y otra de la regla (HTML de RPP que no cierra el bloque "Te recomendamos").
+- Midió la prevalencia en una muestra de diseño. Su propio detector falló primero; lo diagnosticó y lo corrigió antes de proponer nada.
+- Construyó el instrumento y la regla y los validó con criterios fijados antes. C3 no pasó en dos muestras; en las dos, caso por caso, fallaba el instrumento (rótulos cortos, una sola palabra), nunca la regla. La 3.ª muestra pasa.
+- Al preparar la segunda pasada del recálculo encontró que la generación de cada fila ya no es fiable; lo definió antes de tocar el código.

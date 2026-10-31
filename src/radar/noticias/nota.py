@@ -39,11 +39,15 @@ FUERA_POR_MEDIO = {
     "andina": f".//div[{_clase('Top3')}]|.//div[@data-type='_mgwidget']",
     "rpp": (
         f".//div[{_clase('banner')}]|.//div[{_clase('gray-media')}]|.//div[{_clase('article__block')}]"
-        f"|.//div[{_clase('player-audio')}]|.//figure[{_clase('media-video')}]"
+        f"|.//div[{_clase('player-audio')}]|.//figure[{_clase('media-video')}]|.//div[{_clase('rotafono-report-box')}]"
+        f"|.//div[{_clase('article__follow')}]|.//div[{_clase('column-fixed')}]"
     ),
     "exitosa": f".//div[{_clase('rela')}]|.//div[{_clase('module_mm')}]|.//div[{_clase('raw-html-embed')}]",
     "eltiempo": "",
 }
+# RPP a veces no cierra la lista de "Te recomendamos": lo que sigue a la última tarjeta es el resto de la nota (y a
+# veces la barra lateral). Se saca del bloque antes de quitarlo. Medido el 31-oct-2026: ~2 % de las notas del Rotafono.
+LISTA_SIN_CERRAR = {"rpp": ("article__block", "article__block-list", "article__block-item")}  # bloque, lista, tarjeta
 # Bloques y líneas que enlazan a otras notas: se quitan como nodo (así sus enlaces tampoco cuentan) y como línea
 ENLACE_A_OTRAS = re.compile(
     r"^[\s\[(«\"“]*(►|lea también|lee también|puede?s? leer|lee más|leer más|te recomendamos|más en andina|mira también"
@@ -154,6 +158,7 @@ def _sin_bloques_ajenos(nodo, medio):
     """Quita del cuerpo lo que no es la nota; los enlaces se toman después, sin los de recomendados."""
     for basura in nodo.xpath(FUERA_DEL_CUERPO.replace("//", ".//")):
         basura.drop_tree()
+    _fuera_de_listas_sin_cerrar(nodo, medio)
     if FUERA_POR_MEDIO[medio]:
         for basura in nodo.xpath(FUERA_POR_MEDIO[medio]):
             basura.drop_tree()
@@ -167,6 +172,26 @@ def _sin_bloques_ajenos(nodo, medio):
             HORA_Y_LUGAR.match(texto) and palabras <= MAX_PALABRAS_HORA_Y_LUGAR
         ):
             bloque.drop_tree()
+
+
+def _fuera_de_listas_sin_cerrar(nodo, medio):
+    """Lo que sigue a la última tarjeta de una lista de recomendados pasa a quedar después de su bloque."""
+    if medio not in LISTA_SIN_CERRAR:
+        return
+    clase_bloque, clase_lista, clase_tarjeta = LISTA_SIN_CERRAR[medio]
+    for lista in nodo.xpath(f".//div[{_clase(clase_lista)}]"):
+        hijos = list(lista)
+        tarjetas = [i for i, h in enumerate(hijos) if clase_tarjeta in (h.get("class") or "").split()]
+        sueltos = hijos[tarjetas[-1] + 1 :] if tarjetas else []
+        dentro = []
+        for a in lista.iterancestors():
+            if a is nodo:
+                break
+            dentro.append(a)
+        bloque = next((a for a in reversed(dentro) if clase_bloque in (a.get("class") or "").split()), None)
+        if sueltos and bloque is not None:
+            for h in reversed(sueltos):
+                bloque.addnext(h)
 
 
 def _otra_nota(href, url_base):
@@ -227,10 +252,14 @@ def _enlaces(nodo, url_base):
     return list(dict.fromkeys(enlaces))
 
 
-def proporcion_en_cuerpo(texto, cuerpo):
-    """Qué parte de las palabras (de más de 3 letras) de un texto aparece en el cuerpo."""
+def proporcion_en_cuerpo(texto, cuerpo, pegadas=False):
+    """Qué parte de las palabras (de más de 3 letras) de un texto aparece en el cuerpo. Con `pegadas` también cuenta la
+    unión de dos palabras seguidas del cuerpo: el articleBody de RPP pega los ítems de lista ("HBO MaxThe Office")."""
     palabras = [p for p in clave(texto).split() if len(p) > 3]
-    presentes = set(clave(cuerpo).split())
+    del_cuerpo = clave(cuerpo).split()
+    presentes = set(del_cuerpo) | (
+        {a + b for a, b in zip(del_cuerpo, del_cuerpo[1:], strict=False)} if pegadas else set()
+    )
     return round(sum(p in presentes for p in palabras) / len(palabras), 3) if palabras else None
 
 
@@ -305,7 +334,7 @@ def leer_html(medio, contenido, url, tipo=""):
         fuente_fecha="json-ld",
         seccion=seccion or urlsplit(url).path.strip("/").split("/")[0],
         etiquetas=etiquetas,
-        cuerpo_vs_ld=proporcion_en_cuerpo(cuerpo_ld, cuerpo) if cuerpo_ld else None,
+        cuerpo_vs_ld=proporcion_en_cuerpo(cuerpo_ld, cuerpo, pegadas=True) if cuerpo_ld else None,
     )
 
 

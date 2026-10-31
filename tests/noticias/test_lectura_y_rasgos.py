@@ -116,6 +116,43 @@ def test_charset_declarado_y_respaldo_del_articlebody():
     assert campos["n_palabras"] == 60 and campos["cuerpo_vs_ld"] == 1.0
 
 
+def test_articlebody_con_items_de_lista_pegados():
+    ld = {"@type": "NewsArticle", "headline": "T", "datePublished": "2026-03-01T10:00:00-05:00",
+          "articleBody": "Series de estreno: Succession en HBO MaxThe Office en Netflix" + " texto" * 50}  # fmt: skip
+    cuerpo = "<li>Succession en HBO Max</li><li>The Office en Netflix</li>" + "<p>" + " texto" * 50 + "</p>"
+    campos = leer_html("rpp", pagina(f"<div class='body'><p>Series de estreno:</p><ul>{cuerpo}</ul></div>", ld),
+                       "https://rpp.pe/cultura/x-noticia-1")  # fmt: skip
+    assert campos["cuerpo_vs_ld"] == 1.0
+
+
+def test_recomendados_sin_cerrar_en_rpp_no_se_llevan_el_resto_de_la_nota():
+    tarjeta = ("<div class='article__block-item'><article class='news'><h2 class='news__title'>"
+               "<a href='https://rpp.pe/lima/otra-nota-noticia-2'>Vecinos piden ayuda por un poste inclinado</a></h2>"
+               "</article></div>")  # fmt: skip
+    prosa = "<p>" + "Según contó la vecina, el caso sigue en investigación. " * 6 + "</p>"
+    # Sin cerrar: la lista sigue con la prosa, la caja del Rotafono, los tags y la barra lateral
+    mal = (f"<div class='body'><p>{'Primer párrafo de la nota. ' * 4}</p>"
+           "<div class='article__block article__block--recommend'><div class='article__block-content'>"
+           f"<div class='article__block-title'>Te recomendamos</div>"
+           f"<div class='article__block-list'>{tarjeta}{prosa}<h2>¿Cómo empezó todo?</h2>"
+           "<figure class='media'><div class='rotafono-report-box'><h3>Cuéntanos qué está pasando</h3></div>"
+           "<div class='article__block article__block--tags'><div class='article__block-title'>Tags</div></div>"
+           "<div class='article__follow'><a>Únete a nuestro canal en WhatsApp</a></div></figure>"
+           "<div class='column-fixed'><div>Lo más leído</div><div>RPP TV</div></div>"
+           "</div></div></div></div>")  # fmt: skip
+    cuerpo = leer_html("rpp", pagina(mal), "https://rpp.pe/lima/esta-nota-noticia-1")["cuerpo"]
+    assert "Según contó la vecina" in cuerpo and "¿Cómo empezó todo?" in cuerpo
+    for ajeno in ("Te recomendamos", "poste inclinado", "Cuéntanos", "Tags", "Únete", "Lo más leído", "RPP TV"):
+        assert ajeno not in cuerpo
+    assert cuerpo.index("Primer párrafo") < cuerpo.index("Según contó")
+    # Bien cerrado: solo se van las tarjetas, como antes
+    bien = (f"<div class='body'><p>{'Primer párrafo de la nota. ' * 4}</p><div class='article__block'>"
+            f"<div class='article__block-list'>{tarjeta}</div></div>{prosa}</div>")  # fmt: skip
+    campos = leer_html("rpp", pagina(bien), "https://rpp.pe/lima/esta-nota-noticia-1")
+    assert "poste inclinado" not in campos["cuerpo"] and "Según contó la vecina" in campos["cuerpo"]
+    assert campos["enlaces"] == []
+
+
 def test_sin_fecha_no_es_nota():
     with pytest.raises(NotaInvalida):
         leer_html(
