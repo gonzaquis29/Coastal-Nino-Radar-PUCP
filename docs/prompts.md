@@ -330,3 +330,21 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 - Explicó los 3.061 cambios de cuerpo por grupo: recuadros de seguir al medio, la caja del Rotafono, la barra lateral y 10 rescates. También separó 9 ediciones reales de RPP.
 - Aplicó y verificó fila por fila. `region.notas` no cambia, y en `viabilidad` la cobertura de RPP sube de 99,77 % a 99,94 %.
 - Dejó como pendiente aparte las 13 notas que el rescate no cubre.
+17. Procede a avanzar: ¿qué debemos mejorar, validar o actualizar? Pruebas de viabilidad. Vuélvelo a evaluar. Apruebo.
+
+**Resultado:**
+- La IA corrió la rutina diaria y ordenó los pendientes por lo que decide el alcance.
+- Definió las pruebas de pysentimiento y de memoria para Streamlit. Al volver a evaluarlas encontró fallas de diseño:
+  - un acuerdo trivial con "others";
+  - pares de NLI demasiado fáciles;
+  - comparar solo etiquetas.
+
+  También encontró que nunca se había medido la precisión de "sobre El Niño" (386 notas lo son solo por el cuerpo), y la puso primero.
+- **Precisión de "sobre El Niño": pasa.** Hay 5 falsos positivos en 100, todos de la regla: "La Niña" como nombre propio, "Código del Niño" y un apodo.
+- **pysentimiento: no pasa.** 97 % de los titulares salen sin emoción, así que se usa el respaldo: solo polaridad.
+- **Memoria:**
+  - torch no cabe;
+  - el NLI cuantizado cambia la respuesta en 25 % de los pares; comprobó que el instrumento estaba bien comparando el ONNX en float32 con torch;
+  - el NLI en float32 pasa de 2,7 GB, así que queda solo offline;
+  - el embedding sí cabe.
+- Al releer CLAUDE.md señaló dos choques con lo aprobado: el criterio de E1 usaba etiquetas puestas por la IA (prohibido: "cero etiquetado manual") y los scripts eran provisionales. Corrigió la documentación y dejó como pendiente pasar los scripts a `src/`.

@@ -22,14 +22,16 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 5. ~~**Capa 1, bloque "Te recomendamos" sin cerrar en RPP**~~ (hecho y validado el 31-oct, [noticias/texto.md](noticias/texto.md#recomendados-sin-cerrar-en-rpp-31-oct-2026)), junto con el instrumento de `cuerpo_vs_ld` (ítems de lista pegados en el `articleBody`). No cambia "sobre El Niño", las magnitudes ni los comunicados.
 6. ~~**Volver a recalcular RPP** con la regla nueva~~. Hecho y aplicado el 31-oct: solo cambian cuerpos y enlaces (recuadros, caja del Rotafono, barra lateral y 10 rescates), ninguna nota cambia magnitudes ni "sobre El Niño" ([noticias/recalculo.md](noticias/recalculo.md#resultado-y-aplicación-31-oct)).
 7. **13 notas de RPP con menos de 0,9 del articleBody** (8 del Rotafono, como 1672096 y 1674393). El texto que falta no queda después de la lista de recomendados, así que el rescate no lo cubre. Es un análisis de capa 1 aparte: diagnosticar caso por caso con muestra nueva antes de proponer una regla.
+8. **Regla de "sobre El Niño"** ([noticias/definicion.md](noticias/definicion.md#diagnóstico-de-falsos-positivos-31-oct-2026)): la precisión pasa (5/100 falsos positivos en el grupo de riesgo), pero hay fallas de regla: "La Niña" como nombre propio, "Código del Niño", "Fenómeno el Niño" con minúscula y "FEN". Para corregirlas hay que medir antes cuántas notas cambian.
+9. **Pasar a `src/radar/nlp/` las pruebas de viabilidad de modelos** (pysentimiento y memoria), con pruebas sintéticas: se corrieron con scripts provisionales.
 
 ## 2. Pruebas de viabilidad pendientes (esta semana; son las que deciden el alcance)
 | Prueba | Qué falta | Decide |
 |--------|-----------|--------|
 | **YouTube** (≥ 300 videos del período; comentarios de ~30 videos) | Crear la clave de YouTube Data API v3 en Google Cloud (la crea el usuario) | Si la red social usa YouTube o la co-mención; si hay modelo de engagement. Toma 1-2 días de cupo y no apura antes del corte |
 | **Google Trends** por departamento (sobre todo Tumbes) | Exportar el CSV desde la web (pytrends está archivado) | Si el interés de búsqueda entra en la analítica y en el estudio de eventos |
-| **pysentimiento** sobre ~20 titulares | Descargar el modelo | Si las emociones usan pysentimiento o un respaldo |
-| **Streamlit Cloud** con el modelo de embeddings (y el NLI, si sigue) | Una app mínima desplegada desde GitHub (cuenta del usuario) | Qué modelos caben en la app. Medir antes la memoria en local |
+| ~~**pysentimiento**~~ (31-oct: no pasa; en las notas, solo polaridad) | Las emociones de los comentarios de YouTube, cuando haya datos | Si los comentarios tienen emociones |
+| **Streamlit Cloud** con el modelo de embeddings | Una app mínima desplegada desde GitHub (cuenta del usuario). La memoria en local ya se midió (31-oct): el NLI queda offline, y caben e5-small cuantizado o MiniLM en ONNX float32 | Confirmar en el servidor |
 
 **Decisión que depende de estas pruebas:** el tema "datos minados como insumo de ML" depende hoy del modelo de engagement (YouTube) o del índice con NLI. Si caen los dos, la alternativa es un modelo que prediga el interés de Trends por semana y departamento con el volumen y el tono de las noticias y los comunicados.
 

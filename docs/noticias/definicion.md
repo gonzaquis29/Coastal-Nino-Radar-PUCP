@@ -43,6 +43,26 @@ Reglas automáticas sobre el texto de la nota (`rasgos.py`), sin etiquetado manu
 
 La referencia se contrasta con las etiquetas editoriales de RPP (`article:tag`). Las de Exitosa no sirven: en febrero sus `keywords` son el titular reescrito; Andina las mezcla con palabras del título y El Tiempo casi no etiqueta.
 
+### Diagnóstico de falsos positivos (31-oct-2026)
+**Riesgo.** De las 2.385 notas "sobre El Niño", 386 lo son solo por el inicio del cuerpo (sin mención en el titular ni en el resumen), y 101 de ellas tienen una sola mención. Las notas con El Niño en el titular o el resumen se contrastan con las etiquetas de RPP (ver arriba).
+
+**Muestra.** 100 notas no vistas ni reservadas para la capa 3, de ese grupo: 50 con una sola mención y 50 con varias (semilla `precision-sobre-nino-31oct`). Se releyó cada cuerpo en memoria y se mostró solo la ventana de ±15 palabras alrededor de cada mención.
+
+**Criterio fijado antes:** ≤ 10 % de menciones que no son el fenómeno. Pasa con 5/100 (4/50 con una mención y 1/50 con varias), unas 14 de las 386 si se pondera por estrato (~0,6 % del total).
+
+No se etiquetó nada. Los 5 casos se pueden comprobar en el propio texto, porque la mención es un nombre propio, y todos son fallas de la regla. Ninguno viene de un bloque ajeno, así que la capa 1 está bien:
+- **"La Niña" como nombre propio:** "Seidy La Niña" (cantante), "laguna La Niña" (Sechura) y "sector La Niña" (Pataz).
+- **"Código del Niño y Adolescente":** falta "Código" en `NO_ES_EL_FENOMENO`.
+- **Apodo:** "El Niño de las Monjas" (torero).
+
+Del mismo diagnóstico salen dos pérdidas, contadas en todo el consolidado:
+- 3 notas con "Fenómeno el Niño" (artículo en minúscula) en el titular o el resumen;
+- 6 con "FEN" en el titular,
+
+que no quedan "sobre El Niño". Hay además 1 nota de Andina en inglés ("El Niño phenomenon").
+
+Pendiente, en esta capa: corregir la regla (contexto para "La Niña", "Código", "el Niño" con minúscula y "FEN"). Como cambia `sobre_nino`, antes de recalcular hay que medir cuántas notas cambian y explicar cada cambio.
+
 ## Qué se guarda
 | Dónde | Qué | Se versiona |
 |-------|-----|-------------|
