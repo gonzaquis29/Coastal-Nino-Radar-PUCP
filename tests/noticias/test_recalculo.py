@@ -205,6 +205,7 @@ def test_sin_filas_de_control_el_instrumento_no_pasa_y_se_releen_primero(raiz):
 def test_segunda_pasada_separa_el_rescate_de_una_edicion(monkeypatch, tmp_path):
     """Archivos ya recalculados ("actual", por el piso aunque la nota se recolectó antes): el cuerpo cambia solo por
     el rescate de los recomendados sin cerrar, y eso no es una edición de la página."""
+    monkeypatch.setitem(recalculo.PISO_DE_GENERACION, "rpp", "actual")  # el piso de la segunda pasada (31-oct)
     tarjeta = ("<div class='article__block-item'><article class='news'><h2><a href='https://rpp.pe/lima/otra-noticia-2'>"
                "Vecinos piden ayuda</a></h2></article></div>")  # fmt: skip
     pagina = ('<html><head><script type="application/ld+json">{"@type": "NewsArticle", "headline": "Titular",'
@@ -228,3 +229,29 @@ def test_segunda_pasada_separa_el_rescate_de_una_edicion(monkeypatch, tmp_path):
     assert cambio["generacion"] == "actual" and cambio["pagina_editada"] is False
     assert cambio["magnitudes_ahora"] == "fuerte" and cambio["causa_magnitudes"] == "rescate"
     assert cambio["magnitudes_texto_nuevo"] == ""  # el control: el cuerpo de antes reproduce lo guardado
+
+
+def test_tercera_pasada_separa_la_regla_de_menciones(monkeypatch, tmp_path):
+    """Archivos de la generación "rescate": el cuerpo no cambia, pero la regla de menciones del 1-nov reconoce "FEN"
+    y "Fenómeno el Niño"; el cambio se atribuye a "menciones" y no a una edición."""
+    pagina = ('<html><head><script type="application/ld+json">{"@type": "NewsArticle", "headline": "Titular",'
+              ' "datePublished": "2026-02-01T10:00:00-05:00"}</script></head><body><div class="body">'
+              "<p>Piura se prepara para un FEN de magnitud fuerte.</p>"
+              f"<p>{RELLENO}</p></div></body></html>").encode()  # fmt: skip
+    url = "https://rpp.pe/lima/esta-noticia-1"
+    fila = {"medio": "rpp", "id": "noticia-1", "url": url, "titulo": "Titular", "seccion": "lima",
+            "fecha_lista": "", "via": "archivo", "http": 200}  # fmt: skip
+    with monkeypatch.context() as m:  # lo que guardó el código con la regla de menciones anterior
+        m.setattr("radar.noticias.rasgos.NINO", recalculo._NINO_ANTERIOR)
+        vieja, _ = filas_de_nota("rpp", fila, leer_html("rpp", pagina, url), "candidata")
+    vieja["recolectado"] = "2026-10-20T10:00:00-05:00"
+    escribir_csv(tmp_path / "notas.csv", esquemas.NOTAS, [vieja])
+    vieja = leer_csv(tmp_path / "notas.csv")[0]
+    assert vieja["sobre_nino"] == "0" and vieja["magnitudes"] == ""
+    campos = leer_html("rpp", pagina, url)
+    nueva, enlaces = filas_de_nota("rpp", fila, campos, "candidata")
+    cambio = recalculo.comparar(vieja, nueva, campos, enlaces, "rpp", "ahora")
+    assert cambio["generacion"] == "rescate" and cambio["pagina_editada"] is False
+    assert cambio["sobre_ahora"] is True and cambio["causa_sobre"] == "menciones"
+    assert cambio["magnitudes_ahora"] == "fuerte" and cambio["causa_magnitudes"] == "menciones"
+    assert cambio["sobre_texto_nuevo"] is False and cambio["magnitudes_texto_nuevo"] == ""  # el control reproduce

@@ -61,7 +61,20 @@ Del mismo diagnóstico salen dos pérdidas, contadas en todo el consolidado:
 
 que no quedan "sobre El Niño". Hay además 1 nota de Andina en inglés ("El Niño phenomenon").
 
-Pendiente, en esta capa: corregir la regla (contexto para "La Niña", "Código", "el Niño" con minúscula y "FEN"). Como cambia `sobre_nino`, antes de recalcular hay que medir cuántas notas cambian y explicar cada cambio.
+### Regla de menciones del 1-nov-2026
+La propuesta se revisó dos veces antes de construirla. La primera versión tenía dos cambios más, y se descartaron:
+- **"El Niño" seguido de otra palabra con mayúscula como nombre propio:** el inicio del cuerpo une líneas con espacios, así que "…fenómeno El Niño La presidenta…" lo habría borrado.
+- **"La Niña" después de cualquier nombre propio:** por la misma razón, fallaría con "…en Tumbes" al final de una línea.
+
+Cambios en `rasgos.NINO` y `rasgos.menciones`:
+- "Código" anula la mención.
+- "La Niña" no cuenta después de una palabra de `config/lugares_la_nina.csv` ("laguna", "sector", "caserío"…).
+- Después de "fenómeno" o "evento", el artículo vale en cualquier forma ("Fenómeno el Niño", "fenómeno de EL Niño"), y también "el" o "al" seguido de "Niño Costero". El "el Niño" en minúscula en general no se acepta: metería "el Niño Guerrero" o "Ayuda al Niño Quemado".
+- "FEN" cuenta, salvo como "(FEN)" después de una mención, para no contarla dos veces (82 notas lo tienen solo en el titular o el resumen).
+
+Quedan sin resolver, y se declaran, "Seidy La Niña" (cantante), "El Niño de las Monjas" (apodo) y "El Niño CuentaHistorias" (2 casos).
+
+Efecto exacto en titulares y resúmenes: 9 notas pasan a ser "sobre El Niño", todas de verdad (7 de El Tiempo con FEN y 2 de Andina con "Fenómeno el Niño"), y 4 pierden la mención del resumen por "laguna La Niña" o "sector La Niña". El efecto en los cuerpos lo mide el recálculo, con el paso de causa "menciones" ([recalculo.md](recalculo.md#tercera-pasada-regla-de-menciones-1-nov)).
 
 ## Qué se guarda
 | Dónde | Qué | Se versiona |

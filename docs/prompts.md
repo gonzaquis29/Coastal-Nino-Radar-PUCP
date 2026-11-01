@@ -348,3 +348,11 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
   - el NLI en float32 pasa de 2,7 GB, así que queda solo offline;
   - el embedding sí cabe.
 - Al releer CLAUDE.md señaló dos choques con lo aprobado: el criterio de E1 usaba etiquetas puestas por la IA (prohibido: "cero etiquetado manual") y los scripts eran provisionales. Corrigió la documentación y dejó como pendiente pasar los scripts a `src/`.
+18. Realiza la rutina diaria y súbela; actualiza los pendientes. Sí, defínela (la regla de "sobre El Niño"). Vuelve a evaluarlo. Apruebo.
+
+**Resultado:**
+- La IA midió los patrones en todas las notas y propuso cinco cambios.
+- Al volver a evaluarlos descartó dos, porque el inicio del cuerpo une las líneas y habrían borrado menciones legítimas. También evitó que "(FEN)" contara dos veces.
+- Reemplazó la muestra de 400 notas, que no tenía potencia, por el recálculo completo como medición.
+- Construyó la regla, las pruebas sintéticas y el paso de causa "menciones" del recálculo. Lo comprobó con 7 notas reales ya vistas: 7 de 7.
+- Antes de lanzar encontró que los directorios de la primera pasada habrían hecho que el recálculo no releyera nada, y que `--aplicar` se quedaría sin respaldo. Renombró ambos.

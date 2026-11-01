@@ -50,10 +50,12 @@ GENERACIONES = (
     ("regla", "2026-10-28T22:40"),  # regla de magnitud única (333c413)
     ("actual", "2026-10-29T21:55"),  # sin titulares ajenos en el cuerpo
     ("rescate", "2026-10-31T11:41"),  # RPP: recomendados sin cerrar (a45e690)
+    ("menciones", "2026-11-01T18:10"),  # regla de menciones de El Niño del 1-nov (FEN, "Fenómeno el Niño", lugares)
 )
-# "recolectado" se conserva al recalcular: los archivos aplicados el 31-oct-2026 se calcularon enteros con "actual"
-PISO_DE_GENERACION = {"andina": "actual", "rpp": "actual", "exitosa": "actual", "eltiempo": "actual"}
-GENERACION_DE_CONTROL = "actual"  # M1b: filas con el cuerpo de la generación anterior a la vigente
+# "recolectado" se conserva al recalcular: los archivos aplicados el 31-oct-2026 se calcularon enteros con "actual",
+# y los de RPP, con el rescate de su segunda pasada
+PISO_DE_GENERACION = {"andina": "actual", "rpp": "rescate", "exitosa": "actual", "eltiempo": "actual"}
+GENERACION_DE_CONTROL = "actual"  # M1b: filas de esta generación o posteriores (cuerpo limpio ya guardado)
 MAX_INTENTOS = 3  # respuestas con error (HTTP, contenido) antes de dejar la nota como estaba
 MAX_EJECUCIONES_CON_ERROR_DE_RED = 3  # un error de red cuenta una vez por ejecución (una suspensión no la descarta)
 PAUSA_TRAS_SUSPENSION = 600  # segundos que espera un medio suspendido por fallos seguidos antes de reintentar
@@ -72,10 +74,27 @@ _CONTEXTO_ANTERIOR = re.compile(r"magnitud|intensidad|categor[íi]a", re.I)
 _FRASE_ANTERIOR = re.compile(r"(?<=[.!?])\s+")
 
 
+# Menciones de El Niño anteriores (hasta el 1-nov-2026), reproducidas para separar causas; se borran al aplicar
+_NINO_ANTERIOR = re.compile(
+    r"\b(?:(?:[Ff]en[óo]meno|[Ee]vento)\s+(?:de\s+)?)?(?:El|del|de El)\s+Niño\b(?!\s+(?:Jesús|Dios))"
+    r"|\bNiño\s+[Cc]ostero\b|\bNiño\s+[Gg]lobal\b|\b[Mm]ega\s?-?[Nn]iño\b|\bLa\s+Niña\b|\bENFEN\b|\bEnfen\b"
+)
+_NO_ES_ANTERIOR = re.compile(r"(?:Hospital|Salud|Día|Dia|Instituto|Derechos|Casa|Juzgado)\s+$", re.I)
+
+
+def menciones_regla_anterior(texto):
+    texto = texto or ""
+    return sum(
+        1
+        for m in _NINO_ANTERIOR.finditer(texto)
+        if not _NO_ES_ANTERIOR.search(texto[max(0, m.start() - 20) : m.start()])
+    )
+
+
 def magnitudes_regla_anterior(texto):
     encontradas = set()
     for frase in _FRASE_ANTERIOR.split(texto or ""):
-        if rasgos.NINO.search(frase) and _CONTEXTO_ANTERIOR.search(frase):
+        if _NINO_ANTERIOR.search(frase) and _CONTEXTO_ANTERIOR.search(frase):
             encontradas.update(enfen.magnitud_canonica(m.group(1)) for m in _MAGNITUD_ANTERIOR.finditer(frase))
     return [e for e in enfen.ESCALA_MAGNITUD if e in encontradas]
 
@@ -87,14 +106,19 @@ def generacion(recolectado, medio=None):
     return max(por_fecha, PISO_DE_GENERACION.get(medio, "anterior"), key=nombres.index)
 
 
+def de_control(gen):
+    nombres = [g for g, _ in GENERACIONES]
+    return nombres.index(gen) >= nombres.index(GENERACION_DE_CONTROL)
+
+
 def fase(nota):
     if nota["medio"] == "eltiempo" or _si(nota["menciona_nino"]) or _si(nota["sobre_nino"]):
         return FASE_NINO
     return FASE_RESTO
 
 
-def _sobre(titular, resumen, cuerpo):
-    return rasgos.nino_en_inicio(resumen, cuerpo) or rasgos.menciones(titular) > 0
+def _sobre(titular, resumen, cuerpo, contar=rasgos.menciones):
+    return rasgos.nino_en_inicio(resumen, cuerpo, contar) or contar(titular) > 0
 
 
 def _lista(valor):
@@ -149,7 +173,7 @@ def comparar(vieja, nueva, campos, enlaces_nuevos, medio, momento):
         campos["titular"],
     )
     # el paso del cuerpo intermedio: lo que cambió el código desde la generación de la fila
-    if gen == "rescate":
+    if gen in ("rescate", "menciones"):
         previo, paso = cuerpo, "rescate"
     elif gen == "actual":
         previo, paso = campos.get("cuerpo_sin_rescate", cuerpo), "rescate"
@@ -172,29 +196,43 @@ def comparar(vieja, nueva, campos, enlaces_nuevos, medio, momento):
     def causas(pasos):
         return "+".join(c for c, cambia in pasos if cambia)
 
-    # "sobre El Niño": antes → cuerpo previo (titular nuevo, resumen viejo) → sin titulares ajenos → resumen nuevo
+    # "sobre El Niño": antes → cuerpo previo (titular nuevo, resumen viejo) → sin titulares ajenos → menciones de
+    # ahora → resumen nuevo; hasta el paso de menciones se cuenta con las menciones de la fila
     resumen_de_antes = resumen_viejo if gen in ("anterior", "capa1") else resumen_nuevo
+    contar_de_antes = rasgos.menciones if gen == "menciones" else menciones_regla_anterior
     s_antes = _si(vieja["sobre_nino"])
-    s_previo = _sobre(titular, resumen_de_antes, previo)
-    s_medio = _sobre(titular, resumen_de_antes, cuerpo)
+    s_previo = _sobre(titular, resumen_de_antes, previo, contar_de_antes)
+    s_medio = _sobre(titular, resumen_de_antes, cuerpo, contar_de_antes)
+    s_menciones = _sobre(titular, resumen_de_antes, cuerpo)
     s_ahora = _si(nueva["sobre_nino"])
     causa_sobre = causas(
-        [(causa_del_cuerpo(), s_antes != s_previo), (paso, s_previo != s_medio), ("resumen", s_medio != s_ahora)]
+        [
+            (causa_del_cuerpo(), s_antes != s_previo),
+            (paso, s_previo != s_medio),
+            ("menciones", s_medio != s_menciones),
+            ("resumen", s_menciones != s_ahora),
+        ]
     )
 
-    # magnitudes: antes → regla de antes sobre el cuerpo previo → sin titulares ajenos → regla nueva → resumen nuevo
+    # magnitudes: antes → regla de antes sobre el cuerpo previo → sin titulares ajenos → regla nueva → menciones de
+    # ahora → resumen nuevo
     m_antes = [m for m in vieja["magnitudes"].split("|") if m]
-    regla_de_antes = magnitudes_regla_anterior if gen in ("anterior", "capa1", "resumen") else rasgos.magnitudes
+    if gen in ("anterior", "capa1", "resumen"):
+        regla_de_antes = magnitudes_regla_anterior
+    else:
+        regla_de_antes = lambda texto: rasgos.magnitudes(texto, contar_de_antes)  # noqa: E731
     m_previo = regla_de_antes(f"{resumen_de_antes} {previo}")
     m_texto = regla_de_antes(f"{resumen_de_antes} {cuerpo}")
-    m_regla = rasgos.magnitudes(f"{resumen_de_antes} {cuerpo}")
+    m_regla = rasgos.magnitudes(f"{resumen_de_antes} {cuerpo}", contar_de_antes)
+    m_menciones = rasgos.magnitudes(f"{resumen_de_antes} {cuerpo}")
     m_ahora = nueva["magnitudes"]
     causa_magnitudes = causas(
         [
             (causa_del_cuerpo(), m_antes != m_previo),
             (paso, m_previo != m_texto),
             ("regla", m_texto != m_regla),
-            ("resumen", m_regla != m_ahora),
+            ("menciones", m_regla != m_menciones),
+            ("resumen", m_menciones != m_ahora),
         ]
     )
     return {
@@ -256,7 +294,7 @@ class Recalculo:
         orden = {f: i for i, f in enumerate(self.fases)}
         filas = [n for n in viejas if n["id"] not in hechas and fase(n) in orden]
         # estable: dentro de cada fase, primero las filas de control del instrumento (M1b) y luego el orden del archivo
-        filas.sort(key=lambda n: (orden[fase(n)], generacion(n["recolectado"], self.nombre) != GENERACION_DE_CONTROL))
+        filas.sort(key=lambda n: (orden[fase(n)], not de_control(generacion(n["recolectado"], self.nombre))))
         return filas[: self.limite] if self.limite else filas, viejas
 
     def correr(self):
@@ -370,7 +408,7 @@ def informe(medios=None):
     releidas = [c for c in todos if c["estado"] == "releida"]
     # control del instrumento: filas guardadas ya con el cuerpo limpio y sin edición; con el resumen y la regla de
     # antes sobre el texto nuevo deben dar lo guardado
-    control = [c for c in releidas if c["generacion"] == GENERACION_DE_CONTROL and c["pagina_editada"] == "0"]
+    control = [c for c in releidas if de_control(c["generacion"]) and c["pagina_editada"] == "0"]
     reproducidas = [
         c
         for c in control

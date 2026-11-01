@@ -71,6 +71,7 @@ ARCHIVO_TERMINOS = DIR_CONFIG / "terminos_titulo.csv"
 ARCHIVO_SECCIONES_EXCLUIDAS = DIR_CONFIG / "secciones_excluidas.csv"
 ARCHIVO_ACTORES = DIR_CONFIG / "actores.csv"
 ARCHIVO_LUGARES = DIR_CONFIG / "lugares.csv"
+ARCHIVO_LUGARES_LA_NINA = DIR_CONFIG / "lugares_la_nina.csv"  # "laguna La Niña" no es el fenómeno
 # Notas ya vistas en pilotos y validaciones (solo medio, id y muestra): ninguna muestra nueva las repite
 ARCHIVO_NOTAS_VISTAS = DIR_CONFIG / "notas_vistas.csv"
 # Un solo proceso a la vez pide páginas (medios y fuentes oficiales): así se respeta el ritmo por host entre procesos

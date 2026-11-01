@@ -159,3 +159,32 @@ Aplicado con aprobación y verificado fila por fila: notas 19.849 y enlaces 49.6
 En `viabilidad resultados`, RPP con ≥ 0,9 del articleBody pasa de 0,9977 a 0,9994 (18.735/18.747), y `sin texto` de 382 a 383. Las 2.230 notas sobre El Niño no cambian.
 
 Quedan 13 notas de RPP con cobertura menor a 0,9 (8 del Rotafono). Su texto no queda después de la lista de recomendados, así que el rescate no las cubre: ver `docs/pendientes.md`.
+
+## Tercera pasada: regla de menciones (1-nov)
+La regla de menciones de El Niño cambió el 1-nov ([definicion.md](definicion.md#regla-de-menciones-del-1-nov-2026)), y con ella `sobre_nino`, `menciona_nino`, `menciones_nino` y las magnitudes. Todos los medios se recalculan enteros.
+
+**Adaptación:**
+- La generación "menciones" toma la hora del commit.
+- `PISO_DE_GENERACION` de RPP pasa a "rescate", porque sus archivos se calcularon con ese código.
+- El paso de causa "menciones" calcula, sobre el mismo cuerpo, "sobre El Niño" y las magnitudes con la regla anterior (`menciones_regla_anterior`, copia exacta del commit anterior) y con la nueva. Así se separa la regla de una edición del medio.
+- M1b controla todas las filas de la generación "actual" o posteriores, sin edición.
+
+Control previo con 7 notas reales ya vistas, todas como se esperaba:
+- 2 con "La Niña" como lugar y 1 con "Código del Niño" dejan de ser "sobre El Niño", con causa "menciones";
+- 2 de El Tiempo con FEN pasan a serlo;
+- "Seidy La Niña" (limitación declarada) y una nota sin cambio quedan igual.
+
+En las 7, el cuerpo con la regla anterior reproduce lo guardado.
+
+**Antes de lanzar:** se renombraron los `recalculo/` de la primera pasada de Andina, Exitosa y El Tiempo a `recalculo.31oct-aplicado/`. Si no, el recálculo daba por hechas sus notas. Los respaldos ocupaban `*.anterior.csv`, y `--aplicar` no habría guardado los vigentes; se renombraron a `*.antes-del-recalculo.csv` (y, en RPP, a `*.antes-del-rescate.csv`).
+
+**Criterios** (fijados antes de correr, además de M1b a M5):
+- **V1:** de las notas que dejan de ser "sobre El Niño" por "menciones", ≥ 95 % son lugares o nombres propios.
+- **V2:** de las que pasan a serlo, ≥ 95 % son el fenómeno.
+- Si alguno de los dos grupos tiene más de 100 notas, se revisa una muestra de 100 con semilla nueva y sin notas vistas.
+- **V3** (informativo): cuántas notas cambian `menciona_nino`, `menciones_nino` o sus magnitudes.
+
+```bash
+python -m radar.noticias.historico --recalcular --todo --horas 12   # después de la rutina; ~10 h, Andina domina
+python -m radar.noticias.historico --recalcular --aplicar           # con aprobación
+```

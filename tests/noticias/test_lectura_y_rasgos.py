@@ -42,6 +42,39 @@ def test_menciones_de_el_nino_y_exclusiones():
     assert rasgos.menciones("El Instituto Nacional de Salud del Niño y el Día del Niño") == 0
 
 
+@pytest.mark.parametrize(
+    "texto, esperado",
+    [
+        ("Fenómeno el Niño: EsSalud refuerza hospitales", 1),
+        ("ante un fenómeno de EL Niño muy fuerte", 1),
+        ("frente al Niño Costero y las lluvias", 1),
+        ("Temen plagas durante FEN en Piura", 1),
+        ("Brigada FEN-OECE capacita a servidores", 1),
+        ("el Fenómeno El Niño (FEN) y el Niño Costero (FEN)", 2),  # la sigla tras la mención no suma
+        ("El Niño o La Niña", 2),
+        ("Según el ENFEN, La Niña se debilita", 2),
+        ("el río llegó hasta la laguna La Niña", 0),
+        ("en el sector La Niña y el caserío La Niña", 0),
+        ("regulado por el Código del Niño y Adolescente", 0),
+        ("alias el Niño Guerrero, del Tren de Aragua", 0),
+        ("la Asociación de Ayuda al Niño Quemado", 0),
+        ("el niño de la casa y el ENFENX", 0),
+    ],
+)
+def test_menciones_regla_del_1_nov(texto, esperado):
+    assert rasgos.menciones(texto) == esperado
+
+
+def test_mencion_al_final_de_una_linea_sigue_contando():
+    cuerpo = "Embarcación para emergencias en contexto del fenómeno El Niño\nLa presidenta visitó la base naval."
+    assert rasgos.menciones(cuerpo) == 1
+    assert rasgos.nino_en_inicio("", cuerpo)
+
+
+def test_magnitud_con_la_sigla():
+    assert rasgos.magnitudes("Advierten de un FEN de magnitud fuerte.") == ["fuerte"]
+
+
 def test_nino_en_inicio_mira_resumen_y_primer_parrafo():
     relleno = " ".join(["palabra"] * 80)
     assert rasgos.nino_en_inicio("Medidas ante El Niño", relleno)

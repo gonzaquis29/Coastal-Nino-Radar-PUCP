@@ -24,13 +24,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 **Decisión que depende de estas pruebas:** el insumo de ML depende del modelo de engagement (YouTube), porque el NLI ya quedó fuera de la app. Si YouTube no alcanza, la alternativa es un modelo que prediga el interés de Trends por semana y departamento a partir del volumen y el tono de las noticias y los comunicados.
 
 ## 2. Antes del NLP (calidad del corpus)
-1. **Regla de "sobre El Niño"** ([noticias/definicion.md](noticias/definicion.md#diagnóstico-de-falsos-positivos-31-oct-2026)). La precisión pasa (5/100 falsos positivos en el grupo de riesgo), pero hay fallas de la regla:
-   - "La Niña" como nombre propio (cantante, laguna, sector);
-   - "Código del Niño";
-   - un apodo ("El Niño de las Monjas");
-   - y se pierden 3 notas con "Fenómeno el Niño" en minúscula y 6 con "FEN" en el titular.
-
-   Va primero porque define el corpus de tópicos, embeddings y volumen. Es barata: los falsos positivos solo pueden estar en las 386 notas que dependen del cuerpo, así que basta releer esas (~7 min), y lo que se pierde está en el titular y el resumen, que ya están guardados. Antes de aplicar se mide cuántas notas cambian y se explica cada cambio.
+1. **Regla de "sobre El Niño"** ([noticias/definicion.md](noticias/definicion.md#regla-de-menciones-del-1-nov-2026)): construida y probada el 1-nov (FEN, "Fenómeno el Niño", "Código", "La Niña" como lugar). Falta el recálculo completo, que va después de la rutina del 3-nov y dura ~10 h de noche. Luego hay que revisar V1 a V3 y M1b a M5, y aplicar con aprobación ([noticias/recalculo.md](noticias/recalculo.md#tercera-pasada-regla-de-menciones-1-nov)).
 2. **Crear `src/radar/nlp/`** y pasar ahí las pruebas de viabilidad de modelos (pysentimiento y memoria), con pruebas sintéticas: se corrieron con scripts provisionales, y CLAUDE.md no admite scripts sueltos.
 
 ## 3. Semana 2 (2 a 8-nov), en orden de dependencias
