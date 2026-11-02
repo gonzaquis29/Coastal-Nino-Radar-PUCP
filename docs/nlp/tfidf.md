@@ -48,7 +48,7 @@ La lectura tomó 23 min: 3.177 notas con texto y 1 sin texto. Hay 4.042 document
 | T1 sha1 igual | 99,91 % (3 de Andina distintas: ediciones del sitio) | pasa |
 | T2 | 3.177/3.177 | pasa |
 | T3 | prueba sintética en verde | pasa |
-| **T4** | **0,800** | **no pasa** |
+| **T4** | **0,799** | **no pasa** |
 | T5 | ningún nombre de medio | pasa |
 
 Informativos: AUC con todo el vocabulario 0,822; frente a las notas "cercanas", 0,651 sin los términos del fenómeno y 0,665 con ellos.
@@ -60,4 +60,4 @@ Informativos: AUC con todo el vocabulario 0,822; frente a las notas "cercanas", 
 
 **Qué significa.** TF-IDF queda como línea base débil para la distancia a lo oficial. Si los embeddings (punto 4.3) tampoco separan, el umbral del semáforo (percentil 25 del control negativo) no se puede calibrar con este control. Eso hay que decidirlo en el punto 4.3, con los mismos controles.
 
-**Hallazgo de capa 1.** Todas las notas de Andina terminan con la línea `Publicado: 21/10/2026` (comprobado en 2 notas nuevas, semilla `andina-publicado-1nov`). Es texto de la página, no de la nota, y por eso `publicado` sale como segundo término de Andina. T5 no lo detecta porque solo busca nombres de medios. Quitarla no cambia T4 (0,7994), pero sí el cuerpo y el sha1 de todas las notas de Andina, así que va al recálculo final (`docs/pendientes.md`, punto 2).
+**Hallazgo de capa 1.** Todas las notas de Andina terminan con la línea `Publicado: 21/10/2026` (comprobado en 2 notas nuevas, semilla `andina-publicado-1nov`). Es texto de la página, no de la nota, y por eso `publicado` salía como segundo término de Andina. T5 no lo detecta porque solo busca nombres de medios. Se quitó en `noticias/nota.py` (capa 1 validada con dos semillas nuevas) y Andina se volvió a leer: `publicado` ya no está entre sus términos y T4 pasa de 0,7997 a 0,7994; los demás criterios no cambian. En `notas.csv` el sha1 de Andina cambia con el recálculo final (`docs/pendientes.md`, punto 2); hasta entonces T1 acepta el sha1 con y sin la línea.
