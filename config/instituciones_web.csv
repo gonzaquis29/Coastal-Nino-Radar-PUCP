@@ -1,0 +1,10 @@
+actor,patron
+ENFEN,enfen\.imarpe\.gob\.pe|enfen\.gob\.pe|gob\.pe/(institucion/)?enfen\b|cdn\.www\.gob\.pe/.*enfen
+SENAMHI,senamhi\.gob\.pe|gob\.pe/(institucion/)?senamhi\b
+INDECI,indeci\.gob\.pe|gob\.pe/(institucion/)?indeci\b
+IMARPE,imarpe\.gob\.pe|gob\.pe/(institucion/)?imarpe\b
+DHN,dhn\.mil\.pe|gob\.pe/(institucion/)?dhn\b
+IGP,igp\.gob\.pe|gob\.pe/(institucion/)?igp\b
+ANA,(^|\.)ana\.gob\.pe|gob\.pe/(institucion/)?ana\b
+CENEPRED,cenepred\.gob\.pe|gob\.pe/(institucion/)?(cenepred|centro-nacional-de-estimacion-prevencion)\b
+PCM,(^|\.)pcm\.gob\.pe|gob\.pe/(institucion/)?pcm\b

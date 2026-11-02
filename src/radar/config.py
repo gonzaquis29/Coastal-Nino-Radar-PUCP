@@ -16,6 +16,7 @@ DIR_RAW_NOTICIAS = DIR_RAW / "noticias"  # listas descubiertas y estado; nunca e
 DIR_NOTICIAS = DIR_DATOS / "processed" / "noticias"
 DIR_RAW_INEI = DIR_RAW / "inei"  # ubigeos descargados del INEI (la lista decidida queda en config/lugares.csv)
 DIR_REGION = DIR_DATOS / "processed" / "region"  # validación de la asignación de macro-región
+DIR_RED = DIR_DATOS / "processed" / "red"  # red de enlaces y citas de las notas
 DIR_NLP = DIR_DATOS / "processed" / "nlp"  # vectores, conteos y validación del NLP (nunca la secuencia de lemas)
 
 # ---------------------------------------------------------------- fechas del proyecto (README, "Ventana de datos")
@@ -79,6 +80,7 @@ ARCHIVO_ESTACIONES = DIR_CONFIG / "estaciones_costa.csv"
 ARCHIVO_TERMINOS = DIR_CONFIG / "terminos_titulo.csv"
 ARCHIVO_SECCIONES_EXCLUIDAS = DIR_CONFIG / "secciones_excluidas.csv"
 ARCHIVO_ACTORES = DIR_CONFIG / "actores.csv"
+ARCHIVO_INSTITUCIONES_WEB = DIR_CONFIG / "instituciones_web.csv"  # sitios de cada actor de actores.csv
 ARCHIVO_LUGARES = DIR_CONFIG / "lugares.csv"
 ARCHIVO_LUGARES_LA_NINA = DIR_CONFIG / "lugares_la_nina.csv"  # "laguna La Niña" no es el fenómeno
 # Notas ya vistas en pilotos y validaciones (solo medio, id y muestra): ninguna muestra nueva las repite

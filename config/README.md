@@ -10,6 +10,7 @@ Listas de referencia que se pueden cambiar sin tocar código. Los valores del pr
 | `secciones_excluidas.csv` | secciones de RPP y Exitosa que no se descargan salvo que pasen el filtro por título (deportes, espectáculos, publirreportajes…) | histórico de noticias |
 | `lugares_la_nina.csv` | palabras que, justo antes de "La Niña", la vuelven un nombre de lugar ("laguna La Niña") y no el fenómeno | menciones de El Niño (`noticias/rasgos.py`) |
 | `actores.csv` | actores del ENFEN y de la gestión del riesgo (README, "Actores") con la expresión regular que reconoce sus menciones | rasgos de las notas (`noticias/rasgos.py`) |
+| `instituciones_web.csv` | sitios de cada actor de `actores.csv` (expresión regular sobre host y ruta; en `www.gob.pe`, la ruta `/institucion/<x>`). Se prueban en orden: `enfen.imarpe.gob.pe` es del ENFEN antes que del IMARPE | red de enlaces (`redes/enlaces.py`) |
 | `estaciones_costa.csv` | estaciones del Senamhi (listado de `?p=estaciones`, 24-oct-2026) usadas como puntos de referencia de la costa para los polígonos de los avisos. Elegirlas como "costa" es un supuesto declarado | corpus oficial (`senamhi.py`) |
 
 UTF-8, saltos LF, una fila por elemento.

@@ -45,7 +45,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 1. ~~**Crear `src/radar/nlp/`** y pasar ahí las pruebas de viabilidad de modelos~~ Hecho el 1-nov: `python -m radar.nlp.viabilidad`, con pruebas sintéticas. D2 y memoria se reprodujeron ([nlp/viabilidad-modelos.md](nlp/viabilidad-modelos.md#cómo-se-corre)).
 
 ## 4. Semana 2 (2 a 8-nov), en orden de dependencias
-1. **Red de enlaces y citas:** los enlaces ya están limpios (`data/processed/noticias/enlaces.csv`).
+1. ~~**Red de enlaces y citas**~~ Hecha el 1-nov: `python -m radar.redes.enlaces` ([redes/enlaces.md](redes/enlaces.md)). R1 pasa; R2 no pasa para Indeci, Cenepred y PCM, porque Exitosa enlaza palabras genéricas a esos sitios (SEO), no porque falten patrones. Se vuelve a correr después del recálculo final.
 2. **Preprocesamiento y TF-IDF:** una sola lectura por nota que produzca todo lo que se deriva del cuerpo. Corpus: las ~2.400 notas sobre El Niño más las 400 del control negativo. Se pueden guardar vectores y conteos, no la secuencia de lemas, porque reconstruiría el texto.
 3. **Embeddings:** elegir entre MiniLM y e5-small con los controles positivo y negativo (AUC). Los dos caben en la app; MiniLM solo en ONNX float32, porque cuantizado cambia los vectores.
 4. **Tópicos (LDA y BERTopic) y polaridad de las notas:** la polaridad se valida con el kappa frente a un zero-shot independiente (README). El cuerpo se parte en tramos de 128 tokens para robertuito.
