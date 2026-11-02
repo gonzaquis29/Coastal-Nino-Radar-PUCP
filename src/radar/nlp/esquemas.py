@@ -20,3 +20,16 @@ EMBEDDINGS = (
 )  # fmt: skip
 # El vector promedio de cada nota (texto completo), en base64 de float32: nunca los vectores de cada tramo
 VECTORES = ("medio", "id", "modelo", "vector")
+
+# candidatos (plan del 2-nov): una fila por nota leída en cada pasada; las columnas de cada modelo son
+# {modelo}_{puntaje}. "vig" compara solo con los párrafos del ENFEN vigentes en la fecha de la nota, "todo" con los 865
+# párrafos (ENFEN y Senamhi) y "tit" usa solo el titular
+CANDIDATOS_BASE = ("medio", "id", "estrato", "positivo", "sha1_igual", "error")
+PUNTAJES_CANDIDATO = (
+    "con_max", "sin_max", "con_parrafo", "vig_con_max", "vig_sin_max", "vig_con_parrafo", "todo_con_max",
+    "todo_sin_max", "tit_con_max", "tit_sin_max", "tit_vig_con_max", "tramos", "truncados",
+)  # fmt: skip
+
+
+def columnas_candidatos(modelos):
+    return CANDIDATOS_BASE + tuple(f"{m}_{p}" for m in modelos for p in PUNTAJES_CANDIDATO)

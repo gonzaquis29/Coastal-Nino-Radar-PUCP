@@ -392,3 +392,8 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 6. Preguntas sobre la elección de los modelos de embeddings, el universo de alternativas y las restricciones de la app; revisión del sílabo sobre el despliegue. "Si existe una opción gratuita que sea mejor, podríamos elegirla; si no, como no pide que sea publicada, que se pueda correr en local estaría genial."
 
 **Resultado:** la IA reconoció que había tomado el README como el universo de opciones y que presentó como hechos supuestos sin respaldo, como el tiempo por consulta. Revisó el sílabo, que no exige publicar la app, y la documentación oficial de Hugging Face Spaces: CPU Basic tiene 16 GB, pero crear Spaces con cómputo requiere PRO en las cuentas personales. Se decidió que la app principal corre en local y que la versión pública es opcional, en Community Cloud y liviana. Se actualizaron el README y los pendientes.
+7. Sí, haz el mapa / procede, primero definimos y dejamos el plan bien armado / Sí, apruebo (el plan corregido de A a F).
+
+**Resultado:**
+- La IA escribió el mapa de alternativas (papeles, restricciones y tipos de enfoque con su veredicto; candidatos de varias fuentes). Al revisarlo encontró que el filtro con titulares no predice el resultado en cuerpos, que la comparación con todo el ENFEN no es la que hará el semáforo (que usa lo vigente) y que la duración de B no estaba medida. Corrigió el plan.
+- Con la prueba A (`radar.nlp.candidatos tiempo`) encontró que la lentitud de granite y Qwen3 venía de cargarlos en bfloat16. Pasan los 10 candidatos. Dejó escrito el código de B, que falta probar.

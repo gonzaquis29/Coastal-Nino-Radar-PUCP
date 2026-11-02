@@ -54,6 +54,19 @@ MODELOS_EMBEDDING = {
     "minilm": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
     "e5": "intfloat/multilingual-e5-small",
 }
+# Candidatos del mapa de alternativas (docs/nlp/embeddings.md, 2-nov)
+CANDIDATOS_EMBEDDING = {
+    "minilm": MODELOS_EMBEDDING["minilm"],
+    "e5-small": MODELOS_EMBEDDING["e5"],
+    "e5-base": "intfloat/multilingual-e5-base",
+    "granite-107m": "ibm-granite/granite-embedding-107m-multilingual",
+    "granite-278m": "ibm-granite/granite-embedding-278m-multilingual",
+    "mpnet": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+    "beto-es": "hiiamsid/sentence_similarity_spanish_es",
+    "arctic-l": "Snowflake/snowflake-arctic-embed-l-v2.0",
+    "bge-m3": "BAAI/bge-m3",
+    "qwen3": "Qwen/Qwen3-Embedding-0.6B",
+}
 MODELO_SPACY = "es_core_news_sm"
 
 # ---------------------------------------------------------------- red
