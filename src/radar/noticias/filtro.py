@@ -13,6 +13,12 @@ from radar.comun.texto import sin_tildes
 # en la página (25 de 25 notas del sitemap en inglés y 2 falsos positivos en 759, el 24-oct-2026)
 FUNCIONALES_INGLES = {"the", "of", "to", "in", "and", "for", "on", "with", "is", "are", "its", "from", "at", "by"}
 FUNCIONALES_ESPANOL = {"de", "la", "el", "en", "y", "a", "para", "por", "los", "las", "del", "con", "se", "al", "que"}
+# Muchos slugs en inglés no tienen palabras funcionales ("peru-privatization-announces-restructuring"), así que la nota
+# leída se revisa también por su titular y resumen. Ahí "a" es de los dos idiomas. Medido el 1-nov-2026 en las 36.874
+# notas de Andina: 315 en inglés que el slug no reconocía, una sola perdida por nombres propios ("Paz de la Barra") y
+# ninguna en español marcada entre las 5 más cercanas al empate
+FUNCIONALES_INGLES_TEXTO = FUNCIONALES_INGLES | {"an", "will", "has", "was", "as"}
+FUNCIONALES_ESPANOL_TEXTO = (FUNCIONALES_ESPANOL - {"a"}) | {"un", "una", "su", "es"}
 
 
 def palabras(texto):
@@ -48,6 +54,13 @@ def terminos_en(url, titulo=""):
 def es_ingles(url):
     partes = slug(url).split("-")
     return sum(p in FUNCIONALES_INGLES for p in partes) > sum(p in FUNCIONALES_ESPANOL for p in partes)
+
+
+def es_ingles_texto(titular, resumen):
+    """Hay al menos tantas palabras funcionales del inglés como del español (y alguna del inglés)."""
+    lista = re.findall(r"[a-z0-9]+", sin_tildes(f"{titular} {resumen}".lower()))
+    ingles = sum(p in FUNCIONALES_INGLES_TEXTO for p in lista)
+    return ingles >= max(1, sum(p in FUNCIONALES_ESPANOL_TEXTO for p in lista))
 
 
 def candidata_por(medio, url, titulo=""):

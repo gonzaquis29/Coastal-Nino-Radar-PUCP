@@ -193,7 +193,10 @@ class Andina(Medio):
         r = self.cliente.get(fila["url"])
         if not self.NOTA.match(r.url):  # la segunda petición confirma: sin publicar redirige a /agencia/inicio
             raise NoExiste(f"no publicada ({r.url})")
-        return leer_html(self.nombre, r.content, r.url, r.headers.get("Content-Type", ""))
+        campos = leer_html(self.nombre, r.content, r.url, r.headers.get("Content-Type", ""))
+        if filtro.es_ingles_texto(campos["titular"], campos["resumen"]):
+            raise NoExiste("en inglés")
+        return campos
 
 
 # ---------------------------------------------------------------- RPP: archivo por fecha, paginado

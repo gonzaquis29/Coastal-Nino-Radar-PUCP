@@ -25,6 +25,15 @@ def test_ingles_de_andina():
     assert not filtro.es_ingles("https://andina.pe/agencia/noticia-presidenta-llega-a-tumbes-para-supervisar-1.aspx")
 
 
+def test_ingles_de_andina_por_el_texto():
+    # El slug no tiene palabras funcionales, pero el titular y el resumen sí
+    assert not filtro.es_ingles("https://andina.pe/agencia/noticia-peru-minister-rules-out-privatization-1.aspx")
+    assert filtro.es_ingles_texto("Peru: Minister rules out privatization", "The plan will restructure the firm.")
+    assert filtro.es_ingles_texto("Peru: Candidate Juan de la Cruz casts vote", "He voted in the morning.")  # empate
+    assert not filtro.es_ingles_texto("Artista presenta exposición en el Heydar Aliyev Center", "Una muestra de arte.")
+    assert not filtro.es_ingles_texto("Lluvias en Piura", "")  # sin palabras funcionales de ninguno
+
+
 def test_candidatas_por_seccion(monkeypatch):
     monkeypatch.setitem(filtro.config.CANDIDATAS, "rpp", "secciones")
     assert filtro.candidata_por("rpp", "https://rpp.pe/politica/congreso/x-noticia-1") == "seccion"

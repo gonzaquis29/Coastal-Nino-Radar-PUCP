@@ -20,7 +20,7 @@ from radar.comun.energia import sin_suspension
 from radar.comun.http import Cliente
 from radar.comun.registro import configurar, describir
 from radar.comun.texto import ahora
-from radar.noticias import esquemas
+from radar.noticias import esquemas, filtro
 from radar.noticias.medios import DETENER, MEDIOS
 
 log = logging.getLogger(__name__)
@@ -79,11 +79,14 @@ def marcar_fechas_dudosas(notas):
 
 
 def consolidar():
-    """data/processed/noticias/notas.csv y enlaces.csv: las notas del período de los 4 medios, sin duplicados."""
+    """data/processed/noticias/notas.csv y enlaces.csv: las notas del período de los 4 medios, sin duplicados ni las
+    de Andina en inglés que se leyeron antes de reconocerlas por el texto (siguen en data/raw/, no se borran)."""
     notas, claves = [], set()
     for nombre in MEDIOS:
         for n in leer_csv(config.DIR_RAW_NOTICIAS / nombre / "notas.csv"):
             clave = (n["medio"], n["id"])
+            if nombre == "andina" and filtro.es_ingles_texto(n["titular"], n["resumen"]):
+                continue
             if clave not in claves and n["fecha_publicacion"][:10] >= config.INICIO.isoformat():
                 claves.add(clave)
                 notas.append(n)

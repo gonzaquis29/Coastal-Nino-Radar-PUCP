@@ -29,6 +29,8 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 **Ya en el código, esperando ese recálculo:**
 - Regla de menciones del 1-nov (FEN, "Fenómeno el Niño", "Código del Niño", "La Niña" como lugar) y su paso de causa "menciones" ([noticias/recalculo.md](noticias/recalculo.md#tercera-pasada-regla-de-menciones-1-nov)). Cambia menos del 1 % de las notas sobre El Niño.
 
+- Notas de Andina en inglés reconocidas por el texto (1-nov; [noticias/definicion.md](noticias/definicion.md)). Ya no entran al consolidado ni a `region.notas` (quedan 76.646 notas y 2.378 sobre El Niño). En el recálculo, `Andina.leer` las rechaza como "en inglés" y quedan sin releer en `data/raw/`; el consolidado las vuelve a excluir. No hay que hacer nada más.
+
 **Revisar o corregir antes de lanzarlo** (se agrega aquí lo que aparezca, sin recalcular):
 - Las 13 notas de RPP con menos de 0,9 del articleBody (punto 6.1): decidir si se corrigen en la capa 1 o se declaran.
 - Si alguna corrección nueva cambia el cuerpo o las menciones, agregar su generación y su paso de causa en `recalculo.py`, como "rescate" y "menciones".
@@ -40,7 +42,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 3. Revisar M1b a M5 y V1 a V3, y aplicar con aprobación: `--recalcular --aplicar`. Después, `region.notas` y `viabilidad resultados`.
 
 ## 3. Antes del NLP
-1. **Crear `src/radar/nlp/`** y pasar ahí las pruebas de viabilidad de modelos (pysentimiento y memoria), con pruebas sintéticas: se corrieron con scripts provisionales, y CLAUDE.md no admite scripts sueltos.
+1. ~~**Crear `src/radar/nlp/`** y pasar ahí las pruebas de viabilidad de modelos~~ Hecho el 1-nov: `python -m radar.nlp.viabilidad`, con pruebas sintéticas. D2 y memoria se reprodujeron ([nlp/viabilidad-modelos.md](nlp/viabilidad-modelos.md#cómo-se-corre)).
 
 ## 4. Semana 2 (2 a 8-nov), en orden de dependencias
 1. **Red de enlaces y citas:** los enlaces ya están limpios (`data/processed/noticias/enlaces.csv`).

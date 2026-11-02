@@ -23,7 +23,7 @@ python -m radar.noticias.viabilidad resultados        # volumen, control positiv
 | Exitosa | Sitemaps mensuales (solo dirección). Cada número que falta entre el menor y el mayor se prueba con `/actualidad/x-nN` (301 hacia la nota o 404); así entra el hueco del 31-may | HTML de la nota (ISO-8859-1) | ~10 + 141 + candidatas |
 | El Tiempo | API REST (`after`/`before`, 100 por página) | La misma API con `include=` (100 por petición): el cuerpo viene en `content` | ~100 |
 
-- **Notas en inglés de Andina:** comparten numeración y la página no las marca (`lang="es"`). Se reconocen por las palabras funcionales del slug (*the, of, to* frente a *de, la, el*) y no se descargan.
+- **Notas en inglés de Andina:** comparten numeración y la página no las marca (`lang="es"`). Se reconocen por las palabras funcionales del slug (*the, of, to* frente a *de, la, el*) y no se descargan. Muchos slugs no tienen ninguna ("peru-privatization-announces-restructuring"), así que desde el 1-nov la nota leída también se revisa por su titular y resumen (`filtro.es_ingles_texto`): con al menos tantas palabras funcionales del inglés como del español, se descarta. Medido en las 36.874 notas de Andina: 315 en inglés que el slug dejaba pasar (10 sobre El Niño), una sola perdida ("Paz de la Barra casts vote") y ninguna en español marcada. Las ya leídas siguen en `data/raw/noticias/andina/notas.csv`, pero el consolidado y `region.notas` las excluyen.
 - **Páginas "live" de RPP:** no están en el archivo; entran solo si las trae la recolección diaria.
 - **Videos y galerías:** sin texto (< 50 palabras); quedan con `sin_texto=1` (titular sí, cuerpo no).
 

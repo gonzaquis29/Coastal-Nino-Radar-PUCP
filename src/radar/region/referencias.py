@@ -14,7 +14,7 @@ from radar import config
 from radar.comun import regiones
 from radar.comun.archivos import leer_csv
 from radar.comun.texto import clave
-from radar.noticias import esquemas
+from radar.noticias import esquemas, filtro
 from radar.noticias.filtro import seccion_principal
 from radar.noticias.medios import MEDIOS
 from radar.recoleccion.urls import filas_de_notas
@@ -51,12 +51,15 @@ def macro_rpp(url):
 
 def notas_leidas():
     """Notas de 2026 ya leídas por el histórico (data/raw/noticias/<medio>/notas.csv), sin duplicados. Se leen
-    mientras el histórico puede estar escribiendo: una última fila incompleta se salta."""
+    mientras el histórico puede estar escribiendo: una última fila incompleta se salta. Sin las de Andina en inglés,
+    como el consolidado."""
     notas, vistas = [], set()
     for medio in MEDIOS:
         for n in leer_csv(config.DIR_RAW_NOTICIAS / medio / "notas.csv"):
             if None in n.values() or len(n) != len(esquemas.NOTAS):
                 log.debug("fila incompleta en %s/notas.csv: %s", medio, n.get("id"))
+                continue
+            if medio == "andina" and filtro.es_ingles_texto(n["titular"], n["resumen"]):
                 continue
             if (n["medio"], n["id"]) not in vistas and n["fecha_publicacion"][:10] >= config.INICIO.isoformat():
                 vistas.add((n["medio"], n["id"]))
