@@ -56,7 +56,9 @@ Las filas "adicional" salieron del diagnóstico, no de la definición previa. Us
 
 **Decisión (la que prevé el README).** El NLI no cabe en la app sin cambiar sus resultados: en float32 pasa de 2,7 GB, y cuantizado da otra respuesta en 1 de cada 4 pares. Queda **solo offline**, y para textos nuevos la app usa la distancia y la regla de magnitud. Esto coincide con [discrepancia.md](discrepancia.md), que ya acotaba el NLI a un solo intento. El embedding sí cabe, con cualquiera de los dos candidatos: e5-small cuantizado (0,78 GB, equivalente a float32) o MiniLM en ONNX float32 (1,31 GB). MiniLM cuantizado no sirve.
 
-**Falta.** La prueba que decide en el README es el despliegue real en Streamlit Cloud. Necesita la cuenta del usuario y el repositorio en GitHub.
+**Cambio del 2-nov.** El sílabo no exige publicar la app, así que la app principal corre en local (16 GB, sin GPU), donde el NLI y el embedding caben en float32. Hugging Face Spaces ya no da cómputo gratis a las cuentas personales (requiere PRO), así que la única versión pública gratuita es Community Cloud, con estos límites: si se hace, va sin NLI y con e5-small cuantizado. Lo que sigue vale para esa versión opcional.
+
+**Falta.** La prueba que decidía en el README era el despliegue real en Streamlit Cloud. Necesita la cuenta del usuario y el repositorio en GitHub.
 
 ## Cómo se corre
 ```

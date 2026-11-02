@@ -19,7 +19,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 | **YouTube** (≥ 300 videos del período; ≥ 100 videos con ≥ 30 comentarios) | Crear la clave de YouTube Data API v3 en Google Cloud (la crea el usuario y la guarda en una variable de entorno, nunca en el repo ni en el chat) | Si la red social usa YouTube o la co-mención; si hay modelo de engagement. Toma 1-2 días de cupo |
 | **Google Trends** por departamento (Tumbes, Piura, Lambayeque, La Libertad) | Exportar el CSV desde la web, una consulta por departamento para todo el período (pytrends está archivado) | Si el interés de búsqueda entra en la analítica y en el estudio de eventos |
 | **Emociones de comentarios** (pysentimiento) | Datos de YouTube | Si los comentarios tienen emociones (en los titulares no: [nlp/viabilidad-modelos.md](nlp/viabilidad-modelos.md)) |
-| **Streamlit Cloud** con el modelo de embeddings | Una app mínima desplegada desde GitHub (cuenta del usuario). En local caben e5-small cuantizado (0,78 GB) o MiniLM en ONNX float32 (1,31 GB) | Confirmar la memoria en el servidor |
+| **Versión pública (opcional)** en Streamlit Community Cloud | Decisión del 2-nov: la app principal corre en local. La versión pública solo se hace si hay tiempo, con e5-small cuantizado (0,78 GB) y sin NLI | Si hay demo pública |
 
 **Decisión que depende de estas pruebas:** el insumo de ML depende del modelo de engagement (YouTube), porque el NLI ya quedó fuera de la app. Si YouTube no alcanza, la alternativa es un modelo que prediga el interés de Trends por semana y departamento a partir del volumen y el tono de las noticias y los comunicados.
 
@@ -53,7 +53,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 6. **Red social:** YouTube o co-mención, según la prueba del punto 1.
 
 ## 5. Semana 3 (9 a 15-nov)
-- Índice de discrepancia, capas 4 y 5. El NLI tiene un solo intento acotado y queda solo offline. En la app, distancia y regla de magnitud.
+- Índice de discrepancia, capas 4 y 5. El NLI tiene un solo intento acotado. Con la app local (decisión del 2-nov), la memoria ya no lo obliga a quedar offline: si pasa su prueba, puede ir en la app local; en la versión pública, distancia y regla de magnitud.
 - Semáforo calibrado.
 - Estudio de eventos.
 - Modelo de engagement o su alternativa.
@@ -65,7 +65,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 
 ## README
 Hay que actualizar:
-- el índice de discrepancia: NLI solo offline, sin "párrafo más parecido" ni prueba sintética;
+- el índice de discrepancia: NLI en la app local solo si pasa su prueba, sin "párrafo más parecido" ni prueba sintética;
 - las emociones de las notas, que pasan a ser solo polaridad;
 - el producto: la pestaña Consulta ya no muestra el NLI.
 
