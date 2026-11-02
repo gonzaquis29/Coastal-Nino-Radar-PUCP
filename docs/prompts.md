@@ -356,3 +356,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 - Reemplazó la muestra de 400 notas, que no tenía potencia, por el recálculo completo como medición.
 - Construyó la regla, las pruebas sintéticas y el paso de causa "menciones" del recálculo. Lo comprobó con 7 notas reales ya vistas: 7 de 7.
 - Antes de lanzar encontró que los directorios de la primera pasada habrían hecho que el recálculo no releyera nada, y que `--aplicar` se quedaría sin respaldo. Renombró ambos.
+19. ¿Hay que volver a correr el proceso largo? Ya sería la 5.ª vez. Deja claro lo pendiente y qué corregir antes de ejecutarlo.
+
+**Resultado:** se decidió no recalcular después de cada corrección. Las correcciones se acumulan en el código y se hace un solo recálculo final antes del corte, con un ensayo corto antes. La lista de lo que hay que revisar antes de lanzarlo quedó en `docs/pendientes.md`.

@@ -163,6 +163,8 @@ Quedan 13 notas de RPP con cobertura menor a 0,9 (8 del Rotafono). Su texto no q
 ## Tercera pasada: regla de menciones (1-nov)
 La regla de menciones de El Niño cambió el 1-nov ([definicion.md](definicion.md#regla-de-menciones-del-1-nov-2026)), y con ella `sobre_nino`, `menciona_nino`, `menciones_nino` y las magnitudes. Todos los medios se recalculan enteros.
 
+**Postergado (1-nov):** no se corre ahora. Va en el recálculo final único, antes del corte, junto con las demás correcciones que se acumulen ([../pendientes.md](../pendientes.md)).
+
 **Adaptación:**
 - La generación "menciones" toma la hora del commit.
 - `PISO_DE_GENERACION` de RPP pasa a "rescate", porque sus archivos se calcularon con ese código.

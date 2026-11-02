@@ -11,7 +11,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 ## Siempre (rutina hasta el corte del 20-nov)
 - Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. La última fue el 1-nov a las 08:41, así que la próxima vence el **3-nov a las 08:41**. Un solo proceso a la vez pide páginas (`data/red.lock`): si un proceso largo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo.
 - Después: `python -m radar.noticias.historico` (solo notas nuevas) y `python -m radar.region.notas`.
-- Si la recolección avisa "Nuevo documento del ENFEN", correr `python -m radar.oficial.corpus` sin `--solo` (ver el punto 7).
+- Si la recolección avisa "Nuevo documento del ENFEN", correr `python -m radar.oficial.corpus` sin `--solo` (ver el punto 6.2).
 
 ## 1. Desbloquear YouTube y Trends (urgente: núcleo que no se recorta)
 | Prueba | Qué falta | Decide |
@@ -23,11 +23,26 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 
 **Decisión que depende de estas pruebas:** el insumo de ML depende del modelo de engagement (YouTube), porque el NLI ya quedó fuera de la app. Si YouTube no alcanza, la alternativa es un modelo que prediga el interés de Trends por semana y departamento a partir del volumen y el tono de las noticias y los comunicados.
 
-## 2. Antes del NLP (calidad del corpus)
-1. **Regla de "sobre El Niño"** ([noticias/definicion.md](noticias/definicion.md#regla-de-menciones-del-1-nov-2026)): construida y probada el 1-nov (FEN, "Fenómeno el Niño", "Código", "La Niña" como lugar). Falta el recálculo completo, que va después de la rutina del 3-nov y dura ~10 h de noche. Luego hay que revisar V1 a V3 y M1b a M5, y aplicar con aprobación ([noticias/recalculo.md](noticias/recalculo.md#tercera-pasada-regla-de-menciones-1-nov)).
-2. **Crear `src/radar/nlp/`** y pasar ahí las pruebas de viabilidad de modelos (pysentimiento y memoria), con pruebas sintéticas: se corrieron con scripts provisionales, y CLAUDE.md no admite scripts sueltos.
+## 2. Recálculo final, uno solo, antes del corte del 20-nov
+Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de cada corrección; ya fueron cuatro. Las correcciones se acumulan en el código y se recalcula **una sola vez**, con todo junto, antes del corte. Las notas nuevas de cada día ya se leen con el código vigente.
 
-## 3. Semana 2 (2 a 8-nov), en orden de dependencias
+**Ya en el código, esperando ese recálculo:**
+- Regla de menciones del 1-nov (FEN, "Fenómeno el Niño", "Código del Niño", "La Niña" como lugar) y su paso de causa "menciones" ([noticias/recalculo.md](noticias/recalculo.md#tercera-pasada-regla-de-menciones-1-nov)). Cambia menos del 1 % de las notas sobre El Niño.
+
+**Revisar o corregir antes de lanzarlo** (se agrega aquí lo que aparezca, sin recalcular):
+- Las 13 notas de RPP con menos de 0,9 del articleBody (punto 6.1): decidir si se corrigen en la capa 1 o se declaran.
+- Si alguna corrección nueva cambia el cuerpo o las menciones, agregar su generación y su paso de causa en `recalculo.py`, como "rescate" y "menciones".
+- Confirmar que no hay directorios `recalculo/` ya aplicados ni `*.anterior.csv` en ningún medio (si los hay, renombrarlos; ver CLAUDE.md).
+
+**Cómo lanzarlo:**
+1. Ensayo corto, de unos 5 minutos: `python -m radar.noticias.historico --recalcular --todo --limite 200`, más `--informe`. Si algo falla, se corrige antes de gastar las 10 horas. Ese ensayo escribe en `recalculo/`; se borra o se renombra antes de la corrida completa.
+2. Corrida completa de noche: `python -m radar.noticias.historico --recalcular --todo --horas 12`, después de una rutina diaria.
+3. Revisar M1b a M5 y V1 a V3, y aplicar con aprobación: `--recalcular --aplicar`. Después, `region.notas` y `viabilidad resultados`.
+
+## 3. Antes del NLP
+1. **Crear `src/radar/nlp/`** y pasar ahí las pruebas de viabilidad de modelos (pysentimiento y memoria), con pruebas sintéticas: se corrieron con scripts provisionales, y CLAUDE.md no admite scripts sueltos.
+
+## 4. Semana 2 (2 a 8-nov), en orden de dependencias
 1. **Red de enlaces y citas:** los enlaces ya están limpios (`data/processed/noticias/enlaces.csv`).
 2. **Preprocesamiento y TF-IDF:** una sola lectura por nota que produzca todo lo que se deriva del cuerpo. Corpus: las ~2.400 notas sobre El Niño más las 400 del control negativo. Se pueden guardar vectores y conteos, no la secuencia de lemas, porque reconstruiría el texto.
 3. **Embeddings:** elegir entre MiniLM y e5-small con los controles positivo y negativo (AUC). Los dos caben en la app; MiniLM solo en ONNX float32, porque cuantizado cambia los vectores.
@@ -35,14 +50,14 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 5. **Capa 3 del índice (afirmaciones):** definida y aprobada ([nlp/discrepancia.md](nlp/discrepancia.md)). Conviene empezarla esta semana porque está en el camino crítico del índice.
 6. **Red social:** YouTube o co-mención, según la prueba del punto 1.
 
-## 4. Semana 3 (9 a 15-nov)
+## 5. Semana 3 (9 a 15-nov)
 - Índice de discrepancia, capas 4 y 5. El NLI tiene un solo intento acotado y queda solo offline. En la app, distancia y regla de magnitud.
 - Semáforo calibrado.
 - Estudio de eventos.
 - Modelo de engagement o su alternativa.
 - Recomendador híbrido.
 
-## 5. Menores, sin urgencia
+## 6. Menores, sin urgencia
 1. **13 notas de RPP con menos de 0,9 del articleBody** (8 del Rotafono, como 1672096 y 1674393). El texto que falta no queda después de la lista de recomendados, así que el rescate no lo cubre. Es un análisis de capa 1 aparte, con muestra nueva.
 2. **Bug de `corpus --solo`:** `validacion.csv` se reescribe solo con la fuente que corrió, y `--solo enfen` borra las filas del Senamhi (`src/radar/oficial/corpus.py`, donde arma `validacion.csv`). Se corrige conservando las filas de la otra fuente, como ya se hace con `parrafos.csv`. Mientras tanto, correr el corpus sin `--solo`.
 
