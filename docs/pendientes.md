@@ -32,6 +32,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 - Notas de Andina en inglés reconocidas por el texto (1-nov; [noticias/definicion.md](noticias/definicion.md)). Ya no entran al consolidado ni a `region.notas` (quedan 76.646 notas y 2.378 sobre El Niño). En el recálculo, `Andina.leer` las rechaza como "en inglés" y quedan sin releer en `data/raw/`; el consolidado las vuelve a excluir. No hay que hacer nada más.
 
 **Revisar o corregir antes de lanzarlo** (se agrega aquí lo que aparezca, sin recalcular):
+- **Línea `Publicado: dd/mm/aaaa` al final del cuerpo de todas las notas de Andina** (1-nov; [nlp/tfidf.md](nlp/tfidf.md#resultado-no-pasa-por-t4)). Es texto de la página. Falta quitarla en `noticias/nota.py`, agregar su generación y su paso de causa en `recalculo.py` (cambia el sha1 de todas las notas de Andina, y M1b debe esperarlo) y validar con `validar_texto` con una semilla nueva. Después, volver a correr `nlp.tfidf leer` en Andina.
 - Las 13 notas de RPP con menos de 0,9 del articleBody (punto 6.1): decidir si se corrigen en la capa 1 o se declaran.
 - Si alguna corrección nueva cambia el cuerpo o las menciones, agregar su generación y su paso de causa en `recalculo.py`, como "rescate" y "menciones".
 - Confirmar que no hay directorios `recalculo/` ya aplicados ni `*.anterior.csv` en ningún medio (si los hay, renombrarlos; ver CLAUDE.md).
@@ -46,8 +47,8 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 
 ## 4. Semana 2 (2 a 8-nov), en orden de dependencias
 1. ~~**Red de enlaces y citas**~~ Hecha el 1-nov: `python -m radar.redes.enlaces` ([redes/enlaces.md](redes/enlaces.md)). R1 pasa; R2 no pasa para Indeci, Cenepred y PCM, porque Exitosa enlaza palabras genéricas a esos sitios (SEO), no porque falten patrones. Se vuelve a correr después del recálculo final.
-2. **Preprocesamiento y TF-IDF:** una sola lectura por nota que produzca todo lo que se deriva del cuerpo. Corpus: las ~2.400 notas sobre El Niño más las 400 del control negativo. Se pueden guardar vectores y conteos, no la secuencia de lemas, porque reconstruiría el texto.
-3. **Embeddings:** elegir entre MiniLM y e5-small con los controles positivo y negativo (AUC). Los dos caben en la app; MiniLM solo en ONNX float32, porque cuantizado cambia los vectores.
+2. ~~**Preprocesamiento y TF-IDF**~~ Hecho el 1-nov: `python -m radar.nlp.tfidf` ([nlp/tfidf.md](nlp/tfidf.md)). **No pasa T4:** el AUC frente al control negativo es 0,80 (umbral 0,90). Las notas que hablan poco de El Niño, como las de medidas del Gobierno, no se parecen léxicamente a los párrafos del ENFEN. La lectura del corpus toma 23 min, así que no hace falta atar las etapas a una sola lectura.
+3. **Embeddings:** elegir entre MiniLM y e5-small con los controles positivo y negativo (AUC). Comparar con el 0,80 del TF-IDF; si tampoco separan, decidir cómo se calibra el umbral del semáforo. Los dos caben en la app; MiniLM solo en ONNX float32, porque cuantizado cambia los vectores.
 4. **Tópicos (LDA y BERTopic) y polaridad de las notas:** la polaridad se valida con el kappa frente a un zero-shot independiente (README). El cuerpo se parte en tramos de 128 tokens para robertuito.
 5. **Capa 3 del índice (afirmaciones):** definida y aprobada ([nlp/discrepancia.md](nlp/discrepancia.md)). Conviene empezarla esta semana porque está en el camino crítico del índice.
 6. **Red social:** YouTube o co-mención, según la prueba del punto 1.

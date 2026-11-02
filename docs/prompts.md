@@ -359,3 +359,20 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 19. ¿Hay que volver a correr el proceso largo? Ya sería la 5.ª vez. Deja claro lo pendiente y qué corregir antes de ejecutarlo.
 
 **Resultado:** se decidió no recalcular después de cada corrección. Las correcciones se acumulan en el código y se hace un solo recálculo final antes del corte, con un ensayo corto antes. La lista de lo que hay que revisar antes de lanzarlo quedó en `docs/pendientes.md`.
+
+## 2026-11-01 · Viabilidad de modelos en `src/`, red de enlaces y TF-IDF (Claude Code, Claude Opus 5.5)
+1. Avanza con lo que no depende de YouTube, Trends ni del recálculo final: `src/radar/nlp/` con las pruebas de viabilidad de modelos, la red de enlaces y citas, y el preprocesamiento y TF-IDF. Para cada tarea, defínela y analízala con datos reales, sé crítico y fija los criterios antes de escribir código. Valida con muestras nuevas, sin reusar notas vistas. No lances el recálculo; si algo lo requiere, corrígelo en el código y anótalo.
+
+**Resultado:** la IA analizó los datos y propuso las tres definiciones. Al hacerlo encontró:
+- 315 notas de Andina en inglés que el filtro por slug dejaba pasar (10 sobre El Niño);
+- que el script provisional de pysentimiento no se podía reproducir;
+- que el AUC del TF-IDF saldría inflado con los términos que definen "sobre El Niño";
+- que el criterio de menciones fallaba para Indeci y PCM.
+2. Sí, apruebo.
+
+**Resultado:**
+- **Viabilidad de modelos:** `radar.nlp.viabilidad`, con pruebas sintéticas. D2 y la memoria se reprodujeron dentro de los criterios fijados antes de correr, y A reutiliza la muestra guardada de su semilla.
+- **Notas en inglés:** se reconocen por el titular y el resumen, y se excluyen al leer, del consolidado y de `region.notas`, sin recálculo.
+- **Red de enlaces:** `radar.redes.enlaces`. R1 pasa. R2 no pasa para Indeci, Cenepred y PCM; el diagnóstico con 15 notas nuevas mostró que se debe a los enlaces de SEO de Exitosa, no a patrones que falten. La revisión cualitativa (10 notas nuevas) encontró el límite de la lista de actores.
+- **TF-IDF:** `radar.nlp.preproceso` y `radar.nlp.tfidf`, con lectura en memoria que solo guarda bolsas de lemas.
+- **TF-IDF, resultado:** T1, T2, T3 y T5 pasan; **T4 no pasa** (AUC 0,80). El diagnóstico muestra que el AUC depende de cuánto habla la nota de El Niño (0,73 a 0,93). La IA encontró además la línea "Publicado:" en todas las notas de Andina y la anotó para el recálculo final, sin tocar `nota.py`.

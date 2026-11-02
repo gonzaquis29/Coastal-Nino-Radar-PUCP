@@ -54,9 +54,14 @@ def _es_el_fenomeno(texto, m):
     return not (m.group(0).endswith("Niña") and _lugar_antes().search(antes))
 
 
-def menciones(texto):
+def menciones_en(texto):
+    """Coincidencias de NINO que son el fenómeno, en orden (el preprocesamiento las une en un solo término)."""
     texto = texto or ""
-    return sum(1 for m in NINO.finditer(texto) if _es_el_fenomeno(texto, m))
+    return [m for m in NINO.finditer(texto) if _es_el_fenomeno(texto, m)]
+
+
+def menciones(texto):
+    return len(menciones_en(texto))
 
 
 def nino_en_inicio(resumen, cuerpo, contar=menciones):
