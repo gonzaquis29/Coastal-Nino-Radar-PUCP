@@ -28,11 +28,10 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 
 **Ya en el código, esperando ese recálculo:**
 - Regla de menciones del 1-nov (FEN, "Fenómeno el Niño", "Código del Niño", "La Niña" como lugar) y su paso de causa "menciones" ([noticias/recalculo.md](noticias/recalculo.md#tercera-pasada-regla-de-menciones-1-nov)). Cambia menos del 1 % de las notas sobre El Niño.
-
+- Fecha suelta de Andina (`Publicado: dd/mm/aaaa`) quitada del cuerpo el 1-nov, con su generación "fecha" en `recalculo.py`. La capa 1 se validó con dos semillas nuevas ([noticias/texto.md](noticias/texto.md#fecha-suelta-de-andina-1-nov-2026), [noticias/recalculo.md](noticias/recalculo.md#cuarta-corrección-fecha-de-andina-1-nov)). Cambia el sha1 de todas las notas de Andina, pero no sus rasgos.
 - Notas de Andina en inglés reconocidas por el texto (1-nov; [noticias/definicion.md](noticias/definicion.md)). Ya no entran al consolidado ni a `region.notas` (quedan 76.646 notas y 2.378 sobre El Niño). En el recálculo, `Andina.leer` las rechaza como "en inglés" y quedan sin releer en `data/raw/`; el consolidado las vuelve a excluir. No hay que hacer nada más.
 
 **Revisar o corregir antes de lanzarlo** (se agrega aquí lo que aparezca, sin recalcular):
-- **Línea `Publicado: dd/mm/aaaa` al final del cuerpo de todas las notas de Andina** (1-nov; [nlp/tfidf.md](nlp/tfidf.md#resultado-no-pasa-por-t4)). Es texto de la página. Falta quitarla en `noticias/nota.py`, agregar su generación y su paso de causa en `recalculo.py` (cambia el sha1 de todas las notas de Andina, y M1b debe esperarlo) y validar con `validar_texto` con una semilla nueva. Después, volver a correr `nlp.tfidf leer` en Andina.
 - Las 13 notas de RPP con menos de 0,9 del articleBody (punto 6.1): decidir si se corrigen en la capa 1 o se declaran.
 - Si alguna corrección nueva cambia el cuerpo o las menciones, agregar su generación y su paso de causa en `recalculo.py`, como "rescate" y "menciones".
 - Confirmar que no hay directorios `recalculo/` ya aplicados ni `*.anterior.csv` en ningún medio (si los hay, renombrarlos; ver CLAUDE.md).
@@ -40,7 +39,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 **Cómo lanzarlo:**
 1. Ensayo corto, de unos 5 minutos: `python -m radar.noticias.historico --recalcular --todo --limite 200`, más `--informe`. Si algo falla, se corrige antes de gastar las 10 horas. Ese ensayo escribe en `recalculo/`; se borra o se renombra antes de la corrida completa.
 2. Corrida completa de noche: `python -m radar.noticias.historico --recalcular --todo --horas 12`, después de una rutina diaria.
-3. Revisar M1b a M5 y V1 a V3, y aplicar con aprobación: `--recalcular --aplicar`. Después, `region.notas` y `viabilidad resultados`.
+3. Revisar M1b a M5 y V1 a V3, y aplicar con aprobación: `--recalcular --aplicar`. Después, `region.notas`, `viabilidad resultados`, `redes.enlaces` y `nlp.tfidf vectores` (su T1 compara el sha1 con `notas.csv`).
 
 ## 3. Antes del NLP
 1. ~~**Crear `src/radar/nlp/`** y pasar ahí las pruebas de viabilidad de modelos~~ Hecho el 1-nov: `python -m radar.nlp.viabilidad`, con pruebas sintéticas. D2 y memoria se reprodujeron ([nlp/viabilidad-modelos.md](nlp/viabilidad-modelos.md#cómo-se-corre)).

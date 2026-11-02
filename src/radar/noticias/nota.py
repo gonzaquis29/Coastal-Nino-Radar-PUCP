@@ -79,6 +79,9 @@ LINEA_FUERA = re.compile(
     re.I,
 )
 INICIALES = re.compile(r"^(\(FIN\)\s*)?[A-Z]{2,4}(/[A-Z]{2,4})*$")  # sin re.I: "Lima" o "Piura" no son iniciales
+# Andina cierra el cuerpo con la fecha suelta tras un <br> ("Publicado: 21/10/2026"): es de la página, no de la nota.
+# Estaba en todas las notas de Andina hasta el 1-nov-2026; los cuerpos "con_fecha" la conservan para el recálculo
+FECHA_DE_PUBLICACION = re.compile(r"^publicado:\s*\d{1,2}/\d{1,2}/\d{4}$", re.I)
 # El Tiempo pone sus enlaces a otras notas en un <blockquote> ("PUEDES LEER ►"); las citas textuales se conservan
 CITA_QUE_ES_ENLACE = re.compile(r"^\s*(puede?s?|lee)\s*(leer|más)\b|►", re.I)
 # Y WordPress arma el resumen de El Tiempo con las primeras palabras del contenido, enlace incluido ("… PUEDES LEER ►
@@ -236,7 +239,7 @@ def _sin_titulares_ajenos(nodo, url_base):
     return quitados
 
 
-def _lineas(nodo):
+def _lineas(nodo, con_fecha=False):
     """Texto del cuerpo con un salto en cada bloque y en cada <br>: ninguna frase queda pegada a la siguiente."""
     for el in nodo.iter():
         if not isinstance(el.tag, str):
@@ -247,7 +250,12 @@ def _lineas(nodo):
             el.text = "\n" + (el.text or "")
     lineas = (norm(linea) for linea in nodo.text_content().split("\n"))
     return "\n".join(
-        linea for linea in lineas if linea and not LINEA_FUERA.search(linea) and not INICIALES.match(linea)
+        linea
+        for linea in lineas
+        if linea
+        and not LINEA_FUERA.search(linea)
+        and not INICIALES.match(linea)
+        and (con_fecha or not FECHA_DE_PUBLICACION.match(linea))
     )
 
 
@@ -282,14 +290,19 @@ def _normalizar(cuerpo, titular):
     return _sin_titular("\n".join(linea for linea in lineas if linea), titular)
 
 
-def _campos(titular, resumen, cuerpo, enlaces, cuerpo_con_ajenos=None, cuerpo_sin_rescate=None, **otros):
+def _campos(
+    titular, resumen, cuerpo, enlaces, cuerpo_con_ajenos=None, cuerpo_sin_rescate=None, cuerpo_con_fecha=None, **otros
+):
     """Solo para separar causas en el recálculo: cuerpo_con_ajenos, el cuerpo como salía antes de quitar los titulares
-    ajenos, y cuerpo_sin_rescate, antes de rescatar los recomendados sin cerrar; si no cambia, es el mismo cuerpo."""
+    ajenos; cuerpo_sin_rescate, antes de rescatar los recomendados sin cerrar, y cuerpo_con_fecha, antes de quitar la
+    fecha de Andina (los dos primeros también la conservan). Si no cambia, es el mismo cuerpo."""
     resumen = sin_enlace(resumen)
     cuerpo = _normalizar(cuerpo, titular)
+    con_fecha = _normalizar(cuerpo_con_fecha, titular) if cuerpo_con_fecha is not None else cuerpo
     return {
-        "cuerpo_con_ajenos": _normalizar(cuerpo_con_ajenos, titular) if cuerpo_con_ajenos is not None else cuerpo,
-        "cuerpo_sin_rescate": _normalizar(cuerpo_sin_rescate, titular) if cuerpo_sin_rescate is not None else cuerpo,
+        "cuerpo_con_ajenos": _normalizar(cuerpo_con_ajenos, titular) if cuerpo_con_ajenos is not None else con_fecha,
+        "cuerpo_sin_rescate": _normalizar(cuerpo_sin_rescate, titular) if cuerpo_sin_rescate is not None else con_fecha,
+        "cuerpo_con_fecha": con_fecha,
         "titular": titular,
         "resumen": resumen,
         "cuerpo": cuerpo,
@@ -317,8 +330,8 @@ def leer_html(medio, contenido, url, tipo=""):
     bajada = limpiar(" ".join(t.text_content() for t in doc.xpath(BAJADA.get(medio, "/nada"))))
     cuerpo_ld = limpiar(ld.get("articleBody"))
 
-    def armar(n):
-        cuerpo = _lineas(n) if n is not None else ""
+    def armar(n, con_fecha=False):
+        cuerpo = _lineas(n, con_fecha) if n is not None else ""
         if bajada and cuerpo:
             cuerpo = f"{bajada}\n{cuerpo}"
         return cuerpo_ld if len(cuerpo.split()) < MIN_PALABRAS and cuerpo_ld else cuerpo
@@ -329,12 +342,13 @@ def leer_html(medio, contenido, url, tipo=""):
         _sin_bloques_ajenos(nodo, medio)
         previo = copy.deepcopy(nodo)
         if ajenos := _sin_titulares_ajenos(nodo, url):
-            con_ajenos = armar(previo)
+            con_ajenos = armar(previo, con_fecha=True)
         if crudo is not None:
             _sin_bloques_ajenos(crudo, medio, rescate=False)
             _sin_titulares_ajenos(crudo, url)
-            sin_rescate = armar(crudo)
+            sin_rescate = armar(crudo, con_fecha=True)
     cuerpo = armar(nodo)
+    con_fecha = armar(nodo, con_fecha=True) if nodo is not None else None
     return _campos(
         titular,
         resumen,
@@ -343,6 +357,7 @@ def leer_html(medio, contenido, url, tipo=""):
         titulares_ajenos=ajenos,
         cuerpo_con_ajenos=con_ajenos,
         cuerpo_sin_rescate=sin_rescate,
+        cuerpo_con_fecha=con_fecha,
         fecha_publicacion=publicada,
         fecha_modificacion=a_lima(str(ld.get("dateModified") or "")),
         fecha_creacion=a_lima(creacion) if creacion else "",

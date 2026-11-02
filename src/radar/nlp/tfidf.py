@@ -76,9 +76,11 @@ def fila_conteo(nota, estrato, campos):
     marcado, menciones = preproceso.marcar_fenomeno(texto)
     bolsa = preproceso.bolsas([marcado])[0]
     sha1 = sha1_corto(campos["cuerpo"])
+    # hasta el recálculo final, notas.csv tiene el sha1 del cuerpo con la fecha de Andina (noticias.nota)
+    guardado = {sha1, sha1_corto(campos.get("cuerpo_con_fecha", campos["cuerpo"]))}
     return {
         "medio": nota["medio"], "id": nota["id"], "estrato": estrato, "sha1_cuerpo": sha1,
-        "sha1_igual": sha1 == nota["sha1_cuerpo"], "n_palabras": campos["n_palabras"], "usa_resumen": usa_resumen,
+        "sha1_igual": nota["sha1_cuerpo"] in guardado, "n_palabras": campos["n_palabras"], "usa_resumen": usa_resumen,
         "menciones": menciones, "terminos_fenomeno": sum(bolsa[t] for t in preproceso.TERMINOS_FENOMENO),
         "error": "" if not campos["sin_texto"] else "sin texto", "lemas": preproceso.a_celda(bolsa),
     }  # fmt: skip

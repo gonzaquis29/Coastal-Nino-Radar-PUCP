@@ -255,3 +255,27 @@ def test_tercera_pasada_separa_la_regla_de_menciones(monkeypatch, tmp_path):
     assert cambio["sobre_ahora"] is True and cambio["causa_sobre"] == "menciones"
     assert cambio["magnitudes_ahora"] == "fuerte" and cambio["causa_magnitudes"] == "menciones"
     assert cambio["sobre_texto_nuevo"] is False and cambio["magnitudes_texto_nuevo"] == ""  # el control reproduce
+
+
+def test_cuarta_pasada_la_fecha_de_andina_no_es_una_edicion(tmp_path):
+    """Andina no tiene fecha de edición: una edición se ve en el sha1 del cuerpo. Una fila guardada con la línea
+    "Publicado:" se compara con el cuerpo de antes, que la conserva, así que no cuenta como edición y se controla."""
+    pagina = ('<html><head><script type="application/ld+json">{"@type": "NewsArticle", "headline": "Titular",'
+              ' "datePublished": "2026-02-01T10:00:00-05:00"}</script></head><body><div class="col paddingnota">'
+              f"<div class='col linknotas'><div>El Niño costero de magnitud fuerte. {RELLENO}</div>"
+              "<br />Publicado: 1/2/2026</div></div></body></html>").encode()  # fmt: skip
+    url = "https://andina.pe/agencia/noticia-x-1.aspx"
+    fila = {"medio": "andina", "id": "1", "url": url, "titulo": "Titular", "seccion": "", "fecha_lista": "",
+            "via": "numero", "http": 200}  # fmt: skip
+    campos = leer_html("andina", pagina, url)
+    vieja, _ = filas_de_nota("andina", fila, {**campos, "cuerpo": campos["cuerpo_con_fecha"]}, "candidata")
+    vieja["recolectado"] = "2026-11-01T08:40:00-05:00"
+    escribir_csv(tmp_path / "notas.csv", esquemas.NOTAS, [vieja])
+    vieja = leer_csv(tmp_path / "notas.csv")[0]
+    nueva, enlaces = filas_de_nota("andina", fila, campos, "candidata")
+    assert nueva["sha1_cuerpo"] != vieja["sha1_cuerpo"]
+    cambio = recalculo.comparar(vieja, nueva, campos, enlaces, "andina", "ahora")
+    assert cambio["generacion"] == "rescate" and cambio["pagina_editada"] is False
+    assert cambio["sobre_texto_nuevo"] == (vieja["sobre_nino"] == "1") and cambio["causa_sobre"] == ""
+    assert cambio["magnitudes_texto_nuevo"] == vieja["magnitudes"] and cambio["causa_magnitudes"] == ""
+    assert recalculo.generacion("2026-11-02T08:00:00-05:00", "andina") == "fecha"

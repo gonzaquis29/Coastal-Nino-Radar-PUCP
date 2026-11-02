@@ -51,6 +51,7 @@ GENERACIONES = (
     ("actual", "2026-10-29T21:55"),  # sin titulares ajenos en el cuerpo
     ("rescate", "2026-10-31T11:41"),  # RPP: recomendados sin cerrar (a45e690)
     ("menciones", "2026-11-01T18:10"),  # regla de menciones de El Niño del 1-nov (FEN, "Fenómeno el Niño", lugares)
+    ("fecha", "2026-11-01T20:20"),  # Andina: sin la línea "Publicado: dd/mm/aaaa" al final del cuerpo
 )
 # "recolectado" se conserva al recalcular: los archivos aplicados el 31-oct-2026 se calcularon enteros con "actual",
 # y los de RPP, con el rescate de su segunda pasada
@@ -172,9 +173,13 @@ def comparar(vieja, nueva, campos, enlaces_nuevos, medio, momento):
         vieja["resumen"],
         campos["titular"],
     )
-    # el paso del cuerpo intermedio: lo que cambió el código desde la generación de la fila
-    if gen in ("rescate", "menciones"):
-        previo, paso = cuerpo, "rescate"
+    # el paso del cuerpo intermedio: lo que cambió el código desde la generación de la fila. Los cuerpos de antes
+    # conservan la fecha de Andina; una línea con solo la fecha no cambia menciones ni magnitudes, así que en las
+    # generaciones anteriores a "rescate" su paso queda dentro del de ajenos o del rescate
+    if gen == "fecha":
+        previo, paso = cuerpo, "fecha"
+    elif gen in ("rescate", "menciones"):
+        previo, paso = campos.get("cuerpo_con_fecha", cuerpo), "fecha"
     elif gen == "actual":
         previo, paso = campos.get("cuerpo_sin_rescate", cuerpo), "rescate"
     else:

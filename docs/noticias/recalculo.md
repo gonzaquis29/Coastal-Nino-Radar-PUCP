@@ -190,3 +190,14 @@ En las 7, el cuerpo con la regla anterior reproduce lo guardado.
 python -m radar.noticias.historico --recalcular --todo --horas 12   # después de la rutina; ~10 h, Andina domina
 python -m radar.noticias.historico --recalcular --aplicar           # con aprobación
 ```
+
+## Cuarta corrección: fecha de Andina (1-nov)
+El cuerpo de Andina ya no lleva la línea `Publicado: dd/mm/aaaa` ([texto.md](texto.md#fecha-suelta-de-andina-1-nov-2026)). Va en el mismo recálculo final que la regla de menciones; no tiene pasada propia.
+
+**Por qué necesita adaptación.** Andina no tiene fecha de edición fiable (`MEDIOS_SIN_FECHA_DE_EDICION`), así que una edición se reconoce porque el sha1 del cuerpo "previo" difiere del guardado. Sin adaptar el recálculo, todas las notas de Andina habrían salido "editadas" y M1b se habría quedado sin filas de control en ese medio.
+
+**Adaptación:**
+- Generación nueva, "fecha" (`2026-11-01T20:20`). Las filas de "rescate" y "menciones" usan como cuerpo previo `cuerpo_con_fecha`, y su paso se llama "fecha".
+- Para las generaciones anteriores, `cuerpo_con_ajenos` y `cuerpo_sin_rescate` también conservan la línea. Su paso de cuerpo sigue llamándose "ajenos" o "rescate", porque la fecha no puede cambiar ni menciones ni magnitudes.
+- Prueba sintética: una fila de Andina guardada con la línea no cuenta como edición, y el control reproduce "sobre El Niño" y las magnitudes (`test_cuarta_pasada_la_fecha_de_andina_no_es_una_edicion`).
+

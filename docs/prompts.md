@@ -376,3 +376,10 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 - **Red de enlaces:** `radar.redes.enlaces`. R1 pasa. R2 no pasa para Indeci, Cenepred y PCM; el diagnóstico con 15 notas nuevas mostró que se debe a los enlaces de SEO de Exitosa, no a patrones que falten. La revisión cualitativa (10 notas nuevas) encontró el límite de la lista de actores.
 - **TF-IDF:** `radar.nlp.preproceso` y `radar.nlp.tfidf`, con lectura en memoria que solo guarda bolsas de lemas.
 - **TF-IDF, resultado:** T1, T2, T3 y T5 pasan; **T4 no pasa** (AUC 0,80). El diagnóstico muestra que el AUC depende de cuánto habla la nota de El Niño (0,73 a 0,93). La IA encontró además la línea "Publicado:" en todas las notas de Andina y la anotó para el recálculo final, sin tocar `nota.py`.
+3. Sí, corrígela (la línea "Publicado:" de Andina).
+
+**Resultado:**
+- La IA ubicó la línea en el HTML: un texto suelto tras un `<br />`, al final del cuerpo. La quitó en `nota.py`, que ahora entrega también el cuerpo anterior.
+- Vio que, como Andina no tiene fecha de edición, el recálculo habría marcado todas sus notas como editadas y M1b se habría quedado sin control. Agregó la generación "fecha" con su prueba sintética.
+- Validó la capa 1 con dos semillas nuevas (pasa). Encontró que el detector independiente no buscaba esta línea y lo amplió.
+- Volvió a leer Andina para el TF-IDF.

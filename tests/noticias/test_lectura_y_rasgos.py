@@ -226,6 +226,19 @@ def test_andina_cuerpo_en_lineas_sin_credito_hora_ni_enlaces_a_otras():
     assert "JRA" not in lineas and "googletag" not in campos["cuerpo"] and campos["enlaces"] == []
 
 
+def test_andina_sin_la_fecha_de_publicacion_al_final():
+    cuerpo = (
+        '<div class="col paddingnota"><div class="col linknotas">'
+        f"<div>El ENFEN mantiene la alerta. {RELLENO}</div><div>(FIN) DSC/LIT</div><div>JRA</div>"
+        "\r\n<br />\r\nPublicado: 21/10/2026\r\n</div></div>"
+    )
+    campos = leer_html("andina", pagina(cuerpo), "https://andina.pe/agencia/noticia-x-1.aspx")
+    assert "Publicado" not in campos["cuerpo"] and campos["cuerpo"].endswith(RELLENO.strip())
+    # el cuerpo como lo sacaba el código anterior, para el recálculo
+    assert campos["cuerpo_con_fecha"] == campos["cuerpo"] + "\nPublicado: 21/10/2026"
+    assert campos["cuerpo_sin_rescate"] == campos["cuerpo_con_ajenos"] == campos["cuerpo_con_fecha"]
+
+
 def test_rpp_sin_recomendados_promociones_ni_reproductor():
     cuerpo = (
         '<div class="body"><div class="banner"></div><div class="player-audio">Compartir Actualidad Share</div>'

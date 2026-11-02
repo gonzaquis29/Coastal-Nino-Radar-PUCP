@@ -145,6 +145,15 @@ Los umbrales no se movieron. La regla se corrigió una vez (después de la 1.ª)
 
 Los umbrales no se movieron. La regla no se corrigió; el instrumento de C3, dos veces. C1 pasa en las 4 notas con rescate de las dos primeras muestras: son pocas, porque el problema es raro (~2 % del Rotafono). De paso, la regla quita el botón "Hablar con Rotafono", que estaba en el cuerpo de casi todas las notas del Rotafono.
 
+## Fecha suelta de Andina (1-nov-2026)
+**Problema.** Todas las notas de Andina terminaban con la línea `Publicado: 21/10/2026`. Es un texto suelto tras un `<br />`, al final de `div.linknotas` y después de los créditos. El detector independiente no la buscaba, y apareció en el TF-IDF: `publicado` era el segundo término de Andina, presente en 1.192 de sus 1.192 notas sobre El Niño ([../nlp/tfidf.md](../nlp/tfidf.md)).
+
+**Corrección.** Se quita toda línea que sea solo `Publicado: d/m/aaaa` (`nota.FECHA_DE_PUBLICACION`). El lector entrega también `cuerpo_con_fecha`, el cuerpo como lo sacaba el código anterior, para el recálculo; `cuerpo_con_ajenos` y `cuerpo_sin_rescate` también conservan la línea. El detector independiente (`RESTOS`) ahora busca `^Publicado:`.
+
+**Validación** con dos semillas nuevas, de 100 notas cada una (`texto-limpio-fecha-1nov` y, después de ampliar el detector, `texto-limpio-fecha-1nov-b`): **pasa.** Las reglas de línea conservan del 100 al 101,9 % del texto, no hay uniones pegadas y quedan 0 restos.
+
+**Efecto.** Cambia el cuerpo y el sha1 de todas las notas de Andina, pero no las menciones, las magnitudes, "sobre El Niño" ni los enlaces. Una línea con solo la fecha no tiene nada de eso, y además va al final, fuera de las 60 primeras palabras. Va al recálculo final ([recalculo.md](recalculo.md#cuarta-corrección-fecha-de-andina-1-nov)).
+
 ## Limitaciones declaradas
 - Solo RPP publica `articleBody` en su JSON-LD; en Andina, Exitosa y El Tiempo no hay una referencia externa del cuerpo y la pérdida se mide contra el propio contenedor (reglas de línea) y la extracción anterior (bloques quitados, informativo).
 - RPP publica a veces en el `articleBody` párrafos que no están en la página; se valida contra la página visible.

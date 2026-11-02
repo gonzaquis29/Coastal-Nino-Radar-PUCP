@@ -47,10 +47,10 @@ CONSERVA_MINIMO = 0.90  # palabras del contenedor sin bloques ajenos que siguen 
 PEGADAS_POR_MIL = 0.5
 # Detector independiente de las reglas de limpieza: frases de interfaz al inicio de una línea y botones, no palabras
 # que la redacción usa ("compartir con los ciudadanos", "canales en YouTube", "en el poema puede leerse").
-# Corregido el 28-oct-2026 antes de la 3.ª y de la 6.ª muestra.
+# Corregido el 28-oct-2026 antes de la 3.ª y de la 6.ª muestra, y el 1-nov con la fecha suelta de Andina ("Publicado:").
 RESTOS = re.compile(
     r"^[\s\[(«\"“¡]*(Te recomendamos|Le[ae] también|Lee más|Puede?s? leer|Más en Andina|Mira .{0,30}YouTube)"
-    r"|►|googletag|pic\.twitter|\d{1,2}:\d{2}\s*·|^\d{1,2}:\d{2} \|",
+    r"|►|googletag|pic\.twitter|\d{1,2}:\d{2}\s*·|^\d{1,2}:\d{2} \||^Publicado:\s*\d",
     re.I | re.M,
 )
 BOTONES = re.compile(r"\b(Compartir|Share)\b")  # con mayúscula, como botón
