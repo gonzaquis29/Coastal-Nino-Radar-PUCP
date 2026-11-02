@@ -68,6 +68,14 @@ def texto_de(campos):
     return "\n".join([campos["titular"], *([resumen] if usa_resumen else []), cuerpo]), usa_resumen
 
 
+def sha1_de(nota, campos):
+    """(sha1 del cuerpo leído, si es igual al de notas.csv)."""
+    sha1 = sha1_corto(campos["cuerpo"])
+    # hasta el recálculo final, notas.csv tiene el sha1 del cuerpo con la fecha de Andina (noticias.nota)
+    guardado = {sha1, sha1_corto(campos.get("cuerpo_con_fecha", campos["cuerpo"]))}
+    return sha1, nota["sha1_cuerpo"] in guardado
+
+
 def fila_conteo(nota, estrato, campos):
     """Lo que se guarda de una nota leída: la bolsa de lemas y los controles. El cuerpo se descarta aquí."""
     if not isinstance(campos, dict):
@@ -75,12 +83,10 @@ def fila_conteo(nota, estrato, campos):
     texto, usa_resumen = texto_de(campos)
     marcado, menciones = preproceso.marcar_fenomeno(texto)
     bolsa = preproceso.bolsas([marcado])[0]
-    sha1 = sha1_corto(campos["cuerpo"])
-    # hasta el recálculo final, notas.csv tiene el sha1 del cuerpo con la fecha de Andina (noticias.nota)
-    guardado = {sha1, sha1_corto(campos.get("cuerpo_con_fecha", campos["cuerpo"]))}
+    sha1, igual = sha1_de(nota, campos)
     return {
         "medio": nota["medio"], "id": nota["id"], "estrato": estrato, "sha1_cuerpo": sha1,
-        "sha1_igual": nota["sha1_cuerpo"] in guardado, "n_palabras": campos["n_palabras"], "usa_resumen": usa_resumen,
+        "sha1_igual": igual, "n_palabras": campos["n_palabras"], "usa_resumen": usa_resumen,
         "menciones": menciones, "terminos_fenomeno": sum(bolsa[t] for t in preproceso.TERMINOS_FENOMENO),
         "error": "" if not campos["sin_texto"] else "sin texto", "lemas": preproceso.a_celda(bolsa),
     }  # fmt: skip
@@ -109,10 +115,16 @@ def _descargar_medio(nombre, pendientes, cola, parar):
 
 
 def leer(parar, limite=None):
-    ruta = config.DIR_NLP / ARCHIVO_CONTEOS
-    reparar_csv(ruta, esquemas.CONTEOS)
-    hechos = {k for k, f in leidos(ruta).items() if not f["error"] or f["error"] == "sin texto"}
     todo = corpus(leer_csv(config.DIR_NOTICIAS / "notas.csv"), leer_csv(config.DIR_NOTICIAS / "control_negativo.csv"))
+    preproceso.modelo()
+    return leer_cuerpos(todo, config.DIR_NLP / ARCHIVO_CONTEOS, esquemas.CONTEOS, fila_conteo, parar, limite)
+
+
+def leer_cuerpos(todo, ruta, esquema, fila_de, parar, limite=None):
+    """Lee en memoria los cuerpos de todo [(nota, estrato)], 4 medios en paralelo, y anexa fila_de(nota, estrato,
+    campos o excepción) a ruta. Salta las notas ya leídas en ruta, así que se puede cortar y relanzar."""
+    reparar_csv(ruta, esquema)
+    hechos = {k for k, f in leidos(ruta).items() if not f["error"] or f["error"] == "sin texto"}
     por_medio = collections.defaultdict(list)
     for nota, estrato in todo:
         if (nota["medio"], nota["id"]) not in hechos:
@@ -120,7 +132,6 @@ def leer(parar, limite=None):
     if limite:
         por_medio = {m: p[:limite] for m, p in por_medio.items()}
     log.info(f"Corpus {len(todo)} notas · ya leídas {len(hechos)} · por leer {sum(map(len, por_medio.values()))}")
-    preproceso.modelo()
     cola, abiertos, conteo = (
         queue.Queue(),
         len(por_medio),
@@ -134,8 +145,8 @@ def leer(parar, limite=None):
             if estrato is None:
                 abiertos -= 1
                 continue
-            fila = fila_conteo(nota, estrato, resultado)
-            anexar_csv(ruta, esquemas.CONTEOS, [fila])
+            fila = fila_de(nota, estrato, resultado)
+            anexar_csv(ruta, esquema, [fila])
             conteo["con error" if fila["error"] else "leídas"] += 1
             if sum(conteo.values()) % 200 == 0:
                 log.info(f"  {dict(conteo)}")

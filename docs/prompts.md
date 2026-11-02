@@ -383,3 +383,9 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 - Vio que, como Andina no tiene fecha de edición, el recálculo habría marcado todas sus notas como editadas y M1b se habría quedado sin control. Agregó la generación "fecha" con su prueba sintética.
 - Validó la capa 1 con dos semillas nuevas (pasa). Encontró que el detector independiente no buscaba esta línea y lo amplió.
 - Volvió a leer Andina para el TF-IDF.
+4. Procedemos con el análisis, las validaciones y las pruebas primero (embeddings, punto 4.3).
+
+**Resultado:** la IA corrió un piloto sin red con los titulares (e5 superaba al TF-IDF) y propuso la definición. Al hacerlo encontró que MiniLM se entrenó con 128 tokens y que el 14 % de los párrafos del ENFEN pasa de ese largo, que guardar los vectores por tramo permitiría reconstruir el texto y que el control positivo es chico y solo de Andina. Con eso propuso los criterios E1 a E5 y una regla de elección.
+5. Sí, apruebo.
+
+**Resultado:** la IA escribió `radar.nlp.embeddings` (tramos sin truncar, solo puntajes y el vector promedio por nota), con pruebas sintéticas. **Pasa con e5-small:** E4 0,912 frente al 0,799 del TF-IDF, y E3 0,951 en cuerpos y 0,901 en titulares. La revisión de 10 notas nuevas mostró párrafos genéricos para las notas de política, y la IA midió la concentración: un párrafo de definiciones es el más parecido para el 11,5 % de las notas. Lo dejó para decidirlo en el semáforo.

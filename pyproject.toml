@@ -17,10 +17,10 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
 # NLP y redes (modelo de spaCy: python -m spacy download es_core_news_sm; los de transformers, en la caché de
-# Hugging Face). streamlit y psutil son para la prueba de memoria
+# Hugging Face). streamlit y psutil son para la prueba de memoria; sentence-transformers, el control de E2
 nlp = [
     "spacy>=3.8", "pysentimiento>=0.7.3", "onnxruntime>=1.23", "numpy>=2.0", "scipy>=1.13", "scikit-learn>=1.5",
-    "networkx>=3.3", "psutil>=5.9", "streamlit>=1.40",
+    "networkx>=3.3", "psutil>=5.9", "streamlit>=1.40", "sentence-transformers>=5.0",
 ]
 
 [tool.setuptools.packages.find]

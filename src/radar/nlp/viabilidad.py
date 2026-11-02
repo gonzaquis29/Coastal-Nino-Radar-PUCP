@@ -185,11 +185,11 @@ def _softmax(z):
 class Torch:
     """Modelo de transformers en float32 (CLAUDE.md): embedding por promedio de tokens o NLI."""
 
-    def __init__(self, repo, prefijo=""):
+    def __init__(self, repo, prefijo="", largo=LARGO_EMBEDDING):
         import torch
         from transformers import AutoModel, AutoModelForSequenceClassification, AutoTokenizer
 
-        self.torch, self.prefijo = torch, prefijo
+        self.torch, self.prefijo, self.largo = torch, prefijo, largo
         self.tok = AutoTokenizer.from_pretrained(repo)
         clase = AutoModelForSequenceClassification if repo == config.MODELO_NLI else AutoModel
         self.modelo = clase.from_pretrained(repo, dtype=torch.float32).eval()
@@ -199,7 +199,7 @@ class Torch:
             [self.prefijo + t for t in textos],
             padding=True,
             truncation=True,
-            max_length=LARGO_EMBEDDING,
+            max_length=self.largo,
             return_tensors="pt",
         )
         with self.torch.no_grad():
@@ -215,8 +215,8 @@ class Torch:
 class Onnx:
     """El mismo cálculo que Torch con onnxruntime."""
 
-    def __init__(self, repo, archivo, prefijo="", sesion=None, tok=None):
-        self.prefijo = prefijo
+    def __init__(self, repo, archivo, prefijo="", sesion=None, tok=None, largo=LARGO_EMBEDDING):
+        self.prefijo, self.largo = prefijo, largo
         if sesion is None:
             import onnxruntime as ort
             from transformers import AutoTokenizer
@@ -238,7 +238,7 @@ class Onnx:
             [self.prefijo + t for t in textos],
             padding=True,
             truncation=True,
-            max_length=LARGO_EMBEDDING,
+            max_length=self.largo,
             return_tensors="np",
         )
         return _normalizar(_promedio(self.correr(e), e["attention_mask"]))

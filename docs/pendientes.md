@@ -6,7 +6,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 - **Noticias:** 76.961 notas de los 4 medios (1-ene a hoy), con el texto limpio, y 2.388 notas sobre El Niño. Enlaces limpios: 117.516, de los que 7.616 apuntan a fuentes oficiales. La macro-región está asignada y validada (`region.notas` pasa).
 - **Corpus oficial:** ENFEN hasta el comunicado N.° 19 (30-oct) y avisos del Senamhi; 865 párrafos.
 - **Viabilidad cerrada:** histórico, filtro, volumen, calidad, control positivo (con el respaldo), macro-región, precisión de "sobre El Niño", pysentimiento (no pasa: solo polaridad en las notas) y memoria para la app (el NLI queda offline; el embedding cabe). Detalle: [nlp/viabilidad-modelos.md](nlp/viabilidad-modelos.md) y [noticias/definicion.md](noticias/definicion.md#diagnóstico-de-falsos-positivos-31-oct-2026).
-- **Sin empezar:** `src/radar/nlp/` (TF-IDF, embeddings, tópicos, capa 3), YouTube y Trends, y la app.
+- **NLP:** TF-IDF (no pasa T4) y embeddings (pasan con e5-small) hechos el 1-nov. **Sin empezar:** tópicos, capa 3, YouTube y Trends, y la app.
 
 ## Siempre (rutina hasta el corte del 20-nov)
 - Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. La última fue el 1-nov a las 08:41, así que la próxima vence el **3-nov a las 08:41**. Un solo proceso a la vez pide páginas (`data/red.lock`): si un proceso largo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo.
@@ -39,7 +39,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 **Cómo lanzarlo:**
 1. Ensayo corto, de unos 5 minutos: `python -m radar.noticias.historico --recalcular --todo --limite 200`, más `--informe`. Si algo falla, se corrige antes de gastar las 10 horas. Ese ensayo escribe en `recalculo/`; se borra o se renombra antes de la corrida completa.
 2. Corrida completa de noche: `python -m radar.noticias.historico --recalcular --todo --horas 12`, después de una rutina diaria.
-3. Revisar M1b a M5 y V1 a V3, y aplicar con aprobación: `--recalcular --aplicar`. Después, `region.notas`, `viabilidad resultados`, `redes.enlaces` y `nlp.tfidf vectores` (su T1 compara el sha1 con `notas.csv`).
+3. Revisar M1b a M5 y V1 a V3, y aplicar con aprobación: `--recalcular --aplicar`. Después, `region.notas`, `viabilidad resultados`, `redes.enlaces`, `nlp.tfidf vectores` y `nlp.embeddings criterios` (sus T1 y E1 comparan el sha1 con `notas.csv`).
 
 ## 3. Antes del NLP
 1. ~~**Crear `src/radar/nlp/`** y pasar ahí las pruebas de viabilidad de modelos~~ Hecho el 1-nov: `python -m radar.nlp.viabilidad`, con pruebas sintéticas. D2 y memoria se reprodujeron ([nlp/viabilidad-modelos.md](nlp/viabilidad-modelos.md#cómo-se-corre)).
@@ -47,7 +47,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 ## 4. Semana 2 (2 a 8-nov), en orden de dependencias
 1. ~~**Red de enlaces y citas**~~ Hecha el 1-nov: `python -m radar.redes.enlaces` ([redes/enlaces.md](redes/enlaces.md)). R1 pasa; R2 no pasa para Indeci, Cenepred y PCM, porque Exitosa enlaza palabras genéricas a esos sitios (SEO), no porque falten patrones. Se vuelve a correr después del recálculo final.
 2. ~~**Preprocesamiento y TF-IDF**~~ Hecho el 1-nov: `python -m radar.nlp.tfidf` ([nlp/tfidf.md](nlp/tfidf.md)). **No pasa T4:** el AUC frente al control negativo es 0,80 (umbral 0,90). Las notas que hablan poco de El Niño, como las de medidas del Gobierno, no se parecen léxicamente a los párrafos del ENFEN. La lectura del corpus toma 23 min, así que no hace falta atar las etapas a una sola lectura.
-3. **Embeddings:** elegir entre MiniLM y e5-small con los controles positivo y negativo (AUC). Comparar con el 0,80 del TF-IDF; si tampoco separan, decidir cómo se calibra el umbral del semáforo. Los dos caben en la app; MiniLM solo en ONNX float32, porque cuantizado cambia los vectores.
+3. ~~**Embeddings**~~ Hechos el 1-nov: `python -m radar.nlp.embeddings` ([nlp/embeddings.md](nlp/embeddings.md)). **Pasa con e5-small**, que empata con MiniLM en E4 (0,912 frente a 0,799 del TF-IDF); el semáforo del README se puede calibrar (E3: 0,951 en cuerpos y 0,901 en titulares, sin cruce), y e5 cuantizado da lo mismo. **Para el semáforo (semana 3):** un párrafo de definiciones del ENFEN es el más parecido para el 11,5 % de las notas (hubness), así que hay que decidir si los párrafos de `definicion` entran en la comparación. Se vuelve a correr después del recálculo final.
 4. **Tópicos (LDA y BERTopic) y polaridad de las notas:** la polaridad se valida con el kappa frente a un zero-shot independiente (README). El cuerpo se parte en tramos de 128 tokens para robertuito.
 5. **Capa 3 del índice (afirmaciones):** definida y aprobada ([nlp/discrepancia.md](nlp/discrepancia.md)). Conviene empezarla esta semana porque está en el camino crítico del índice.
 6. **Red social:** YouTube o co-mención, según la prueba del punto 1.
