@@ -541,9 +541,9 @@ def control_negativo(notas):
 # ---------------------------------------------------------------- principal
 
 
-def guardar(filas):
+def guardar(filas, ruta=None):
     """Reemplaza en validacion.csv solo las pruebas que se volvieron a correr."""
-    ruta = config.DIR_NOTICIAS / "validacion.csv"
+    ruta = ruta or config.DIR_NOTICIAS / "validacion.csv"
     corridas = {f["prueba"] for f in filas}
     previas = [f for f in leer_csv(ruta) if f["prueba"] not in corridas]
     escribir_csv(ruta, esquemas.ARCHIVOS["validacion.csv"], previas + filas)

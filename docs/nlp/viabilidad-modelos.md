@@ -58,5 +58,16 @@ Las filas "adicional" salieron del diagnóstico, no de la definición previa. Us
 
 **Falta.** La prueba que decide en el README es el despliegue real en Streamlit Cloud. Necesita la cuenta del usuario y el repositorio en GitHub.
 
-## Cómo se corrió
-Se corrió con scripts de diagnóstico provisionales. **Pendiente:** pasarlos a `src/radar/nlp/` con pruebas sintéticas, como exige CLAUDE.md ("nada de scripts sueltos"), para que se puedan reproducir. Las semillas y las notas vistas quedan en `config/notas_vistas.csv`.
+## Cómo se corre
+```
+python -m radar.nlp.viabilidad emociones   # A (pip install -e ".[nlp]")
+python -m radar.nlp.viabilidad memoria     # B, D1: un proceso por configuración
+python -m radar.nlp.viabilidad d2          # B, D2 y el control del instrumento
+```
+Los resultados van a `data/processed/nlp/validacion.csv`. Los modelos se leen solo de la caché de Hugging Face (`HF_HUB_OFFLINE`), y sus nombres están en `config.py`. Pruebas sintéticas: `tests/nlp/test_viabilidad.py`.
+
+**Reproducibilidad de A.** El 31-oct se corrió con scripts provisionales, que sorteaban entre las notas no vistas. Con la misma semilla, hoy elegirían otras notas, porque las del 31-oct ya están vistas y "sobre El Niño" cambió con el recálculo. El módulo usa las notas que la semilla ya guardó en `config/notas_vistas.csv` y solo sortea si la semilla es nueva. A no se volvió a correr: repetirlo sería reusar notas vistas, y una semilla nueva gastaría 100 de las notas sin ver. La revisión cualitativa muestra el titular con la emoción del modelo, sin el archivo oculto de la propuesta original, porque la comparación a ciegas se descartó.
+
+**Comprobación del paso a `src/` (1-nov).** Criterio fijado antes: D2 igual con 4 decimales y memoria a ±5 % de lo medido el 31-oct. **Pasa.**
+- D2: NLI 0,7500 de etiquetas iguales, |Δp| mediana 0,1373; coseno mínimo de MiniLM 0,9738 y de e5 0,9946; control del instrumento 1,0000. El |Δp| ≤ 0,05 se da en 10,3 % de los pares.
+- Memoria: las 8 configuraciones quedan entre +1,1 % y +4,6 % del 31-oct (la mayor diferencia es e5 cuantizado solo: 0,816 frente a 0,78 GB), con las mismas decisiones.

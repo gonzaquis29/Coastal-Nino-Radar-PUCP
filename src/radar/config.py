@@ -16,6 +16,7 @@ DIR_RAW_NOTICIAS = DIR_RAW / "noticias"  # listas descubiertas y estado; nunca e
 DIR_NOTICIAS = DIR_DATOS / "processed" / "noticias"
 DIR_RAW_INEI = DIR_RAW / "inei"  # ubigeos descargados del INEI (la lista decidida queda en config/lugares.csv)
 DIR_REGION = DIR_DATOS / "processed" / "region"  # validación de la asignación de macro-región
+DIR_NLP = DIR_DATOS / "processed" / "nlp"  # vectores, conteos y validación del NLP (nunca la secuencia de lemas)
 
 # ---------------------------------------------------------------- fechas del proyecto (README, "Ventana de datos")
 LIMA = dt.timezone(dt.timedelta(hours=-5))  # el Perú no tiene horario de verano
@@ -45,6 +46,14 @@ URL_AVISOS_SENAMHI = URL_SENAMHI + "?p=aviso-meteorologico"
 # Ubigeos: WFS de la IDE del INEI (capas de límites "actualizado al 2023"; validado el 25-oct-2026)
 HOST_INEI_GIS = "geoespacial.inei.gob.pe"
 URL_WFS_INEI = f"https://{HOST_INEI_GIS}/geoserver/Interoperabilidad/ows"
+
+# ---------------------------------------------------------------- modelos (docs/nlp/viabilidad-modelos.md)
+MODELO_NLI = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"
+MODELOS_EMBEDDING = {
+    "minilm": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "e5": "intfloat/multilingual-e5-small",
+}
+MODELO_SPACY = "es_core_news_sm"
 
 # ---------------------------------------------------------------- red
 USER_AGENT = (
