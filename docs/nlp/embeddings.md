@@ -214,3 +214,23 @@ Query:" (en inglés, como recomienda su ficha; se declara); los demás, sin prom
 - pasada 3: qwen3, ~7 h.
 
 MiniLM y e5-small se recalculan en la pasada 1, porque B2, B5 y B7 necesitan puntajes que el 1-nov no guardó. Su B1 debe reproducir el E4 del 1-nov (control del instrumento, ± 0,005).
+
+## Resultado de B, pasada 1 (3-nov, provisional)
+Se leyeron 3.186 notas (1 con error de lectura) en 7,7 h; se había estimado ~6 h. Hubo 0 tramos truncados. **Control del instrumento: pasa.** MiniLM da 0,9129 y e5-small 0,9122, igual que el E4 del 1-nov.
+
+| Modelo | B1 (todo ENFEN) | B2 (vigente) | B3 | B4 citado | B5 exacto / ±1 | B6 repetido |
+|---|---|---|---|---|---|---|
+| mpnet | **0,929** (0,916-0,940) | 0,922 | pasa | 36/67 | 0,09 / 0,24 | 0,25 |
+| beto-es | 0,920 | **0,938** | pasa | 20/67 | 0,12 / 0,30 | 0,20 |
+| minilm | 0,913 | 0,910 | pasa | **40/67** | ver CSV | ver CSV |
+| e5-small | 0,912 | 0,874 | pasa | 31/67 | ver CSV | ver CSV |
+| e5-base | 0,902 | 0,898 | pasa | 32/67 | ver CSV | ver CSV |
+| granite-278m | 0,900 | 0,885 | pasa | 37/67 | 0,08 / 0,22 | 0,09 |
+| granite-107m | 0,887 | 0,885 | pasa | 32/67 | 0,10 / 0,27 | 0,07 |
+
+**Elección provisional según la regla: minilm.** El líder en B1, mpnet, no supera por 0,02 en B1 y en B2 a minilm, e5-small, e5-base ni beto-es. Entre esos cinco, el más rápido en A1 es minilm. Los dos granite quedan fuera.
+
+Lecturas críticas (informativas):
+- beto-es tiene el mejor B2, pero el peor B4 (McNemar frente a minilm, p = 0,0003). Reconoce el tema, pero no el comunicado.
+- En todos los modelos, el comunicado vigente exacto acierta poco (8-12 %).
+- mpnet concentra el 25 % de las notas en un solo párrafo.
