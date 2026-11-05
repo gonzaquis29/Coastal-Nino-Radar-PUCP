@@ -9,8 +9,8 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 - **NLP:** TF-IDF (no pasa T4) y embeddings (pasan con e5-small) hechos el 1-nov. **Sin empezar:** tópicos, capa 3, YouTube y Trends, y la app.
 
 ## Siempre (rutina hasta el corte del 20-nov)
-- Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. La última fue el 3-nov a las 19:42 (59 h después de la anterior), así que la próxima vence el **5-nov a las 19:42**. Un solo proceso a la vez pide páginas (`data/red.lock`): si un proceso largo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo.
-- Después: `python -m radar.noticias.historico` (solo notas nuevas) y `python -m radar.region.notas`. **Pendiente del 3-nov, junto con el `corpus` por el informe técnico N.° 19 del ENFEN: correrlos recién al terminar la pasada 3 de candidatos (punto 3b),** porque cambian las notas y los párrafos y las pasadas dejarían de ser comparables.
+- Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. La última fue el 5-nov a las 17:24, así que la próxima vence el **7-nov a las 17:24**. Un solo proceso a la vez pide páginas (`data/red.lock`): si un proceso largo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo.
+- Después: `python -m radar.noticias.historico` (solo notas nuevas) y `python -m radar.region.notas`. **Pendiente del 3-nov, junto con el `corpus` por el informe técnico N.° 19 y el aviso del comunicado N.° 19 del ENFEN (5-nov): correrlos recién al terminar la pasada 3 de candidatos (punto 3b),** porque cambian las notas y los párrafos y las pasadas dejarían de ser comparables.
 - Si la recolección avisa "Nuevo documento del ENFEN", correr `python -m radar.oficial.corpus` sin `--solo` (ver el punto 6.2).
 
 ## 1. Desbloquear YouTube y Trends (urgente: núcleo que no se recorta)
