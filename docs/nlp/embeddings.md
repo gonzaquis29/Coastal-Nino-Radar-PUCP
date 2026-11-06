@@ -234,3 +234,15 @@ Lecturas críticas (informativas):
 - beto-es tiene el mejor B2, pero el peor B4 (McNemar frente a minilm, p = 0,0003). Reconoce el tema, pero no el comunicado.
 - En todos los modelos, el comunicado vigente exacto acierta poco (8-12 %).
 - mpnet concentra el 25 % de las notas en un solo párrafo.
+
+## Resultado de B, pasada 2 (5-nov, provisional)
+Se leyeron las 3.191 notas de arctic-l y bge-m3. Quedan 3.189 notas comunes a todos los modelos: una nota de RPP sin texto, y una de Andina (1090297) que se leyó en la pasada 1 pero ya no está publicada. Por eso MiniLM baja de 0,9129 a 0,9128; el control del instrumento sigue pasando. Hubo 0 tramos truncados.
+
+| Modelo | B1 | B2 | B3 | B4 citado | B5 exacto / ±1 | B6 repetido |
+|---|---|---|---|---|---|---|
+| arctic-l | 0,916 (0,905-0,928) | 0,916 | pasa | 29/67 | 0,08 / 0,22 | 0,31 |
+| bge-m3 | 0,890 (0,876-0,906) | 0,886 | pasa | 35/67 | 0,08 / 0,22 | 0,17 |
+
+**La elección provisional sigue siendo minilm.** arctic-l empata con el líder, pero es 8 veces más lento en A1, acierta menos el comunicado citado (McNemar frente a minilm, p = 0,027) y tiene la mayor concentración en un solo párrafo (31 %). bge-m3 queda fuera por la regla de reemplazo. Falta la pasada 3 (qwen3).
+
+La duración real dependió de la memoria y de la corriente: unas 6 notas por minuto enchufada y con RAM libre; unas 2 con Chrome pesado o a batería. El 3-nov la paginación a disco explicó la lentitud (el proceso necesitaba 7,4 GB y solo tenía 2,6 GB en RAM).
