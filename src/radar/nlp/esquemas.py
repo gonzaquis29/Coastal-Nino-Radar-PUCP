@@ -31,5 +31,8 @@ PUNTAJES_CANDIDATO = (
 )  # fmt: skip
 
 
+RERANKER = ("medio", "id", "estrato", "positivo", "nueva", "con", "sin", "parrafo", "pares", "truncados", "error")
+
+
 def columnas_candidatos(modelos):
     return CANDIDATOS_BASE + tuple(f"{m}_{p}" for m in modelos for p in PUNTAJES_CANDIDATO)

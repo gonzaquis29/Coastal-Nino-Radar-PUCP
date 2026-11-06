@@ -272,3 +272,38 @@ Los dos límites superiores quedan por debajo de sus umbrales: 0,9307 frente a 0
 - **Modelo elegido: minilm**, con B1 0,913 y B2 0,909. Según la regla, ningún otro candidato lo reemplaza y es de los más rápidos en A1.
 - **Margen:** el de B1 es de solo 0,002. El descarte se apoya en el criterio fijado antes de correr la muestra y en que B2 también lo cumple.
 - **Límite de la muestra:** B4 de qwen3 solo tiene 9 notas de las 67 con comunicado citado, así que no permite compararlo con los demás. El descarte no lo usa.
+
+## Definición de C (aprobada el 6-nov): reemplaza a la del plan del 2-nov
+**Por qué cambia.** Medido antes de escribir el código:
+- Cada nota tiene un solo comunicado vigente, de 11 a 14 párrafos. "Los 10 mejores" casi no filtra.
+- B4 deja de medir al modelo: con el filtro de fecha da 59/67 en cuerpos y en texto corto, porque el comunicado citado es el vigente en esas 59 notas.
+- La app recibe texto corto, y ahí E4 no llega al mínimo de 0,90 con ningún modelo medido:
+
+| Modelo | E4 corto, vigentes | E3 corto, vigentes |
+|---|---|---|
+| minilm | 0,865 (0,845-0,883) | 0,870 |
+| mpnet | 0,873 (0,854-0,887) | 0,883 |
+| beto-es | 0,879 (0,862-0,893) | 0,877 |
+| e5-small | 0,795 (0,772-0,818) | 0,909 |
+
+**Alternativas:** el filtro por fecha ya es parte del semáforo; el filtro por `tipo` y la diversidad de párrafos se deciden en el semáforo si hay referencia. ColBERT se descarta porque añade complejidad sin una ventaja clara para unos 14 párrafos, y un LLM porque es de pago y lento. mDeBERTa no entra: detecta contradicción, no tema, y tiene un solo intento reservado para el índice.
+
+**Prueba.** Titular y resumen frente a los párrafos vigentes del ENFEN, sin leer cuerpos. Cada candidato puntúa todos los párrafos vigentes, así que en el semáforo reemplaza al bi-encoder. Candidatos: mmarco-mMiniLMv2, bge-reranker-v2-m3, mxbai-rerank-base-v2 y Qwen3-Reranker-0.6B, con la instrucción por defecto de cada uno.
+
+```bash
+python -m radar.nlp.reranker tiempo
+python -m radar.nlp.reranker puntuar minilm mmarco
+python -m radar.nlp.reranker criterios
+```
+
+| Paso | Qué se mide | Criterio |
+|---|---|---|
+| 1. Tiempo | 14 pares reales, en float32 | Hasta 2 s y 6 GB; si no cumple, no sigue |
+| 2. Decide | E4 en texto corto, con la lista de notas de B | minilm + 0,02 o más, con el límite inferior del IC sobre el superior de minilm |
+| 3. Debe pasar | E3 en texto corto | 0,80 o más |
+| 4. Confirma | Notas sobre El Niño que no estaban en B, frente al mismo control negativo | Debe superar a minilm |
+
+Si dos pasan, gana el más rápido. Si ninguno pasa, el semáforo sigue con minilm y se declara que su E4 en texto corto no llega a 0,90. El tipo de párrafo elegido es informativo (se toma de la variante sin términos en las notas sobre El Niño).
+
+**Límites:** el paso 4 reutiliza el control negativo, porque no hay otro. Estas pruebas miden el tema, no si se eligió el párrafo correcto; eso queda para E.
+

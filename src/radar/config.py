@@ -67,6 +67,12 @@ CANDIDATOS_EMBEDDING = {
     "bge-m3": "BAAI/bge-m3",
     "qwen3": "Qwen/Qwen3-Embedding-0.6B",
 }
+CANDIDATOS_RERANKER = {
+    "mmarco": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
+    "bge": "BAAI/bge-reranker-v2-m3",
+    "mxbai": "mixedbread-ai/mxbai-rerank-base-v2",
+    "qwen3": "Qwen/Qwen3-Reranker-0.6B",
+}
 MODELO_SPACY = "es_core_news_sm"
 
 # ---------------------------------------------------------------- red

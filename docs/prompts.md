@@ -406,3 +406,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 10. Entonces procede (la rutina atrasada).
 
 **Resultado:** la IA corrió `historico`, `region.notas` y `corpus`. Se leyeron 1.193 notas y el total llegó a 77.839. Revisó el control nuevo que no pasa: el PDF del comunicado N.° 19 cambió, pero sus párrafos no, y la baja viene de `pypdf`. Los dos controles del Senamhi siguen sin pasar, como antes de esta corrida.
+11. Procedemos a definir / vuelve a evaluarlo / sí, apruebo (C, reranker).
+
+**Resultado:** la IA midió que con el filtro de fecha B4 deja de medir al modelo y que el semáforo casi no necesita filtrar párrafos. En la reevaluación corrigió dos errores suyos: e5-small no es mejor en texto corto y mDeBERTa no debía entrar. Quedó una definición nueva para texto corto, con pasos y criterios fijados antes de correr, y el módulo `radar.nlp.reranker`.
