@@ -259,3 +259,16 @@ python -m radar.nlp.candidatos criterios
 - **Criterio:** qwen3 se descarta si el límite superior de su IC del 95 % queda por debajo de B1 < 0,9328 o de B2 < 0,9294 (minilm + 0,02). Los umbrales se calculan con el modelo elegido.
 - **Si no se descarta:** se termina la pasada completa (`leer --pasada 3`), que aprovecha lo ya leído.
 - **Orden:** `criterios` debe correr antes de `historico`, porque la muestra depende de la lista de notas.
+
+## Resultado de la pasada 3 (5-nov): qwen3 se descarta y B queda cerrada
+La muestra tomó 167 min, sin errores y con 0 tramos truncados. No hace falta terminar la pasada completa.
+
+| Modelo | B1 | B2 | B3 | B4 citado | B5 exacto / ±1 | B6 repetido |
+|---|---|---|---|---|---|---|
+| qwen3 (muestra) | 0,910 (0,886-0,931) | 0,901 (0,876-0,925) | pasa | 5/9 | 0,05 / 0,20 | 0,19 |
+
+Los dos límites superiores quedan por debajo de sus umbrales: 0,9307 frente a 0,9328 en B1 y 0,9247 frente a 0,9294 en B2. Basta con uno para descartarlo.
+
+- **Modelo elegido: minilm**, con B1 0,913 y B2 0,909. Según la regla, ningún otro candidato lo reemplaza y es de los más rápidos en A1.
+- **Margen:** el de B1 es de solo 0,002. El descarte se apoya en el criterio fijado antes de correr la muestra y en que B2 también lo cumple.
+- **Límite de la muestra:** B4 de qwen3 solo tiene 9 notas de las 67 con comunicado citado, así que no permite compararlo con los demás. El descarte no lo usa.

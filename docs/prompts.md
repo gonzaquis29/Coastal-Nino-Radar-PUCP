@@ -400,3 +400,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 8. Dime qué es lo que está faltando y si es realmente necesario ejecutar esta última prueba / actualiza el código, no lo ejecutes.
 
 **Resultado:** la IA calculó que qwen3 solo cambia la decisión con B1 y B2 cerca de 0,94 o más, y propuso medirlo en una muestra de 636 notas con un criterio de descarte fijado antes de correrla. Agregó `leer --muestra` y ese criterio a `criterios`, sin ejecutarlos.
+9. Procede a ejecutar el otro (la muestra de qwen3).
+
+**Resultado:** la IA leyó las 636 notas de la muestra y corrió `criterios`. qwen3 se descarta con el criterio fijado antes: el límite superior es 0,9307 en B1 (umbral 0,9328) y 0,9247 en B2 (umbral 0,9294). B queda cerrada con minilm.
