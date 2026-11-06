@@ -246,3 +246,16 @@ Se leyeron las 3.191 notas de arctic-l y bge-m3. Quedan 3.189 notas comunes a to
 **La elección provisional sigue siendo minilm.** arctic-l empata con el líder, pero es 8 veces más lento en A1, acierta menos el comunicado citado (McNemar frente a minilm, p = 0,027) y tiene la mayor concentración en un solo párrafo (31 %). bge-m3 queda fuera por la regla de reemplazo. Falta la pasada 3 (qwen3).
 
 La duración real dependió de la memoria y de la corriente: unas 6 notas por minuto enchufada y con RAM libre; unas 2 con Chrome pesado o a batería. El 3-nov la paginación a disco explicó la lentitud (el proceso necesitaba 7,4 GB y solo tenía 2,6 GB en RAM).
+
+## Pasada 3 con muestra (criterio fijado el 5-nov, antes de correrla)
+La pasada completa de qwen3 cuesta entre 9 y 18 h y mantiene detenidos `historico` y `corpus`. Por la regla de reemplazo, qwen3 solo cambia la decisión si supera a minilm por 0,02 en B1 y en B2. Se mide primero en una muestra:
+
+```bash
+python -m radar.nlp.candidatos leer --pasada 3 --muestra
+python -m radar.nlp.candidatos criterios
+```
+
+- **Muestra:** 300 notas al azar sobre El Niño y 300 de otros temas (semilla del proyecto). Se leen además las 36 del control positivo que quedan fuera, solo para B3. En total son 636 notas: unas 2-4 h.
+- **Criterio:** qwen3 se descarta si el límite superior de su IC del 95 % queda por debajo de B1 < 0,9328 o de B2 < 0,9294 (minilm + 0,02). Los umbrales se calculan con el modelo elegido.
+- **Si no se descarta:** se termina la pasada completa (`leer --pasada 3`), que aprovecha lo ya leído.
+- **Orden:** `criterios` debe correr antes de `historico`, porque la muestra depende de la lista de notas.

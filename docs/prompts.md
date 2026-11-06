@@ -397,3 +397,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 **Resultado:**
 - La IA escribió el mapa de alternativas (papeles, restricciones y tipos de enfoque con su veredicto; candidatos de varias fuentes). Al revisarlo encontró que el filtro con titulares no predice el resultado en cuerpos, que la comparación con todo el ENFEN no es la que hará el semáforo (que usa lo vigente) y que la duración de B no estaba medida. Corrigió el plan.
 - Con la prueba A (`radar.nlp.candidatos tiempo`) encontró que la lentitud de granite y Qwen3 venía de cargarlos en bfloat16. Pasan los 10 candidatos. Dejó escrito el código de B, que falta probar.
+8. Dime qué es lo que está faltando y si es realmente necesario ejecutar esta última prueba / actualiza el código, no lo ejecutes.
+
+**Resultado:** la IA calculó que qwen3 solo cambia la decisión con B1 y B2 cerca de 0,94 o más, y propuso medirlo en una muestra de 636 notas con un criterio de descarte fijado antes de correrla. Agregó `leer --muestra` y ese criterio a `criterios`, sin ejecutarlos.

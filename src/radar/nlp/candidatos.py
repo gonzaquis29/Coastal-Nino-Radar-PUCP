@@ -4,6 +4,7 @@ Uso: python -m radar.nlp.candidatos tiempo             # A: tiempo por consulta,
      python -m radar.nlp.candidatos medir NOMBRE       # proceso hijo de A: imprime la medida de un candidato
      python -m radar.nlp.candidatos leer --pasada N    # B: pide páginas; lee los cuerpos en memoria y guarda solo los
                                                        # puntajes de la pasada; se puede cortar y relanzar
+     python -m radar.nlp.candidatos leer --pasada 3 --muestra  # B: solo la muestra, para decidir si se descarta
      python -m radar.nlp.candidatos criterios          # B: sin red, con las pasadas que haya
 """
 
@@ -12,6 +13,7 @@ import collections
 import json
 import logging
 import os
+import random
 import statistics
 import subprocess
 import sys
@@ -143,6 +145,7 @@ PASADAS = {
     3: ("qwen3",),
 }
 MARGEN_REEMPLAZO = 0.02  # en B1 y B2, sin solape de los IC del 95 %
+MUESTRA_POR_ESTRATO = 300  # notas al azar por estrato de E4 para decidir si un candidato se descarta (5-nov)
 REFERENCIA_1NOV = {"minilm": 0.9129, "e5-small": 0.9122}  # E4 del 1-nov: control del instrumento
 TOLERANCIA_REFERENCIA = 0.005
 
@@ -225,10 +228,29 @@ def fila_candidatos(nota, estrato, campos, cargados, parrafos_enfen, positivos):
     return fila
 
 
-def leer(pasada, parar, limite=None):
+def clave_muestra(todo, n=MUESTRA_POR_ESTRATO):
+    """{(medio, id)} al azar, n por estrato de E4. Con la misma lista de notas sale siempre igual, así que hay que
+    correr criterios antes de que el histórico agregue notas."""
+    azar = random.Random(f"{config.SEMILLA_MUESTRAS}-candidatos")
+    claves = set()
+    for estrato in (ESTRATO_NINO, embeddings.ESTRATO_NEGATIVO):
+        grupo = sorted((nota["medio"], nota["id"]) for nota, e in todo if e == estrato)
+        claves.update(azar.sample(grupo, min(n, len(grupo))))
+    return claves
+
+
+def de_la_muestra(todo, positivos):
+    """Las notas de la muestra y todo el control positivo, que necesita B3 (B1 y B2 usan solo la muestra)."""
+    claves = clave_muestra(todo)
+    return [(nota, e) for nota, e in todo if (nota["medio"], nota["id"]) in claves | positivos.keys()]
+
+
+def leer(pasada, parar, limite=None, muestra=False):
     notas = leer_csv(config.DIR_NOTICIAS / "notas.csv")
     todo = embeddings.corpus(notas, leer_csv(config.DIR_NOTICIAS / "control_negativo.csv"))
     positivos, parrafos_enfen = embeddings.positivas(notas), embeddings.parrafos_enfen()
+    if muestra:
+        todo = de_la_muestra(todo, positivos)
     parrafos = leer_csv(config.DIR_OFICIAL / "parrafos.csv")
     cargados = {}
     for nombre in PASADAS[pasada]:
@@ -339,6 +361,12 @@ def elegir(medidas, consulta):
     return min(empatados, key=lambda m: consulta.get(m, float("inf"))), empatados
 
 
+def descartable(medida, referencia):
+    """Un modelo medido en la muestra no puede desplazar a la referencia: para hacerlo tendría que superarla por el
+    margen en B1 y en B2, y el límite superior de su IC no llega en alguna de las dos."""
+    return any(medida[c][1][1] < referencia[c][0] + MARGEN_REEMPLAZO for c in ("b1", "b2"))
+
+
 def consultas_a():
     ruta = config.DIR_NLP / "validacion.csv"
     filas = leer_csv(ruta) if ruta.exists() else []
@@ -347,24 +375,35 @@ def consultas_a():
 
 def criterios():
     unidas, modelos = filas_unidas()
-    notas = {(n["medio"], n["id"]): n for n in leer_csv(config.DIR_NOTICIAS / "notas.csv")}
+    lista_notas = leer_csv(config.DIR_NOTICIAS / "notas.csv")
+    notas = {(n["medio"], n["id"]): n for n in lista_notas}
+    todo = embeddings.corpus(lista_notas, leer_csv(config.DIR_NOTICIAS / "control_negativo.csv"))
     parrafos_enfen = embeddings.parrafos_enfen()
     doc = {p["id"]: p["doc_id"] for p in parrafos_enfen}
     cuerpos = [f for f in unidas.values() if not f["error"]]
     faltan = [str(p) for p in PASADAS if not archivo_pasada(p).exists()]
+    parciales = {
+        m
+        for p, nombres in PASADAS.items()
+        if archivo_pasada(p).exists() and len(tfidf.leidos(archivo_pasada(p))) < len(todo)
+        for m in nombres
+    }
+    muestra = clave_muestra(todo) if parciales else set()
     nino, otros = embeddings.es(ESTRATO_NINO), embeddings.es(embeddings.ESTRATO_NEGATIVO)
-    medidas, informativos, aciertos = {}, [], {}
+    medidas, informativos, aciertos, leidas = {}, [], {}, {}
     for m in modelos:
         b3 = semaforos(cuerpos, m)
+        filas = [f for f in cuerpos if (f["medio"], f["id"]) in muestra] if m in parciales else cuerpos
+        leidas[m] = {(f["medio"], f["id"]) for f in filas if f.get(f"{m}_con_max")}
         medidas[m] = {
-            "b1": auc_de(cuerpos, f"{m}_sin_max", nino, otros),
-            "b2": auc_de(cuerpos, f"{m}_vig_sin_max", nino, otros),
+            "b1": auc_de(filas, f"{m}_sin_max", nino, otros),
+            "b2": auc_de(filas, f"{m}_vig_sin_max", nino, otros),
             "b3": all(f["pasa"] for f in b3),
         }
-        aciertos[m] = citado(cuerpos, m, notas, doc)
-        exacto, cerca = vigencia(cuerpos, m, notas, parrafos_enfen)
-        repetido, definicion = concentracion(cuerpos, m, parrafos_enfen)
-        b7 = auc_de(cuerpos, f"{m}_todo_sin_max", nino, otros)
+        aciertos[m] = citado(filas, m, notas, doc)
+        exacto, cerca = vigencia(filas, m, notas, parrafos_enfen)
+        repetido, definicion = concentracion(filas, m, parrafos_enfen)
+        b7 = auc_de(filas, f"{m}_todo_sin_max", nino, otros)
         for nombre, (valor, ic) in (("B1 E4 cuerpos, todo el ENFEN", medidas[m]["b1"]),
                                     ("B2 E4 cuerpos, ENFEN vigente", medidas[m]["b2"]),
                                     ("B7 E4 cuerpos, 865 párrafos", b7)):  # fmt: skip
@@ -378,10 +417,31 @@ def criterios():
             criterio(INFO_B, f"B6 párrafo más repetido / definicion ({m})", f"{repetido} / {definicion}", "", True),
         ]
     consulta = consultas_a()
-    elegido, empatados = elegir(medidas, consulta)
+    completos = {m: x for m, x in medidas.items() if m not in parciales}
+    elegido, empatados = elegir(completos, consulta)
     truncados = sum(int(f.get(f"{m}_truncados") or 0) for f in cuerpos for m in modelos)
-    provisional = f" (provisional: faltan las pasadas {', '.join(faltan)})" if faltan else ""
     resultado = [criterio(PRUEBA_B, "tramos truncados", truncados, 0, not truncados)]
+    abiertos = list(faltan)
+    for m in sorted(parciales):
+        pendientes = len(muestra - leidas[m] - {(f["medio"], f["id"]) for f in unidas.values() if f["error"]})
+        se_descarta = bool(elegido) and not pendientes and descartable(medidas[m], medidas[elegido])
+        if not se_descarta:
+            abiertos.append(m)
+        if elegido:
+            b1, b2, ref = medidas[m]["b1"], medidas[m]["b2"], medidas[elegido]
+            resultado.append(
+                criterio(
+                    PRUEBA_B,
+                    f"{m} en la muestra: se descarta si no puede desplazar a {elegido}",
+                    f"B1 {b1[0]} (hasta {b1[1][1]}), B2 {b2[0]} (hasta {b2[1][1]})",
+                    f"B1 < {ref['b1'][0] + MARGEN_REEMPLAZO:.4f} o B2 < {ref['b2'][0] + MARGEN_REEMPLAZO:.4f}",
+                    se_descarta,
+                    f"{pendientes} notas de la muestra sin leer"
+                    if pendientes
+                    else "si no se descarta, hay que terminar la pasada",
+                )
+            )
+    provisional = f" (provisional: falta {', '.join(abiertos)})" if abiertos else ""
     resultado += [
         criterio(
             PRUEBA_B,
@@ -401,7 +461,8 @@ def criterios():
             "pasa B3; regla de reemplazo",
             elegido is not None,
             f"empatados con el líder {empatados}; A1 {({m: consulta.get(m) for m in empatados})}; "
-            f"B1 {({m: x['b1'][0] for m, x in medidas.items()})}; B2 {({m: x['b2'][0] for m, x in medidas.items()})}",
+            f"B1 {({m: x['b1'][0] for m, x in completos.items()})}; "
+            f"B2 {({m: x['b2'][0] for m, x in completos.items()})}",
         )
     )
     if elegido:
@@ -414,9 +475,9 @@ def criterios():
 
 
 @exclusivo("radar.nlp.candidatos")
-def _leer_exclusivo(pasada, parar, limite):
+def _leer_exclusivo(pasada, parar, limite, muestra):
     with sin_suspension():
-        return leer(pasada, parar, limite)
+        return leer(pasada, parar, limite, muestra)
 
 
 def main(argv=None):
@@ -425,6 +486,7 @@ def main(argv=None):
     ap.add_argument("nombre", nargs="?", choices=tuple(config.CANDIDATOS_EMBEDDING), help="solo con medir")
     ap.add_argument("--pasada", type=int, choices=tuple(PASADAS), help="con leer")
     ap.add_argument("--limite", type=int, help="con leer: como máximo N notas por medio (ensayo corto)")
+    ap.add_argument("--muestra", action="store_true", help="con leer: solo la muestra, para decidir si se descarta")
     args = ap.parse_args(argv)
     if args.paso == "medir":  # proceso hijo: solo imprime la medida
         print(json.dumps(medir(args.nombre)))
@@ -436,7 +498,7 @@ def main(argv=None):
     config.DIR_NLP.mkdir(parents=True, exist_ok=True)
     try:
         if args.paso == "leer":
-            filas = _leer_exclusivo(args.pasada, parar, args.limite)
+            filas = _leer_exclusivo(args.pasada, parar, args.limite, args.muestra)
         else:
             filas = prueba_tiempo() if args.paso == "tiempo" else criterios()
     except KeyboardInterrupt:

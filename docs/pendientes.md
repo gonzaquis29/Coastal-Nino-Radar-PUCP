@@ -10,7 +10,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 
 ## Siempre (rutina hasta el corte del 20-nov)
 - Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. La última fue el 5-nov a las 17:24, así que la próxima vence el **7-nov a las 17:24**. Un solo proceso a la vez pide páginas (`data/red.lock`): si un proceso largo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo.
-- Después: `python -m radar.noticias.historico` (solo notas nuevas) y `python -m radar.region.notas`. **Pendiente del 3-nov, junto con el `corpus` por el informe técnico N.° 19 y el aviso del comunicado N.° 19 del ENFEN (5-nov): correrlos recién al terminar la pasada 3 de candidatos (punto 3b),** porque cambian las notas y los párrafos y las pasadas dejarían de ser comparables.
+- Después: `python -m radar.noticias.historico` (solo notas nuevas) y `python -m radar.region.notas`. **Pendiente del 3-nov, junto con el `corpus` por el informe técnico N.° 19 y el aviso del comunicado N.° 19 del ENFEN (5-nov): correrlos recién al cerrar B de candidatos (punto 3b),** porque cambian las notas y los párrafos, y las pasadas dejarían de ser comparables.
 - Si la recolección avisa "Nuevo documento del ENFEN", correr `python -m radar.oficial.corpus` sin `--solo` (ver el punto 6.2).
 
 ## 1. Desbloquear YouTube y Trends (urgente: núcleo que no se recorta)
@@ -48,10 +48,10 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 1. ~~**Red de enlaces y citas**~~ Hecha el 1-nov: `python -m radar.redes.enlaces` ([redes/enlaces.md](redes/enlaces.md)). R1 pasa; R2 no pasa para Indeci, Cenepred y PCM, porque Exitosa enlaza palabras genéricas a esos sitios (SEO), no porque falten patrones. Se vuelve a correr después del recálculo final.
 2. ~~**Preprocesamiento y TF-IDF**~~ Hecho el 1-nov: `python -m radar.nlp.tfidf` ([nlp/tfidf.md](nlp/tfidf.md)). **No pasa T4:** el AUC frente al control negativo es 0,80 (umbral 0,90). Las notas que hablan poco de El Niño, como las de medidas del Gobierno, no se parecen léxicamente a los párrafos del ENFEN. La lectura del corpus toma 23 min, así que no hace falta atar las etapas a una sola lectura.
 3. ~~**Embeddings**~~ Hechos el 1-nov: `python -m radar.nlp.embeddings` ([nlp/embeddings.md](nlp/embeddings.md)). **Pasa con e5-small**, que empata con MiniLM en E4 (0,912 frente a 0,799 del TF-IDF); el semáforo del README se puede calibrar (E3: 0,951 en cuerpos y 0,901 en titulares, sin cruce), y e5 cuantizado da lo mismo. **Para el semáforo (semana 3):** un párrafo de definiciones del ENFEN es el más parecido para el 11,5 % de las notas (hubness), así que hay que decidir si los párrafos de `definicion` entran en la comparación. Se vuelve a correr después del recálculo final.
-3b. **Comparación de candidatos de embedding (plan del 2-nov, [nlp/embeddings.md](nlp/embeddings.md#plan-de-pruebas-2-nov-por-aprobar)).** A está hecha: pasan los 10. **Para retomar:**
-   1. Escribir las pruebas sintéticas de B (`radar.nlp.candidatos`: `puntajes_candidato`, `vigencia`, `concentracion`, `mcnemar`, `elegir`) y hacer el ensayo corto `python -m radar.nlp.candidatos leer --pasada 1 --limite 1`.
-   2. Correr las pasadas, cada una de noche y sin chocar con la recolección diaria: `python -m radar.nlp.candidatos leer --pasada 1` (~6 h), luego `--pasada 2` (~8 h) y `--pasada 3` (~7 h). Si se cortan, al relanzarlas siguen desde donde quedaron.
-   3. `python -m radar.nlp.candidatos criterios` (sin red) después de cada pasada; la elección es provisional hasta la pasada 3.
+3b. **Comparación de candidatos de embedding ([nlp/embeddings.md](nlp/embeddings.md)).** A y las pasadas 1 y 2 de B están hechas; elección provisional: minilm. **Para retomar:**
+   1. `python -m radar.nlp.candidatos leer --pasada 3 --muestra` (636 notas, unas 2-4 h; 3 ya leídas).
+   2. `python -m radar.nlp.candidatos criterios`, antes de `historico`. Si qwen3 no se descarta, terminar con `leer --pasada 3`.
+   3. Con B cerrada, correr la rutina atrasada (`historico`, `region.notas`, `corpus`).
    4. Después, C (reranker), D (híbrido) y E (recall@k), según el plan.
 4. **Tópicos (LDA y BERTopic) y polaridad de las notas:** la polaridad se valida con el kappa frente a un zero-shot independiente (README). El cuerpo se parte en tramos de 128 tokens para robertuito.
 5. **Capa 3 del índice (afirmaciones):** definida y aprobada ([nlp/discrepancia.md](nlp/discrepancia.md)). Conviene empezarla esta semana porque está en el camino crítico del índice.

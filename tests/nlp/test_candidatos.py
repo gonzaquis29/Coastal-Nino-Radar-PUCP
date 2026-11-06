@@ -144,3 +144,30 @@ def test_elegir_reemplaza_solo_si_supera_en_b1_y_b2():
     medidas = {"lider": _m(0.95, 0.90), "otro": _m(0.90, 0.90)}  # supera en B1 pero no en B2: empatan
     assert candidatos.elegir(medidas, {"otro": 0.01, "lider": 0.1})[0] == "otro"
     assert candidatos.elegir({"a": _m(0.9, 0.9, False)}, {}) == (None, [])
+
+
+def _todo():
+    notas = [({"medio": "m", "id": str(i)}, "sobre_nino") for i in range(500)]
+    notas += [({"medio": "m", "id": f"o{i}"}, "otros_temas") for i in range(400)]
+    return notas + [({"medio": "m", "id": "c"}, "cercano")]
+
+
+def test_muestra_por_estrato_y_repetible():
+    claves = candidatos.clave_muestra(_todo(), n=50)
+    assert claves == candidatos.clave_muestra(list(reversed(_todo())), n=50)
+    assert sum(i.startswith("o") for _, i in claves) == 50 and len(claves) == 100
+    assert ("m", "c") not in claves
+
+
+def test_la_lectura_de_la_muestra_agrega_el_control_positivo():
+    todo = _todo()
+    fuera = next(k for k in (("m", str(i)) for i in range(500)) if k not in candidatos.clave_muestra(todo))
+    claves = {(n["medio"], n["id"]) for n, _ in candidatos.de_la_muestra(todo, {fuera: {"x"}})}
+    assert fuera in claves and len(claves) == len(candidatos.clave_muestra(todo)) + 1
+
+
+def test_descartable_si_el_limite_no_llega_en_b1_o_en_b2():
+    referencia = _m(0.91, 0.91)
+    assert not candidatos.descartable(_m(0.93, 0.93), referencia)  # llega en las dos: hay que terminar la pasada
+    assert candidatos.descartable(_m(0.89, 0.93), referencia)
+    assert candidatos.descartable(_m(0.93, 0.89), referencia)
