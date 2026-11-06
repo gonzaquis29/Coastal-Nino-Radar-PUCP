@@ -286,7 +286,7 @@ def elegir(medidas, base, tiempos):
 
 def tiempos_validados():
     filas = leer_csv(config.DIR_NLP / "validacion.csv")
-    return {f["criterio"]: float(f["valor"]) for f in filas if f["prueba"] == PRUEBA_TIEMPO and f["pasa"] == "True"}
+    return {f["criterio"]: float(f["valor"]) for f in filas if f["prueba"] == PRUEBA_TIEMPO and es_si(f["pasa"])}
 
 
 def tipos_elegidos(filas, parrafos):

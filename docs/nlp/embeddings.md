@@ -307,3 +307,21 @@ Si dos pasan, gana el más rápido. Si ninguno pasa, el semáforo sigue con mini
 
 **Límites:** el paso 4 reutiliza el control negativo, porque no hay otro. Estas pruebas miden el tema, no si se eligió el párrafo correcto; eso queda para E.
 
+## Resultado de C (6-nov): ningún reranker pasa y el semáforo sigue con minilm
+| Candidato | Paso 1: consulta / memoria | E4 corto | E3 corto | Notas nuevas |
+|---|---|---|---|---|
+| mmarco-mMiniLMv2 | 0,44 s / 1,4 GB | 0,418 (0,388-0,448) | 0,678 | 0,483 |
+| bge-reranker-v2-m3 | 6,19 s / 3,15 GB | no sigue | | |
+| mxbai-rerank-base-v2 | 12,23 s / 2,79 GB | no sigue | | |
+| Qwen3-Reranker-0.6B | 14,00 s / 3,23 GB | no sigue | | |
+| **minilm (base)** | | **0,860 (0,841-0,878)** | **0,864** | **0,903** |
+
+Se puntuaron 2.936 notas (146 nuevas), sin errores y sin pares truncados. El control del instrumento pasa por poco: 0,8602 frente a 0,8651 ± 0,005. La diferencia con la medición previa viene de unir titular y resumen con un salto de línea, como la consulta de la prueba A.
+
+- **El AUC bajo no es un error de la prueba.** El signo es correcto (par relevante 9,1; irrelevante -7,2), un párrafo consigo mismo da 10,6 y una muestra de 100 + 100 notas reproduce el CSV exactamente. En esa muestra, con términos, el AUC es 0,53.
+- **Lectura:** el máximo sobre los párrafos vigentes es alto también en notas de otros temas (mediana 3,25, frente a 1,38 en las de El Niño). No sirve como medida de cercanía al tema. La causa exacta no se investigó.
+- **Límite:** los otros tres candidatos quedaron fuera por tiempo, así que no se sabe cómo separan los temas.
+- **Declarado:** el E4 de minilm en texto corto (0,860) no llega a 0,90. Hay que considerarlo al calibrar el semáforo en la semana 3.
+- **Informativo, tipo de párrafo elegido:** minilm elige `recomendacion` en el 48 % de las notas sobre El Niño; mmarco, `pronostico` en el 44 %. No hay referencia para saber cuál acierta.
+- **Sigue abierto:** el reranker en la recuperación del agente (P2) se mide en E.
+

@@ -124,3 +124,18 @@ def test_medidas_de_separa_nuevas_y_antiguas():
     ]
     m = reranker.medidas_de(filas)
     assert m["e4"][0] == 1.0 and m["nuevas"][0] == 0.0
+
+
+def test_tiempos_validados_lee_como_guarda_validacion(tmp_path, monkeypatch):
+    from radar.noticias.viabilidad import criterio, guardar
+
+    monkeypatch.setattr(config, "DIR_NLP", tmp_path)
+    guardar(
+        [
+            criterio(reranker.PRUEBA_TIEMPO, "a", 0.5, "", True),
+            criterio(reranker.PRUEBA_TIEMPO, "b", 6.0, "", False),
+            criterio(reranker.PRUEBA_TIEMPO, "c", "falló", "", False),
+        ],
+        tmp_path / "validacion.csv",
+    )
+    assert reranker.tiempos_validados() == {"a": 0.5}

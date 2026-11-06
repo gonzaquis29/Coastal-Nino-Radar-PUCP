@@ -409,3 +409,7 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 11. Procedemos a definir / vuelve a evaluarlo / sí, apruebo (C, reranker).
 
 **Resultado:** la IA midió que con el filtro de fecha B4 deja de medir al modelo y que el semáforo casi no necesita filtrar párrafos. En la reevaluación corrigió dos errores suyos: e5-small no es mejor en texto corto y mDeBERTa no debía entrar. Quedó una definición nueva para texto corto, con pasos y criterios fijados antes de correr, y el módulo `radar.nlp.reranker`.
+12. Pregunta sobre usar LLM abiertos, en local o por API gratuita; podrías investigar mientras se ejecuta.
+
+**Resultado:** la IA corrigió que un LLM local no es de pago y revisó las páginas oficiales: las API gratuitas alcanzan para un piloto de F, no para el semáforo ni para enviar cuerpos. No se usó ningún LLM. C terminó sin reranker adoptado. La revisión detectó un error de la IA: `criterios` no leía los tiempos guardados y elegía sin evaluar. Lo corrigió con una prueba y comprobó que el AUC bajo de mMiniLM no venía de la prueba.
+
