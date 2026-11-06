@@ -403,3 +403,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 9. Procede a ejecutar el otro (la muestra de qwen3).
 
 **Resultado:** la IA leyó las 636 notas de la muestra y corrió `criterios`. qwen3 se descarta con el criterio fijado antes: el límite superior es 0,9307 en B1 (umbral 0,9328) y 0,9247 en B2 (umbral 0,9294). B queda cerrada con minilm.
+10. Entonces procede (la rutina atrasada).
+
+**Resultado:** la IA corrió `historico`, `region.notas` y `corpus`. Se leyeron 1.193 notas y el total llegó a 77.839. Revisó el control nuevo que no pasa: el PDF del comunicado N.° 19 cambió, pero sus párrafos no, y la baja viene de `pypdf`. Los dos controles del Senamhi siguen sin pasar, como antes de esta corrida.
