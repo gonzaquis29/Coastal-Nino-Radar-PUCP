@@ -402,3 +402,30 @@ Si dos pasan, gana el más rápido. Si ninguno pasa, `buscar_oficial` usa minilm
 
 **Límites:** son preguntas artificiales, no de usuarios reales. Ya se vieron minilm y BM25 en @1, @5 y @10, pero no en @3. No mide si la respuesta final del agente es buena.
 
+## Resultado de E (7-nov): ningún candidato reemplaza a minilm
+1.827 preguntas (A 285, B 639, C 903), 14 candidatos, sin errores. Acierto@3:
+
+| Candidato | Promedio | A | B | C | Consulta | Motivo |
+|---|---|---|---|---|---|---|
+| **minilm (base)** | **0,789** | **0,825** | 0,958 | 0,584 | 0,012 s | |
+| granite-107m | 0,911 | 0,758 | 0,987 | 0,988 | 0,011 s | retrocede en A |
+| granite-278m | 0,904 | 0,747 | 0,977 | 0,989 | 0,031 s | retrocede en A |
+| arctic-l | 0,890 | 0,726 | 0,998 | 0,946 | 0,094 s | retrocede en A |
+| qwen3 | 0,872 | 0,751 | 0,992 | 0,872 | 0,202 s | retrocede en A |
+| bge-m3 | 0,862 | 0,702 | 0,991 | 0,894 | 0,092 s | retrocede en A |
+| mmarco (reranker) | 0,858 | 0,681 | 0,997 | 0,897 | 0,525 s | retrocede en A |
+| e5-small | 0,844 | 0,737 | 0,987 | 0,808 | 0,017 s | retrocede en A |
+| e5-base | 0,834 | 0,712 | 0,992 | 0,797 | 0,037 s | no mejora 0,05 |
+| mpnet | 0,834 | 0,807 | 0,981 | 0,713 | 0,029 s | no mejora 0,05 |
+| fusión de rangos | 0,767 | 0,828 | 0,950 | 0,523 | 0,020 s | no mejora |
+| TF-IDF | 0,749 | 0,747 | 0,958 | 0,540 | 0,002 s | no mejora |
+| BM25 | 0,697 | 0,772 | 0,947 | 0,372 | 0,002 s | no mejora |
+| beto-es | 0,676 | 0,709 | 0,833 | 0,485 | 0,029 s | no mejora |
+
+Azar@3: A 0,335, B 0,559, C 0,131. minilm supera el mínimo (azar + 0,10) en los tres grupos, así que `buscar_oficial` usa minilm y no hace falta cargar otro modelo.
+
+- **TF-IDF frente a embeddings (README):** minilm supera a TF-IDF (0,789 frente a 0,749; McNemar p = 0,0022).
+- **Lo que se juega en A:** siete candidatos mejoran mucho el promedio gracias a C (aviso por día; granite-107m pasa de 0,584 a 0,988), pero pierden entre 0,07 y 0,14 en A, las preguntas sobre el ENFEN. La regla de no retroceder protege justo el grupo central del proyecto.
+- **El grupo C con metadatos:** minilm acierta poco el día exacto (0,224 en el primer lugar). Las consultas por día se resolverían mejor con `aviso_dias` y la fecha que extrae el agente.
+- **Límites:** son preguntas artificiales, y A tiene solo 5 temas con 3 redacciones cada uno. Ese retroceso puede depender de cómo están redactadas, pero la regla no se cambia después de medir.
+

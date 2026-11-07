@@ -417,5 +417,4 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 **Resultado:** la IA midió que la fusión de rangos del plan no sirve para comparar notas (26 valores distintos en 2.777) y propuso una regla única de fusión de puntajes, con criterios fijados antes de medirla. Escribió `radar.nlp.hibrido`. El híbrido no se adopta: E4 de 0,866 frente al mínimo de 0,880.
 14. Sí, defínela / sí, apruebo (E, recall@k).
 
-**Resultado:** la IA midió que el filtro de fecha deja pocos párrafos y que recall@5 discrimina poco, y propuso decidir con acierto@3 frente al azar, con preguntas por plantilla sacadas de los metadatos. Escribió `radar.nlp.recuperador`.
-
+**Resultado:** la IA midió que el filtro de fecha deja pocos párrafos y que recall@5 discrimina poco, y propuso decidir con acierto@3 frente al azar, con preguntas por plantilla sacadas de los metadatos. Escribió `radar.nlp.recuperador`. Ningún candidato reemplaza a minilm: los que mejoran el promedio retroceden en las preguntas sobre el ENFEN.
