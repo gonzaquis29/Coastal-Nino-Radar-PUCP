@@ -13,7 +13,44 @@ def test_conversion_de_plazos_conocidos(texto, fecha, esperado):
 def test_plazo_sin_anio_toma_la_proxima_vez():
     assert a.plazos("se extendería hasta marzo", "2026-10-01") == ["2027-03"]
     assert a.plazos("se extendería hasta diciembre", "2026-10-01") == ["2026-12"]
-    assert a.plazos("hasta el próximo año", "2026-10-01") == ["2027-12"]
+    assert a.plazos("hasta el próximo año", "2026-10-01") == ["2027"]
+
+
+def test_plazo_de_solo_anio_y_su_comparacion():
+    assert a.plazos("El ENFEN mantiene la alerta hasta 2027", "2026-06-01") == ["2027"]
+    assert a.mismo_plazo("2027", "2027-02") and a.mismo_plazo("2027-02", "2027")
+    assert not a.mismo_plazo("2027", "2026-12") and not a.mismo_plazo("2027-03", "2027-02")
+
+
+def test_plazo_solo_si_va_pegado_a_el_nino():
+    assert a.plazos("El Niño traería lluvias intensas que podrían extenderse hasta marzo", "2026-08-01") == []
+    assert a.plazos("El calor en la costa alcanzará récords hasta el 2027", "2026-08-01") == []
+    assert a.plazos("Las lluvias llegarán, pero El Niño seguiría hasta marzo", "2026-08-01") == ["2027-03"]
+
+
+@pytest.mark.parametrize(
+    ("frase", "esperado"),
+    [
+        ("El Enfen descarta por ahora un Niño de magnitud muy fuerte.", True),
+        ("Es prematuro afirmar un Niño muy fuerte.", True),
+        ("El Niño no evolucionará a magnitud extraordinaria.", True),
+        ("No se descarta un Niño extraordinario.", False),
+        ("El Niño sería fuerte, sin descartar que sea extraordinario.", False),
+        ("El Niño sería fuerte.", False),
+    ],
+)
+def test_negada(frase, esperado):
+    assert a.negada(frase) is esperado
+
+
+def test_comunicado_pasado_es_historico():
+    assert (
+        a.momento("En su comunicado oficial de julio, el ENFEN indicó que El Niño seguiría.", "2026-09-26")
+        == "historico"
+    )
+    texto = "En su comunicado extraordinario de enero de 2026, el ENFEN cambió el estado."
+    assert a.momento(texto, "2026-09-08") == "historico"
+    assert a.momento("En su comunicado de agosto, el ENFEN prevé un Niño fuerte.", "2026-09-08") == "actual"
 
 
 @pytest.mark.parametrize(
@@ -79,8 +116,8 @@ def test_modalidad(frase, esperado):
 
 
 def test_momento_cita_y_explicativa():
-    assert a.momento("El Niño de 1997-1998 fue extraordinario.") == "historico"
-    assert a.momento("El Niño de 2026 sería fuerte, como en 1998.") == "actual"
+    assert a.momento("El Niño de 1997-1998 fue extraordinario.", "2026-08-01") == "historico"
+    assert a.momento("El Niño de 2026 sería fuerte, como en 1998.", "2026-08-01") == "actual"
     assert a.es_cita("El ENFEN dijo: «El Niño costero se mantendrá fuerte».")
     assert not a.es_cita("El ENFEN usa la palabra «fuerte».")
     assert a.explicativa("El Niño es un fenómeno de calentamiento del mar.")

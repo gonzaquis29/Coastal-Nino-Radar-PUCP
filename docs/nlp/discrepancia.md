@@ -34,7 +34,7 @@ Pilotos fuera del repositorio, con notas reales leídas en memoria y sin guardar
 |------|-----------------|--------|
 | 1. Texto limpio | Cuerpo en líneas y sin bloques ajenos (`noticias/nota.py`) | **Hecha** (28-oct): [../noticias/texto.md](../noticias/texto.md) |
 | 2. Corpus oficial limpio | Sin encabezados de tabla; `tipo` y `region_enso` por párrafo (`oficial/`) | **Hecha** (28-oct): [../oficial/definicion.md](../oficial/definicion.md) |
-| 3. Frases y afirmaciones | Qué dato afirma cada frase, quién lo dice, de cuándo, con qué seguridad | **Definida** (abajo), sin construir; la regla de magnitud ya está hecha ([magnitud.md](magnitud.md)) |
+| 3. Frases y afirmaciones | Qué dato afirma cada frase, quién lo dice, de cuándo, con qué seguridad | **Hecha** (7-nov): estado y magnitud pasan; plazo no pasa (0,882) |
 | 4. Referencia oficial | Comunicado vigente y anterior de cada nota, con datos comparables (plazos en mes y año) | Por definir; `radar.oficial.vigencia.Corpus` ya da el vigente |
 | 5. Comparación | Reglas por dato + distancia (+ NLI acotado) → índice y semáforo | Por definir; evaluación descrita abajo |
 
@@ -83,6 +83,29 @@ Las notas nuevas para esa validación son ~170:
 - **Atribución:** pasa a la frase siguiente del mismo párrafo ("Según el ENFEN… Además, …"). Dentro de "tercero" se marca "otro país" (por ejemplo, Ecuador).
 - **Muestra de validación:** son ~150 notas. Las 30 que citan un comunicado sin ver (el recálculo del 31-oct dejó 30, no 52), más 30 por medio de las que nombran al ENFEN. El 90 % se cumple con la estimación puntual, y el intervalo de Wilson se reporta.
 - **Fuera de alcance:** el nivel de los avisos del Senamhi (rojo, naranja) que citan las notas. Queda para la capa 5, con la distancia.
+
+**Resultado (7-nov).** Código: `radar.nlp.afirmaciones` (`muestra` y `validar`, con `--ronda a|b`). Salida: `data/processed/nlp/afirmaciones.csv`, sin el texto de las frases.
+
+| Criterio | Ronda a (150 notas) | Ronda b (99 notas, tras los arreglos) |
+|---|---|---|
+| Conversión de plazos (15 casos) | 15/15 | 15/15 |
+| Estado en los textos oficiales | 33/33 | 33/33 |
+| Frases de más de 60 palabras | 1,3 % | 1,3 % |
+| Estado atribuido al ENFEN | 63/64 (0,984) | 19/19 (1,000; IC 0,83–1,00) |
+| Magnitud atribuida al ENFEN | 116/128 (0,906) | 62/63 (0,984; IC 0,92–1,00) |
+| **Plazo atribuido al ENFEN** | 91/104 (0,875) **no pasa** | 30/34 (0,882; IC 0,73–0,95) **no pasa** |
+
+- **Ronda a:** de 25 desacuerdos, 15 eran de extracción. Se corrigieron con 4 arreglos:
+  1. marca `negada` ("descarta", "prematuro afirmar"), que no se evalúa;
+  2. plazo de solo año ("hasta 2027"), que se compara por año;
+  3. relato de un comunicado de dos o más meses atrás, que cuenta como histórico;
+  4. plazo solo si va pegado a El Niño y no a lluvias o calor.
+
+  Los otros 10 eran diferencias reales: un vocero que dice más que el comunicado, o notas que redondean.
+- **Ronda b:** ninguno de los 4 desacuerdos de plazo es un error de extracción.
+  - 2 son del vocero del ENFEN ("se expandiría hasta mayo de 2027", cuando el comunicado decía "hasta el verano").
+  - 2 vienen de la referencia: el comunicado N.° 09 da el plazo como rango ("moderada entre mayo y agosto"), y la regla solo lee "hasta …".
+- **Sin notas reservadas por ver:** las de la ronda b eran todas las que quedaban. Llegan ~1,5 por día.
 
 ## Capa 5: cómo se evalúa (para definir en detalle)
 Cada método se evalúa con los mismos conjuntos, con criterios fijados antes y los umbrales calibrados con datos aparte:

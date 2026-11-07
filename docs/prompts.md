@@ -421,4 +421,7 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 15. Sí, defínelo / vuelve a evaluarlo / sí, apruebo (punto 4, tópicos y polaridad).
 
 **Resultado:** la IA propuso y corrigió la definición: BERTopic con KMeans para tener el mismo k que LDA, c_v con la nota como ventana, estabilidad entre semillas y kappa frente a un zero-shot en notas nuevas. Escribió `radar.nlp.topicos`. Se elige BERTopic k=12; LDA es inestable; la polaridad no pasa P2 (κ 0,12) y queda descriptiva.
+16. Sí, mejor de una vez, siempre validando y analizando… / sí, apruebo (x2) (capa 3).
+
+**Resultado:** la IA revisó la definición con notas ya vistas, propuso 6 ajustes y escribió `radar.nlp.afirmaciones`. Validó con 150 notas nuevas, diagnosticó los desacuerdos, propuso 4 arreglos y los volvió a validar con otras 99. Estado y magnitud pasan; el plazo no (0,882).
 

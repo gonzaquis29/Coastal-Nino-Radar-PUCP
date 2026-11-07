@@ -40,6 +40,7 @@ FRASES_LARGAS_MAXIMO = 0.02
 ESTADO_OFICIAL_MINIMO = 0.95
 ACIERTO_MINIMO = 0.90
 SEMILLA = "capa3-validacion-7nov"
+RONDAS = {"a": SEMILLA, "b": "capa3-validacion-7nov-b"}  # b: tras los 4 arreglos del 7-nov
 POR_MEDIO = 30
 Z_WILSON = 1.96
 
@@ -142,12 +143,35 @@ def plazo_de(m, fecha):
         solo = m.group("anio_solo").lower()
         proximo = (m.group("rel") or "").lower().startswith("pr")
         a = int(solo) if solo.isdigit() else (anio or fecha.year + proximo)
-        mes = (1, 6, 12)[mod] if mod is not None else 12
+        if mod is None:  # "hasta 2027": solo el año (arreglo del 7-nov)
+            return f"{a:04d}"
+        mes = (1, 6, 12)[mod]
     return f"{a:04d}-{mes:02d}"
 
 
+# El plazo cuenta solo si va pegado a El Niño (arreglo del 7-nov): "lluvias que podrían extenderse hasta marzo" no
+ANCLA_PLAZO = re.compile(r"Niño|evento|fen[óo]meno|condici[óo]n|magnitud|alerta|vigilancia|calentamiento|nivel"
+                         r"|intensidad|anomal", re.I)  # fmt: skip
+CLIMA_PLAZO = re.compile(r"lluvi|precipitaci|caudal|crecid|viento|olea|temperatura|calor|fr[íi]o|sequ[íi]a|huaico"
+                         r"|emergencia|declaratoria|bono|vigencia|plazo|medida", re.I)  # fmt: skip
+PALABRAS_ANTES_DEL_PLAZO = 10
+
+
+def anclado(antes):
+    """En las palabras previas a "hasta", lo último que se nombra es El Niño (o su grado) y no un fenómeno del clima."""
+    ventana = " ".join(antes.split()[-PALABRAS_ANTES_DEL_PLAZO:])
+    clima = [m.start() for m in CLIMA_PLAZO.finditer(ventana)]
+    ancla = [m.start() for m in ANCLA_PLAZO.finditer(ventana)]
+    return not clima or (bool(ancla) and ancla[-1] > clima[-1])
+
+
 def plazos(frase, fecha):
-    return [plazo_de(m, fecha) for m in PLAZO.finditer(frase)]
+    return [plazo_de(m, fecha) for m in PLAZO.finditer(frase) if anclado(frase[: m.start()])]
+
+
+def mismo_plazo(a, b):
+    """Iguales, o uno es solo un año y el otro cae en ese año."""
+    return a == b or (len(a) == 4 or len(b) == 4) and a[:4] == b[:4]
 
 
 # ---------------------------------------------------------------- probabilidad y región
@@ -225,8 +249,36 @@ def es_cita(frase):
     return any(len(m.group(1).split()) >= PALABRAS_CITA for m in CITA.finditer(frase))
 
 
-def momento(frase):
-    """Histórico si habla de un Niño pasado y no nombra los años del evento actual ("como en 1998" compara)."""
+# "En su comunicado de julio, el ENFEN indicó…": cuenta un comunicado pasado (arreglo del 7-nov)
+COMUNICADO_PASADO = re.compile(rf"\b(?:comunicados?|bolet[íi]n(?:es)?|informes?|reportes?)\b[^.;]{{0,40}}?\b(?:de|del)"
+                               rf"\s+(?P<mes>{_MES})\b(?:\s+(?:de|del)\s+(?P<anio>20\d\d))?", re.I)  # fmt: skip
+MESES_ATRAS_PASADO = 2  # el de hace un mes puede seguir vigente; desde dos meses atrás ya es pasado
+
+# "Enfen descarta un Niño muy fuerte", "es prematuro afirmar…": la frase niega el dato (arreglo del 7-nov)
+NEGACION = re.compile(r"\bdescart\w*|\bprematuro\b|\bno\s+(?:existen?|hay|habr[áa]|se\s+prev[ée]|se\s+espera"
+                      r"|evolucionar[íi]?[áa]|alcanzar[íi]?[áa]|llegar[íi]?[áa]|ser[íi]?[áa]|tendr[íi]?[áa]"
+                      r"|pasar[íi]?[áa])\b", re.I)  # fmt: skip
+
+
+def negada(frase):
+    """Niega un dato; "no se descarta" y "sin descartar" son lo posible, no una negación."""
+    return bool(NEGACION.search(enfen.POSIBLE.sub(" ", frase)))
+
+
+def _cuenta_pasado(frase, fecha):
+    hoy = dt.date.fromisoformat(fecha[:10])
+    for m in COMUNICADO_PASADO.finditer(frase):
+        anio = int(m.group("anio")) if m.group("anio") else hoy.year
+        if (hoy.year - anio) * 12 + hoy.month - MESES[m.group("mes").lower()] >= MESES_ATRAS_PASADO:
+            return True
+    return False
+
+
+def momento(frase, fecha):
+    """Histórico si cuenta un comunicado pasado, o si habla de un Niño pasado sin nombrar los años del actual
+    ("como en 1998" compara)."""
+    if _cuenta_pasado(frase, fecha):
+        return "historico"
     if ANIO_ACTUAL.search(frase):
         return "actual"
     return "historico" if HISTORICO.search(frase) or ANIO.search(frase) else "actual"
@@ -278,7 +330,8 @@ def afirmaciones(titular, resumen, cuerpo, fecha):
         salida.append({
             "frase": n, "origen": origen, "sha1_frase": sha1_corto(frase), "palabras": len(frase.split()), **d,
             "region": region(frase), "atribucion": fuente, "heredada": heredada, "otro_pais": pais,
-            "cita": es_cita(frase), "momento": momento(frase), "modalidad": modalidad(frase),
+            "cita": es_cita(frase), "momento": momento(frase, fecha), "modalidad": modalidad(frase),
+            "negada": negada(frase),
             "explicativa": explicativa(frase), "_texto": frase,
         })  # fmt: skip
     return salida
@@ -334,11 +387,12 @@ def comparables(corpus, fecha):
 
 
 def evaluable(a):
-    """Afirmación atribuida al ENFEN, de la costa o sin región, actual, no explicativa ni pregunta."""
+    """Afirmación atribuida al ENFEN, de la costa o sin región, actual, no negada, no explicativa ni pregunta."""
     return (
         a["atribucion"] == "enfen"
         and a["region"] in ("costa", "ambigua")
         and a["momento"] == "actual"
+        and not a.get("negada")
         and not a["explicativa"]
         and a["modalidad"] != "pregunta"
     )
@@ -351,7 +405,7 @@ def comparar(a, refs):
     plazos_ = set().union(*(r["plazos"] for r in refs)) if refs else set()
     salida = [("estado", a["estado"], a["estado"] in estados)] if a["estado"] else []
     salida += [("magnitud", m, m in mags) for m in dict.fromkeys(a["magnitudes"])]
-    salida += [("plazo", p, p in plazos_) for p in dict.fromkeys(a["plazos"])]
+    salida += [("plazo", p, any(mismo_plazo(p, x) for x in plazos_)) for p in dict.fromkeys(a["plazos"])]
     return salida
 
 
@@ -461,12 +515,20 @@ def muestra(notas, vistas):
                                                                SEMILLA, nombre)]  # fmt: skip
 
 
-def elegir_muestra():
-    if viabilidad.registrada(SEMILLA):
-        log.info(f"La muestra {SEMILLA} ya está en notas_vistas.csv; no se elige otra.")
+def muestra_b(notas, vistas):
+    """Ronda b, tras los arreglos: todas las reservadas que siguen sin ver."""
+    return sorted((n for n in notas if reservada_capa3(n) and (n["medio"], n["id"]) not in vistas),
+                  key=lambda n: (n["medio"], n["id"]))  # fmt: skip
+
+
+def elegir_muestra(ronda):
+    semilla = RONDAS[ronda]
+    if viabilidad.registrada(semilla):
+        log.info(f"La muestra {semilla} ya está en notas_vistas.csv; no se elige otra.")
         return []
-    elegidas = muestra(leer_csv(config.DIR_NOTICIAS / "notas.csv"), notas_vistas())
-    marcar_vistas(elegidas, SEMILLA)
+    elegir = muestra if ronda == "a" else muestra_b
+    elegidas = elegir(leer_csv(config.DIR_NOTICIAS / "notas.csv"), notas_vistas())
+    marcar_vistas(elegidas, semilla)
     log.info(f"Muestra: {len(elegidas)} · {collections.Counter(n['medio'] for n in elegidas)}")
     return []
 
@@ -495,10 +557,10 @@ def fila_validacion(nota, campos, corpus, refs):
 
 
 @exclusivo("radar.nlp.afirmaciones")
-def _validar(parar):
-    elegidas = set(viabilidad.registrada(SEMILLA))
+def _validar(parar, ronda):
+    elegidas = set(viabilidad.registrada(RONDAS[ronda]))
     if not elegidas:
-        raise SystemExit("Falta la muestra: python -m radar.nlp.afirmaciones muestra")
+        raise SystemExit(f"Falta la muestra: python -m radar.nlp.afirmaciones muestra --ronda {ronda}")
     notas = [n for n in leer_csv(config.DIR_NOTICIAS / "notas.csv") if (n["medio"], n["id"]) in elegidas]
     corpus = Corpus()
     refs = referencia(corpus)
@@ -528,12 +590,13 @@ def _guardar_y_resumir(nota, campos, corpus, refs, filas):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Capa 3: frases y afirmaciones.")
     ap.add_argument("paso", choices=("muestra", "validar"))
+    ap.add_argument("--ronda", choices=tuple(RONDAS), default="b", help="a: primera validación; b: tras los arreglos")
     args = ap.parse_args(argv)
-    registro = configurar(f"nlp-afirmaciones-{args.paso}")
+    registro = configurar(f"nlp-afirmaciones-{args.paso}-{args.ronda}")
     inicio, parar = ahora(), threading.Event()
     config.DIR_NLP.mkdir(parents=True, exist_ok=True)
     try:
-        filas = elegir_muestra() if args.paso == "muestra" else _validar(parar)
+        filas = elegir_muestra(args.ronda) if args.paso == "muestra" else _validar(parar, args.ronda)
     except KeyboardInterrupt:
         parar.set()
         return 1
