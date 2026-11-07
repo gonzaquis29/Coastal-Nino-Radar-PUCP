@@ -21,6 +21,7 @@ dev = ["pytest>=8.0", "ruff>=0.6"]
 nlp = [
     "spacy>=3.8", "pysentimiento>=0.7.3", "onnxruntime>=1.23", "numpy>=2.0", "scipy>=1.13", "scikit-learn>=1.5",
     "networkx>=3.3", "psutil>=5.9", "streamlit>=1.40", "sentence-transformers>=5.0",
+    "gensim>=4.4", "bertopic>=0.17.4", "umap-learn>=0.5.12",
 ]
 
 [tool.setuptools.packages.find]

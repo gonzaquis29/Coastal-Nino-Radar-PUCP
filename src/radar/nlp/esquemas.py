@@ -42,5 +42,23 @@ RECUPERADOR = ("id", "grupo", "primero", "en5", "oro", "candidatos", "tiempo_s",
 RECUPERADOR_PREGUNTAS = ("id", "grupo", "pregunta", "fecha", "oro")
 
 
+# punto 4: tópicos y polaridad (radar.nlp.topicos). zs_* solo en la muestra de P2
+TOPICOS_LECTURA = (
+    "medio", "id", "estrato", "sha1_cuerpo", "n_palabras", "error", "lemas", "vector", "pol_tramos", "pol_truncados",
+    "pol_negativo", "pol_neutral", "pol_positivo", "zs_tramos", "zs_negativo", "zs_neutral", "zs_positivo",
+)  # fmt: skip
+TOPICOS_GRILLA = ("metodo", "k", "semilla", "cv", "vacios", "estable", "palabras")
+TOPICOS_NOTAS = ("medio", "id", "topico", "polaridad")
+_POLARIDADES = ("pol_negativo", "pol_neutral", "pol_positivo")
+
+
+def topicos_nombres(medios):
+    return ("topico", "n", "palabras", "categoria", *[f"medio_{m}" for m in medios], *_POLARIDADES)
+
+
+def topicos_agregados(k):
+    return ("dimension", "valor", "n", *[f"topico_{t}" for t in range(k)], *_POLARIDADES)
+
+
 def columnas_candidatos(modelos):
     return CANDIDATOS_BASE + tuple(f"{m}_{p}" for m in modelos for p in PUNTAJES_CANDIDATO)
