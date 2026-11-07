@@ -361,3 +361,14 @@ Si no pasa, el semáforo sigue solo con minilm y el híbrido queda para medirse 
 
 **Límites:** BM25 solo ya se vio, y por eso se eligió dividirlo por largo; la combinación no se midió antes de fijar los criterios. La prueba mide el tema, no si se eligió el párrafo correcto. El corpus offline (P3) sigue con minilm sobre cuerpos.
 
+## Resultado de D (6-nov): no se adopta y el semáforo sigue solo con minilm
+| | E4 corto (decide) | E3 corto | Notas nuevas | Consulta / memoria |
+|---|---|---|---|---|
+| minilm (base) | 0,860 (0,841-0,878) | 0,864 | 0,903 | |
+| **Híbrido** | **0,866 (0,848-0,882)** | 0,896 | 0,939 | 0,031 s / 1,47 GB |
+
+No llega a 0,880 y su IC se solapa con el de minilm. Se puntuaron 2.936 notas y 400 de referencia, sin errores, y el coseno coincide con el de la base (diferencia máxima 0,000005).
+
+- **E3 y las notas nuevas mejoran, pero no deciden:** el criterio se fijó en E4 y no se cambia después de medir. Esas dos mejoras tampoco tienen una prueba de significancia.
+- **Sigue abierto:** el híbrido en la recuperación del agente se mide en E. Para el semáforo solo se volvería a considerar con una definición nueva y datos que no se hayan visto.
+
