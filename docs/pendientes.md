@@ -9,7 +9,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 - **NLP:** TF-IDF (no pasa T4) y embeddings (pasan con e5-small) hechos el 1-nov. **Sin empezar:** tópicos, capa 3, YouTube y Trends, y la app.
 
 ## Siempre (rutina hasta el corte del 20-nov)
-- Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. La última fue el 5-nov a las 17:24, así que la próxima vence el **7-nov a las 17:24**. Un solo proceso a la vez pide páginas (`data/red.lock`): si un proceso largo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo.
+- Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. La última fue el 7-nov a las 09:49, así que la próxima vence el **9-nov a las 09:49**. Un solo proceso a la vez pide páginas (`data/red.lock`): si un proceso largo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo.
 - Después: `python -m radar.noticias.historico` (solo notas nuevas) y `python -m radar.region.notas`. Última rutina con `corpus`: 6-nov, con 77.839 notas. El PDF del comunicado N.° 19 del ENFEN cambió el 1-nov, pero sus datos y párrafos quedan iguales. Su control con `pypdf` baja a 0,974 (umbral 0,98) por ruido de ese extractor: repite el encabezado y separa palabras.
 - Si la recolección avisa "Nuevo documento del ENFEN", correr `python -m radar.oficial.corpus` sin `--solo` (ver el punto 6.2).
 
