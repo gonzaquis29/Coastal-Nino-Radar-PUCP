@@ -38,5 +38,9 @@ HIBRIDO = ("medio", "id", "estrato", "positivo", "nueva", "con", "sin", "cos_con
 HIBRIDO_REFERENCIA = ("medio", "id", "cos_con", "bm25_con", "cos_sin", "bm25_sin", "error")
 
 
+RECUPERADOR = ("id", "grupo", "primero", "en5", "oro", "candidatos", "tiempo_s", "pico_gb")
+RECUPERADOR_PREGUNTAS = ("id", "grupo", "pregunta", "fecha", "oro")
+
+
 def columnas_candidatos(modelos):
     return CANDIDATOS_BASE + tuple(f"{m}_{p}" for m in modelos for p in PUNTAJES_CANDIDATO)

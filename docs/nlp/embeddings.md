@@ -372,3 +372,33 @@ No llega a 0,880 y su IC se solapa con el de minilm. Se puntuaron 2.936 notas y 
 - **E3 y las notas nuevas mejoran, pero no deciden:** el criterio se fijó en E4 y no se cambia después de medir. Esas dos mejoras tampoco tienen una prueba de significancia.
 - **Sigue abierto:** el híbrido en la recuperación del agente se mide en E. Para el semáforo solo se volvería a considerar con una definición nueva y datos que no se hayan visto.
 
+## Definición de E (aprobada el 6-nov)
+**Punto de partida.** `buscar_oficial` filtra por fecha, y eso deja de 13 a 43 párrafos (mediana 21). Con tan pocos, acertar entre los 5 primeros por azar ya es probable (azar@5 de 0,21 a 0,76), así que se decide con acierto@3. Medición previa de las bases:
+
+| Grupo | n | Azar@5 | minilm @1 / @5 | BM25 @1 / @5 |
+|---|---|---|---|---|
+| A. ENFEN por tipo | 95 | 0,44 | 0,56 / 0,84 | 0,48 / 0,76 |
+| B. Aviso por tipo y región | 213 | 0,76 | 0,75 / 0,995 | 0,73 / 0,97 |
+| C. Aviso por día | 316 | 0,21 | 0,13 / 0,77 | 0,08 / 0,62 |
+
+**Oro:** sale de los metadatos (`tipo`, región, fecha), sin etiquetado manual. Por eso E mide la búsqueda por texto y no un filtro por esos campos, que acertaría por construcción. Las preguntas son 3 redacciones fijas por plantilla (`radar.nlp.recuperador`), escritas antes de medir.
+
+**Candidatos:** los 10 bi-encoders, TF-IDF, BM25, fusión de rangos de minilm y BM25, y mmarco sobre todos los párrafos vigentes. Se compara cada uno con minilm, que ya está cargado para el semáforo.
+
+```bash
+python -m radar.nlp.recuperador correr
+python -m radar.nlp.recuperador criterios
+```
+
+| Paso | Qué se mide | Criterio |
+|---|---|---|
+| 1. Mínimo | El elegido | Acierto@3 al menos 0,10 sobre el azar en cada grupo |
+| 2. Decide | Promedio de acierto@3 entre A, B y C, con el mismo peso | Reemplaza a minilm con 0,05 o más de mejora |
+| 3. Significancia | McNemar pareado frente a minilm | p < 0,0038 (0,05 entre 13 comparaciones) |
+| 4. Sin retroceso | Cada grupo | Ninguno cae más de 0,05 |
+| 5. Tiempo | Consulta y memoria | Hasta 2 s y 6 GB |
+
+Si dos pasan, gana el más rápido. Si ninguno pasa, `buscar_oficial` usa minilm. Si el elegido no alcanza el mínimo en un grupo, ese tipo de consulta debe resolverse con metadatos. Son informativos el acierto@1, 5 y 10, recall@5 y MRR.
+
+**Límites:** son preguntas artificiales, no de usuarios reales. Ya se vieron minilm y BM25 en @1, @5 y @10, pero no en @3. No mide si la respuesta final del agente es buena.
+
