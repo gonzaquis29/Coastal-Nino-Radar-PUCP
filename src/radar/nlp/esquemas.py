@@ -34,5 +34,9 @@ PUNTAJES_CANDIDATO = (
 RERANKER = ("medio", "id", "estrato", "positivo", "nueva", "con", "sin", "parrafo", "pares", "truncados", "error")
 
 
+HIBRIDO = ("medio", "id", "estrato", "positivo", "nueva", "con", "sin", "cos_con", "cos_sin", "parrafo", "error")
+HIBRIDO_REFERENCIA = ("medio", "id", "cos_con", "bm25_con", "cos_sin", "bm25_sin", "error")
+
+
 def columnas_candidatos(modelos):
     return CANDIDATOS_BASE + tuple(f"{m}_{p}" for m in modelos for p in PUNTAJES_CANDIDATO)

@@ -325,3 +325,39 @@ Se puntuaron 2.936 notas (146 nuevas), sin errores y sin pares truncados. El con
 - **Informativo, tipo de párrafo elegido:** minilm elige `recomendacion` en el 48 % de las notas sobre El Niño; mmarco, `pronostico` en el 44 %. No hay referencia para saber cuál acierta.
 - **Sigue abierto:** el reranker en la recuperación del agente (P2) se mide en E.
 
+## Definición de D (aprobada el 6-nov): reemplaza a la del plan del 2-nov
+**Por qué cambia.** Medido antes de escribir el código, en texto corto y con párrafos vigentes:
+
+| Medición | E4 | E3 | Notas nuevas |
+|---|---|---|---|
+| minilm (base) | 0,860 (0,841-0,878) | 0,864 | 0,903 |
+| BM25 | 0,732 (0,708-0,755) | 0,861 | 0,887 |
+| BM25 dividido por largo de la consulta | 0,770 (0,747-0,789) | | 0,912 |
+| Fusión de rangos del plan (k = 60) | 0,654 (0,625-0,678) | | 0,720 |
+
+La fusión de rangos da solo 26 valores distintos en 2.777 notas: usa posiciones, no cuánto se parece el texto, y por eso no sirve para comparar notas entre sí. Se puede medir en E, donde solo hay que ordenar párrafos. El plan original tampoco aplica porque B no guardó los puntajes por párrafo y la app recibe texto corto. BM25 y minilm no dicen lo mismo (Spearman 0,54).
+
+**Alternativas descartadas:** pesos aprendidos (se ajustarían con las etiquetas que los evalúan), SPLADE (otro modelo pesado) y TF-IDF en lugar de BM25 (ya probado: E4 de 0,80 en cuerpos).
+
+**Regla única, sin ajustes después de medir:**
+1. Para cada párrafo vigente, el coseno de minilm y BM25 dividido por el largo de la consulta (k1 = 1,5; b = 0,75; IDF de los 264 párrafos del ENFEN).
+2. Cada puntaje se normaliza con la media y la desviación de sus máximos en el estrato `cercano`, que no entra en E4 ni en E3.
+3. Se suman con el mismo peso; el puntaje de la nota es el máximo entre los párrafos.
+
+```bash
+python -m radar.nlp.hibrido puntuar
+python -m radar.nlp.hibrido tiempo
+python -m radar.nlp.hibrido criterios
+```
+
+| Paso | Qué se mide | Criterio |
+|---|---|---|
+| 1. Decide | E4 en texto corto | minilm + 0,02 o más, con límite inferior del IC sobre el superior de minilm (0,880 y 0,878) |
+| 2. Debe pasar | E3 en texto corto | 0,80 o más |
+| 3. Confirma | Las 146 notas nuevas | Debe superar a minilm (0,903) |
+| 4. Debe pasar | Tiempo y memoria en la consulta | Hasta 2 s y 6 GB |
+
+Si no pasa, el semáforo sigue solo con minilm y el híbrido queda para medirse en E.
+
+**Límites:** BM25 solo ya se vio, y por eso se eligió dividirlo por largo; la combinación no se midió antes de fijar los criterios. La prueba mide el tema, no si se eligió el párrafo correcto. El corpus offline (P3) sigue con minilm sobre cuerpos.
+

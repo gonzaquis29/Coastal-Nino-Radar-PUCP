@@ -412,4 +412,7 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 12. Pregunta sobre usar LLM abiertos, en local o por API gratuita; podrías investigar mientras se ejecuta.
 
 **Resultado:** la IA corrigió que un LLM local no es de pago y revisó las páginas oficiales: las API gratuitas alcanzan para un piloto de F, no para el semáforo ni para enviar cuerpos. No se usó ningún LLM. C terminó sin reranker adoptado. La revisión detectó un error de la IA: `criterios` no leía los tiempos guardados y elegía sin evaluar. Lo corrigió con una prueba y comprobó que el AUC bajo de mMiniLM no venía de la prueba.
+13. Sí, defínela / sí, apruebo (D, híbrido).
+
+**Resultado:** la IA midió que la fusión de rangos del plan no sirve para comparar notas (26 valores distintos en 2.777) y propuso una regla única de fusión de puntajes, con criterios fijados antes de medirla. Escribió `radar.nlp.hibrido`.
 
