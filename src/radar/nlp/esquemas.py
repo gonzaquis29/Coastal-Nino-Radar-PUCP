@@ -60,5 +60,14 @@ def topicos_agregados(k):
     return ("dimension", "valor", "n", *[f"topico_{t}" for t in range(k)], *_POLARIDADES)
 
 
+# capa 3 (radar.nlp.afirmaciones): una fila por afirmación, sin el texto de la frase
+AFIRMACIONES = (
+    "medio", "id", "frase", "origen", "sha1_frase", "palabras", "magnitudes", "magnitudes_posibles", "estado",
+    "plazos", "probabilidades", "region", "atribucion", "heredada", "otro_pais", "cita", "momento", "modalidad",
+    "explicativa",
+)  # fmt: skip
+AFIRMACIONES_LECTURA = ("medio", "id", "fecha", "error", "frases", "largas", "afirmaciones")
+
+
 def columnas_candidatos(modelos):
     return CANDIDATOS_BASE + tuple(f"{m}_{p}" for m in modelos for p in PUNTAJES_CANDIDATO)

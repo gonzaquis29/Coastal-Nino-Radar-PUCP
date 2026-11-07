@@ -74,6 +74,16 @@ Las notas nuevas para esa validación son ~170:
 - La magnitud y el plazo de `comunicados.csv` salen de las mismas reglas aplicadas al texto oficial, así que compararlos sobre ese texto es solo un chequeo de regresión.
 - Las marcas (histórico, otra agencia, explicativa) no tienen referencia externa: su efecto se mide en la capa 5, viendo si bajan las falsas alarmas (7 de las 8 de las reglas por dato venían de esas categorías) sin perder detección.
 
+**Ajustes aprobados el 7-nov.** Salen de revisar la definición con 139 notas reservadas ya vistas, sin usar notas nuevas:
+- **Afirmaciones:** en las notas que citan un comunicado o nombran al ENFEN hay ~3 por nota, y 1,6 atribuidas al ENFEN en la misma frase. Las frases de más de 60 palabras son el 1,6 %.
+- **Estado:** solo cuenta como valor de El Niño ("estado de Alerta de El Niño Costero", "cambia el estado a Vigilancia"; en "de X a Y" vale Y). "Sistema de alerta", las alertas roja, naranja o amarilla y las de otros países no son el estado: en titulares y resúmenes, solo 43 de 245 frases con "alerta" o "vigilancia" lo eran.
+- **Plazo en mes y año:** cada estación termina en un mes fijo (verano → marzo, otoño → junio, invierno → septiembre, primavera → diciembre). Con "inicios", "mediados" o "fines" va al primer, segundo o último mes. Sin año, vale la próxima estación o el próximo mes desde la fecha del texto.
+- **Magnitud y plazo frente al comunicado:** aciertan si están entre los que menciona para la costa el comunicado vigente o el anterior. El N.° 19 dice "hasta fines de otoño de 2027" en el titular y "magnitud extraordinaria hasta febrero de 2027" en el cuerpo, y `comunicados.csv` guarda solo uno.
+- **Probabilidad:** se extrae, pero no se valida. La tabla oficial está solo en 4 de los 20 comunicados (N.° 13 a 16).
+- **Atribución:** pasa a la frase siguiente del mismo párrafo ("Según el ENFEN… Además, …"). Dentro de "tercero" se marca "otro país" (por ejemplo, Ecuador).
+- **Muestra de validación:** son ~150 notas. Las 30 que citan un comunicado sin ver (el recálculo del 31-oct dejó 30, no 52), más 30 por medio de las que nombran al ENFEN. El 90 % se cumple con la estimación puntual, y el intervalo de Wilson se reporta.
+- **Fuera de alcance:** el nivel de los avisos del Senamhi (rojo, naranja) que citan las notas. Queda para la capa 5, con la distancia.
+
 ## Capa 5: cómo se evalúa (para definir en detalle)
 Cada método se evalúa con los mismos conjuntos, con criterios fijados antes y los umbrales calibrados con datos aparte:
 
