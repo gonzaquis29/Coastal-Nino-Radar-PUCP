@@ -418,3 +418,7 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 14. Sí, defínela / sí, apruebo (E, recall@k).
 
 **Resultado:** la IA midió que el filtro de fecha deja pocos párrafos y que recall@5 discrimina poco, y propuso decidir con acierto@3 frente al azar, con preguntas por plantilla sacadas de los metadatos. Escribió `radar.nlp.recuperador`. Ningún candidato reemplaza a minilm: los que mejoran el promedio retroceden en las preguntas sobre el ENFEN.
+15. Sí, defínelo / vuelve a evaluarlo / sí, apruebo (punto 4, tópicos y polaridad).
+
+**Resultado:** la IA propuso y corrigió la definición: BERTopic con KMeans para tener el mismo k que LDA, c_v con la nota como ventana, estabilidad entre semillas y kappa frente a un zero-shot en notas nuevas. Escribió `radar.nlp.topicos`. Se elige BERTopic k=12; LDA es inestable; la polaridad no pasa P2 (κ 0,12) y queda descriptiva.
+
