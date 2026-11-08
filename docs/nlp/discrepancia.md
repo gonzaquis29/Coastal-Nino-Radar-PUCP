@@ -357,7 +357,14 @@ python -m radar.nlp.semaforo validar     # S1 a S6 (pide páginas para los 100 c
 - **S2 en cuerpo (1,000) y S4 son fáciles.** Las notas de Andina que citan un comunicado lo resumen casi al pie de la letra, y cada comunicado repite mucho del anterior. Solo descartan un fallo grueso. El lado positivo no tiene una muestra nueva independiente: el control limpio son 30 notas ya vistas.
 - **S5 se apoya solo en los positivos de la calibración.** Ninguno de los 100 negativos nuevos tenía afirmaciones evaluables. Es un control de integración: el color de la capa 5 llega intacto.
 - **La separación es de tema, no de alineación** (como E3 y E4): una nota sobre El Niño que habla de otro aspecto puede salir intermedia o lejana. Por eso lo lejano es gris, no rojo. El E4 de minilm en texto corto (0,860) sigue debajo de 0,90 y se declara.
-- **Informativo:** en los 30 positivos, la capa 5 da 24 verdes, 3 amarillas, 2 rojas y 1 sin afirmaciones. En los 100 cuerpos nuevos, 76 grises, 18 amarillos y 6 verdes, y el párrafo más parecido es de `recomendacion` en 51.
+- **Informativo:** en los 30 positivos, la capa 5 da 24 verdes, 3 amarillas, 2 rojas y 1 sin afirmaciones.
+
+**Diagnóstico de las 5 notas no verdes del control positivo (8-nov).** Se releyeron en memoria; ya estaban vistas.
+- **3 amarillas, bien:** dos dan la magnitud en futuro simple ("ratifica que evento será moderado", "pasará a magnitud moderada") y una da fechas de un comunicado anterior.
+- **Roja real (Andina 1079643, 1-jul):** atribuye al ENFEN "moderado hasta diciembre de 2027", cuando el comunicado decía diciembre de 2026. El método mide bien la distancia; no dice si es una errata.
+- **Roja por error de la capa 3 (Andina 1085001, 25-jul):** el subtítulo "Estudio sobre el Fenómeno de El Niño hacia 2030" salía como fin del evento. Además, esa nota solo era positiva por el "Comunicado 004-2026/Ceplan" ([../noticias/definicion.md](../noticias/definicion.md#citas-por-número-sin-el-enfen-arreglo-del-8-nov-2026)).
+
+**Arreglo en la capa 3 (8-nov):** "hacia" seguido solo de un año ("hacia 2030") es un horizonte, no el fin del evento. "Hacia el otoño de 2027" sigue contando, y "hasta 2027" también. Los controles oficiales no cambian: T1 a T4 dan 32/32, 113/114, 29/31 y 19/19; C1, C2 y C5, 33/33, 138/138 y 1.273/1.273, y 0/40. En los 100 cuerpos nuevos, 76 grises, 18 amarillos y 6 verdes, y el párrafo más parecido es de `recomendacion` en 51.
 
 ## Configuración del NLI (si se usa)
 - Modelo `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` (MIT; 83,2 % en XNLI en español).

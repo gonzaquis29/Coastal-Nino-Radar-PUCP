@@ -115,9 +115,24 @@ def test_comunicado_por_enlace_numero_proximo_e_informe(comunicados):
     assert rasgos.comunicado_de_enlace(informe) == ("enfen-2026-03", "informe")
     assert rasgos.comunicado_de_enlace("https://www.gob.pe/x.pdf") is None
     texto = (
-        "Según el Comunicado Oficial N° 09-2026, … El próximo comunicado oficial será el viernes 27 de febrero de 2026."
+        "Según el Comunicado Oficial N° 09-2026 del ENFEN, … El próximo comunicado oficial será el viernes 27 "
+        "de febrero de 2026."
     )
     assert rasgos.comunicados(texto, []) == ["enfen-2026-03:proximo", "enfen-2026-09:numero"]
+
+
+@pytest.mark.parametrize(
+    ("texto", "esperado"),
+    [
+        ("La FAP difundió el Comunicado Oficial N° 09-2026 sobre el helicóptero.", []),  # otra entidad
+        ("Según el Comunicado Oficial del ENFEN N° 09-2026, sigue la alerta.", ["enfen-2026-09:numero"]),
+        ("El Niño Costero continúa. Así lo indica el Comunicado Oficial N° 09-2026.", ["enfen-2026-09:numero"]),
+        ("La Comisión Multisectorial emitió el Comunicado Oficial N° 09-2026.", ["enfen-2026-09:numero"]),
+        ("El Niño Costero continúa." + " Otra noticia." * 40 + " La PNP emitió el Comunicado Oficial N° 09-2026.", []),
+    ],
+)
+def test_cita_por_numero_solo_del_enfen(comunicados, texto, esperado):
+    assert rasgos.comunicados(texto, []) == esperado
 
 
 # ---------------------------------------------------------------- lectura

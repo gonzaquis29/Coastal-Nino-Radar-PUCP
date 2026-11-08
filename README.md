@@ -50,15 +50,14 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 ## Producto
 **Usuario principal:** el ciudadano de la costa que quiere entender las alertas. **Usuario secundario:** el analista o periodista que quiere ver el panorama. El dashboard tiene dos pestañas:
 
-- **Consulta (ciudadano):** se pega un titular o el título y descripción de un video (o se elige un video ya recolectado) y se elige macro-región e interés. Muestra el **semáforo de alineación** (producto estrella): el párrafo oficial más cercano, la distancia semántica, si el texto contradice a ese párrafo (NLI), el estado vigente del ENFEN y el aviso del Senamhi en esa fecha, más las fuentes oficiales y notas alineadas recomendadas. Incluye el agente.
+- **Consulta (ciudadano):** se pega un titular o el título y descripción de un video (o se elige un video ya recolectado) y se elige macro-región e interés. Muestra el **semáforo de alineación** (producto estrella): el color y de dónde sale, los datos que afirma el texto frente al comunicado vigente, la distancia semántica con el párrafo oficial más cercano, el estado vigente del ENFEN y el aviso del Senamhi en esa fecha, más las fuentes oficiales y notas alineadas recomendadas. Incluye el agente.
 - **Panorama (analista):** tópicos, emociones, redes, KPIs de engagement e interés, y estudio de eventos.
 
-**Umbrales del semáforo**, calibrados con los controles de evaluación y **por separado para títulos cortos y cuerpos de nota** (sus distancias no son comparables):
-- 🟢 Verde: distancia por debajo del percentil 75 del control positivo.
-- 🔴 Rojo: distancia por encima del percentil 25 del control negativo, magnitud distinta de la oficial según la regla de magnitud, o contradicción con el párrafo oficial según el modelo NLI.
-- 🟡 Amarillo: el resto.
-- Si un texto cumple a la vez verde y rojo, manda el rojo.
-- Si la separación entre controles es pobre (AUC < 0,8) o los umbrales se cruzan (percentil 75 del positivo ≥ percentil 25 del negativo), se muestra solo la distancia, sin colores.
+**Semáforo** (`radar.nlp.semaforo.medir_discrepancia`; detalle en [docs/nlp/discrepancia.md](docs/nlp/discrepancia.md)):
+- **Si el texto afirma datos sobre El Niño** (magnitud, estado, fechas), manda la comparación con el comunicado vigente: 🔴 rojo si alguno lo contradice; 🟡 amarillo si alguno está desactualizado, no tiene respaldo, usa otra escala o afirma con más certeza que lo oficial; 🟢 verde si todos están respaldados.
+- **Si no afirma datos** (la mayoría de las notas), el color lo da la distancia de minilm a los párrafos del ENFEN vigentes en la fecha, sin los de definiciones: 🟢 verde si es cercano (llega al percentil 95 del control negativo), ⚪ gris si es lejano (no pasa del percentil 75 del negativo) y 🟡 amarillo entre ambos. **Lejos no es contradecir:** por distancia nunca sale rojo.
+- Los umbrales se calibran **por separado para textos cortos (hasta 100 palabras) y cuerpos de nota**. Si un tipo no separa los controles (AUC < 0,8) o sus umbrales se cruzan (percentil 25 del positivo ≤ percentil 75 del negativo), muestra solo la distancia, sin colores.
+- El NLI entra en la app local solo si pasa su único intento (frases sin datos).
 
 **Categorías de interés**, tomadas solo de temas presentes en los textos oficiales (los comunicados no tratan agricultura ni salud): Pesca y mar · Lluvias, ríos y huaicos · Calor · Prevención y emergencias. Los tópicos de las noticias se usan para confirmar que también aparecen en lo que circula.
 

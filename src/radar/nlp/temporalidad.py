@@ -69,6 +69,7 @@ RANGO_GUION = re.compile(rf"\b{F1}\s*[-–]\s*{F2}", re.I)  # "trimestre junio �
 INICIO = re.compile(rf"\b(?:iniciad[oa]|inici[óo]|comenz[óo]|empez[óo])\s+(?:en|a\s+partir\s+de)\s+"
                     rf"(?:el\s+|la\s+)?{F1}", re.I)  # fmt: skip
 HASTA = re.compile(rf"\b(?:hasta|hacia)\s+(?:el\s+|la\s+|en\s+)?{F1}", re.I)
+HACIA_ANIO = re.compile(r"hacia\s+(?:el\s+|la\s+|en\s+)?20\d\d\b", re.I)
 DESDE = re.compile(rf"\b(?:a\s+partir\s+de|desde)\s+(?:el\s+|la\s+)?{F1}", re.I)
 PUNTO = re.compile(rf"\b(?:en|durante|para|antes\s+de)\s+(?:el\s+|la\s+)?{F1}", re.I)
 
@@ -242,6 +243,8 @@ def segmentos(frase, fecha):
         for m in regex.finditer(frase):
             if not libre(m):
                 continue
+            if relacion == "hasta" and HACIA_ANIO.match(m.group(0)):
+                continue  # "estudio… hacia 2030": un año suelto tras "hacia" es un horizonte, no el fin del evento
             f = intervalo(m, 1, fecha, frase[: m.start()])
             if relacion in ("punto", "desde") and PUBLICACION.search(frase[max(0, m.start() - 60) : m.start()]):
                 continue

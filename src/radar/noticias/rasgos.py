@@ -35,6 +35,10 @@ CITA_NUMERO = re.compile(
     r"(?:N\.?\s*[°º]?\s*|n[úu]mero\s+)?0?(?P<numero>\d{1,2})\s*[-–]\s*(?P<anio>20\d\d)"
 )
 CITA_PROXIMO = re.compile(r"pr[óo]ximo\s+[Cc]omunicado[^.]{0,80}?(\d{1,2}\s+de\s+\w+\s+(?:de|del)\s+\d{4})")
+# Una cita por número es del ENFEN solo si cerca se nombra al ENFEN o a El Niño: "Comunicado N.° 5-2026" también lo
+# emiten la FAP, la PNP o el Minedu (arreglo del 8-nov-2026, definicion.md)
+VENTANA_CITA = 300  # caracteres antes y después de la cita
+COMISION = re.compile(r"Comisi[óo]n\s+Multisectorial")
 SLUG_COMUNICADO = re.compile(r"comunicado-(oficial|extraordinario)-enfen-n-?0?(\d{1,2})-(20\d\d)")
 
 
@@ -150,9 +154,17 @@ def comunicado_de_enlace(url):
     return None
 
 
+def cita_del_enfen(texto, m):
+    """La cita por número nombra al ENFEN, o a menos de VENTANA_CITA caracteres aparece el ENFEN o El Niño."""
+    cerca = texto[max(0, m.start() - VENTANA_CITA) : m.end() + VENTANA_CITA]
+    return menciones(cerca) > 0 or bool(COMISION.search(cerca))
+
+
 def comunicados_citados(texto):
     """[(id, nivel)] por el número citado ('Comunicado Oficial N° 09-2026') o la fecha del próximo anunciado."""
-    hallados = [(i, "numero") for m in CITA_NUMERO.finditer(texto or "") if (i := _por_numero(*m.groups()))]
+    texto = texto or ""
+    hallados = [(i, "numero") for m in CITA_NUMERO.finditer(texto)
+                if cita_del_enfen(texto, m) and (i := _por_numero(*m.groups()))]  # fmt: skip
     for m in CITA_PROXIMO.finditer(texto or ""):
         fecha = fecha_es(m.group(1))
         hallados += [(c["id"], "proximo") for c in _comunicados() if fecha and c["proximo_anunciado"] == fecha]

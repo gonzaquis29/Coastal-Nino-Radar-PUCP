@@ -76,3 +76,9 @@ def test_fechas_de_la_economia_no_son_de_el_nino():
     frase = ("Esto se mantendrá en los próximos dos trimestres, hasta diciembre, y el PBI podría caer por "
              "El Niño fuerte.")  # fmt: skip
     assert celda(frase, "2026-10-15") == ""
+
+
+def test_hacia_un_anio_suelto_no_es_el_fin_del_evento():
+    assert celda("Estudio sobre el Fenómeno de El Niño hacia 2030") == ""
+    assert celda("El Niño se extendería hacia el otoño de 2027.", "2026-09-28") == "evento:?>2027-04..2027-06"
+    assert celda("El Niño costero se extendería hasta 2027.", "2026-06-01") == "evento:?>2027-01..2027-12"

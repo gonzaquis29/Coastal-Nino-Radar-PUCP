@@ -101,6 +101,35 @@ Columnas de `notas.csv`: `medio, id, url, via, candidata_por, muestra, titular, 
   2. `numero`: cita su número ("Comunicado Oficial N° 09-2026").
   3. `proximo`: dice "el próximo comunicado será el <fecha>", que se cruza con `proximo_anunciado` del comunicado anterior.
   4. `informe`: enlaza el informe técnico del ENFEN emitido entre 0 y 3 días antes de un comunicado.
+
+### Citas por número sin el ENFEN (arreglo del 8-nov-2026)
+**Problema** (punto 5.1, [../nlp/discrepancia.md](../nlp/discrepancia.md)): `numero` toma cualquier "Comunicado N.° x-2026", también los de la FAP, la PNP o el Minedu. De las 88 notas con ese nivel, 30 no mencionan El Niño, y 11 de los 41 positivos de E3 son de ese tipo.
+
+**Regla nueva:** una cita por número cuenta solo si nombra al ENFEN en la misma cita ("Comunicado Oficial del ENFEN N.° 09-2026") o si a menos de 300 caracteres, antes o después, aparece el ENFEN (o la Comisión Multisectorial) o una mención de El Niño (la regla de `rasgos.menciones`). Los niveles `enlace`, `proximo` e `informe` no cambian.
+
+**Criterios (fijados antes del código):**
+
+| | Prueba | Umbral |
+|---|---|---|
+| R1 | Casos sintéticos: cita de otra entidad, con el ENFEN dentro de la cita, con el ENFEN o El Niño cerca, y con El Niño lejos | 100 % |
+| R2 | **Coherencia temporal** (referencia independiente de la regla): de las citas por número que quedan, las del comunicado vigente en la fecha de la nota o de alguno emitido en los 60 días anteriores | ≥ 90 % |
+| R3 | **Retención:** notas que también enlazan, anuncian o citan por informe el mismo comunicado (otra vía, independiente) conservan su cita por número | ≥ 95 % |
+| R4 | Informativo: citas que salen, por "sobre El Niño", y la coherencia temporal de las que salen | — |
+
+**Datos:** las 88 notas con nivel `numero` se releen en memoria (solo conteos, sin texto). Se excluyen las notas sobre El Niño sin ver (reservadas para T5). Las demás que no estaban vistas se agregan a `notas_vistas.csv` con la muestra `citas-numero-8nov`. El cambio llega a `notas.csv` con el recálculo final: `comunicados` no entra en las causas de M2, y su cambio se revisa como informativo antes de `--aplicar`.
+
+**Resultado (8-nov): pasa.** `python -m radar.noticias.validar_citas` leyó las 88 notas en 1,3 min. Ninguna estaba reservada para T5.
+
+| | Resultado |
+|---|---|
+| R1. Casos sintéticos | 5/5 (más la prueba anterior, ajustada para que nombre al ENFEN) |
+| R2. Coherencia temporal de las citas que quedan | 53/54 |
+| R3. Retención con otra vía al mismo comunicado | 7/7 |
+| R4. Citas que salen | 34: 31 de notas de otros temas y 3 de notas sobre El Niño; 12 de las 34 coinciden en fecha con un comunicado del ENFEN |
+
+- **Las 3 que salen de notas sobre El Niño son de otras entidades:** el "Comunicado N.° 004-2026/Ceplan" (en Andina y El Tiempo) y el N.° 001-2026 del COEP de Piura.
+- **Por qué 12 salidas "coinciden" en fecha:** otras entidades también numeran sus comunicados desde enero, así que un número de 2026 cae a menudo cerca del comunicado del ENFEN con ese número. R2 solo es una referencia útil sobre las citas que quedan.
+- 21 de las 88 notas no estaban vistas (ninguna sobre El Niño) y se agregaron a `config/notas_vistas.csv` con la muestra `citas-numero-8nov`.
 - Enlaces del cuerpo sin botones de compartir; `oficial` = dominio `gob.pe`.
 
 ## Fechas y duplicados

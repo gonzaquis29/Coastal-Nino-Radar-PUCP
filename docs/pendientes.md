@@ -33,7 +33,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 
 **Revisar o corregir antes de lanzarlo** (se agrega aquí lo que aparezca, sin recalcular):
 - Las 13 notas de RPP con menos de 0,9 del articleBody (punto 6.1): decidir si se corrigen en la capa 1 o se declaran.
-- **Citas falsas de comunicados (hallado el 7-nov, punto 5.1).** El nivel `numero` de `rasgos.comunicados_citados` toma cualquier "Comunicado N.°" (FAP, PNP, Minedu). Al menos 11 de los 41 positivos de E3 y las 23 notas no vistas que "citan" un comunicado sin ser sobre El Niño son citas falsas. Hay que exigir una mención del ENFEN o de El Niño cerca de la cita, con su generación y su paso de causa en `recalculo.py`. Hasta entonces, el semáforo usa el positivo limpio (`semaforo.positivo_limpio`).
+- **Citas por número solo del ENFEN** (8-nov; [noticias/definicion.md](noticias/definicion.md#citas-por-número-sin-el-enfen-arreglo-del-8-nov-2026)). Pasa R1 a R3, y saldrán 34 citas de otras entidades (Ceplan, COEP, FAP…). `comunicados` no entra en las causas de M2: antes de `--aplicar`, comprobar que solo cambian esas notas. Después del recálculo, el control positivo de E3 queda limpio solo y `semaforo.positivo_limpio` da lo mismo; repetir `semaforo calibrar` y `validar`.
 - Si alguna corrección nueva cambia el cuerpo o las menciones, agregar su generación y su paso de causa en `recalculo.py`, como "rescate" y "menciones".
 - Confirmar que no hay directorios `recalculo/` ya aplicados ni `*.anterior.csv` en ningún medio (si los hay, renombrarlos; ver CLAUDE.md).
 
@@ -81,9 +81,9 @@ Además, en la semana 3:
 
 ## README
 Hay que actualizar:
-- el índice de discrepancia: capas, cuatro dimensiones (dato, escala, tiempo, certeza), semáforo con reglas y distancia (lo lejano en gris, no en rojo; verde desde el p95 del negativo), NLI en la app local solo si pasa su prueba, sin "párrafo más parecido" ni prueba sintética, y sus límites;
+- el índice de discrepancia: capas, cuatro dimensiones (dato, escala, tiempo, certeza), NLI en la app local solo si pasa su prueba, sin "párrafo más parecido" ni prueba sintética, y sus límites;
 - las emociones de las notas, que pasan a ser solo polaridad;
-- el producto: la pestaña Consulta ya no muestra el NLI.
+- el producto: la pestaña Consulta ya no muestra el NLI (el semáforo y su descripción en Consulta ya están al día, 8-nov).
 
 El insumo de ML espera a la prueba de YouTube. Mientras tanto mandan [nlp/discrepancia.md](nlp/discrepancia.md), [nlp/viabilidad-modelos.md](nlp/viabilidad-modelos.md) y este archivo.
 
