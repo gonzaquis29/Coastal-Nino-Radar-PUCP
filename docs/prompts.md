@@ -458,3 +458,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 27. Ronda c (estudio de eventos).
 
 **Resultado:** la IA comparó cada comunicado con los mismos días de la semana anterior y aplicó la prueba de Wilcoxon sobre los 18 eventos. V3 y V4 pasan, pero V1 (0,087) y V2 (0,561) no. Con el cierre fijado antes, el estudio queda descriptivo: la proporción sobre El Niño sube en 14 de 18 comunicados (mediana +63 %).
+28. ¿Con qué seguimos? / Analiza críticamente / ¿Es la única forma? / ¿Cuál es la más adecuada? / Procedemos (recomendador).
+
+**Resultado:** la IA midió las etiquetas débiles: solo sirven los enlaces que cada medio pone entre sus notas, y casi todos tienen el origen ya visto. Encontró una muestra nueva (notas sin ver que mencionan El Niño) fuera de la reserva de T5. Propuso reglas para lo oficial y una cascada sin parámetros ajustados para las notas, con una puerta y R1 a R4 fijados antes, y escribió `radar.analitica.recomendador`. Pasan la puerta (AUC 0,745), R2 a R4 y K2. R1 no pasa: los editores enlazan sobre todo lo más reciente.
