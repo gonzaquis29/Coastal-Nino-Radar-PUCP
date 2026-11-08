@@ -36,7 +36,7 @@ Pilotos fuera del repositorio, con notas reales leídas en memoria y sin guardar
 | 2. Corpus oficial limpio | Sin encabezados de tabla; `tipo` y `region_enso` por párrafo (`oficial/`) | **Hecha** (28-oct): [../oficial/definicion.md](../oficial/definicion.md) |
 | 3. Frases y afirmaciones | Qué dato afirma cada frase, quién lo dice, de cuándo, con qué seguridad | **Hecha** (7-nov): estado y magnitud pasan; plazo no pasa (0,882) |
 | 4. Referencia oficial | Comunicado vigente y anterior de cada nota, con datos comparables (plazos en mes y año) | Por definir; `radar.oficial.vigencia.Corpus` ya da el vigente |
-| 5. Comparación | Reglas por dato en cuatro dimensiones (dato, escala, tiempo, certeza) + distancia → semáforo | Definida y aprobada (7-nov); en construcción |
+| 5. Comparación | Reglas por dato en cuatro dimensiones (dato, escala, tiempo, certeza) + distancia → semáforo | **Hecha** (7-nov): pasa en la ronda c; C3 con pocos casos |
 
 ## Capa 3: frases y afirmaciones (definición aprobada para construir)
 **Responsabilidad única:** partir el texto limpio en frases y, de cada frase que afirma algo sobre El Niño, sacar qué dato afirma, quién lo dice, de qué momento habla y con qué seguridad. No compara con lo oficial. Va en `src/radar/nlp/`.
@@ -245,6 +245,32 @@ Con los tres, los controles oficiales dan lo mismo que antes:
 - **Diagnóstico de C4:** los 2 fallos vienen del diseño de la prueba.
   - En un rango ("a finales de este año y principios de 2030"), cambiar solo el año del final deja el periodo cruzado con el oficial, y la regla aprobada lo respalda.
   - Un año como 2030 hace que la capa 3 tome la frase como histórica: `ANIO_ACTUAL` solo acepta 2025 a 2027, así que "hasta 2028" también saldría histórica (error de la capa 3).
+
+**Cambios aprobados tras la ronda b (7-nov):**
+1. *Capa 3:* "la vigilancia del fenómeno" es la actividad de monitoreo, no el estado.
+2. *Capa 3:* los años de 2028 en adelante son del evento actual, no históricos.
+3. *C4:* solo se perturban segmentos con todos sus años explícitos.
+4. *C3:* se mide sobre lo atribuido al ENFEN y lo que no tiene atribución, que es lo que debería seguir al vigente. Lo de otras entidades y terceros se reporta aparte, como informativo. Es un cambio del criterio hecho después de ver la ronda b: se declara así.
+
+Con estos cambios, los controles oficiales no cambian (T1 a T4, plazos, estado oficial, C1, C2, C5).
+
+**Ronda c (7-nov):** 200 notas nuevas, semilla `capa5-validacion-7nov-c`. **Pasa.**
+
+| Criterio | Resultado |
+|---|---|
+| C1 · C2 · C5 | 30/30 · 138/138 y 1.273/1.273 · 0/40 |
+| C3. Desplazamiento (ENFEN y sin atribución) | 4/4 (IC 0,51–1,00) |
+| C3. Otras entidades y terceros (informativo) | 4/7 |
+| C4. Perturbaciones | 35/35 |
+| C6 | 3 desactualizadas, 0 adelantadas: informativo |
+
+- **Semáforo:** 173 notas sin afirmaciones, 24 verdes, 3 amarillas, 0 rojas.
+- **C3 pasa con muy pocos casos (4).** El intervalo de confianza no excluye un acierto bajo, así que la evidencia de C3 es débil. Las tres rondas juntas (a, b y c) suman unos 50 casos.
+- **Casos reales que el índice muestra bien:**
+  - El BCR, el 3-ago, usa el plazo del N.° 12 ("hasta el verano de 2027"). El vigente, el N.° 13, ya decía "hasta abril": el índice lo marca *desactualizado*.
+  - Una funcionaria del Senamhi, el 27-ago, dice "muy fuerte".
+- **Límite que queda: el silencio del vigente.** El N.° 14 no da magnitud para el Pacífico central. Por eso "muy fuerte" sale *desactualizada* frente al N.° 13, cuando el ENFEN no la cambió: solo dejó de mencionarla. Se declara; no se corrige ahora.
+- **No hubo ninguna roja** en las 3 rondas (598 notas), salvo una de un tercero en la ronda b. Con lo oficial, las notas casi siempre coinciden o no afirman datos. Lo que más aparece es *desactualizada* y *más certeza*.
 
 ## Configuración del NLI (si se usa)
 - Modelo `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` (MIT; 83,2 % en XNLI en español).

@@ -35,7 +35,7 @@ log = logging.getLogger(__name__)
 
 PRUEBA = "Capa 5: comparación"
 SEMILLA = "capa5-validacion-7nov"
-RONDAS = {"a": SEMILLA, "b": "capa5-validacion-7nov-b"}  # b: tras los arreglos A a D del 7-nov
+RONDAS = {"a": SEMILLA, "b": "capa5-validacion-7nov-b", "c": "capa5-validacion-7nov-c"}  # b: arreglos A-D; c: 4 más
 TAMANO_MUESTRA = 200
 RESPALDO_PROPIO_MINIMO = 0.98  # C2
 ESPERADA_MINIMA = 0.95  # C2
@@ -453,13 +453,16 @@ def criterio_certeza_oficial(oficiales):
 # ---------------------------------------------------------------- C3, C4 y C6: la muestra
 
 
-def criterio_desplazamiento(filas_notas, historia):
+ATRIBUCION_C3 = ("enfen", "sin")  # las que deberían seguir al vigente; terceros aparte (cambio aprobado el 7-nov)
+
+
+def criterio_desplazamiento(filas_notas, historia, atribuciones=ATRIBUCION_C3, nombre="C3: desplazamiento"):
     """En cada dato, el comunicado más cercano al vigente cuyo respaldo es distinto: ¿respalda el vigente?"""
     distintos, vigente_gana = 0, 0
     for nota in filas_notas:
         i = indice_vigente(historia, nota["fecha"])
         for f in nota["filas"]:
-            if f["_en"] is None or f["categoria"] == "otra_fuente":
+            if f["_en"] is None or f["categoria"] == "otra_fuente" or f["_atribucion"] not in atribuciones:
                 continue
             propio = f["_en"](historia[i])
             otros = sorted((j for j in range(len(historia)) if j != i), key=lambda j: (abs(j - i), j))
@@ -470,9 +473,10 @@ def criterio_desplazamiento(filas_notas, historia):
                 if not propio:  # solo a pantalla, para el diagnóstico
                     print(f"  [C3] {nota['medio']} {nota['id']} {nota['fecha']} {f['dato']}={f['valor']} "
                           f"{f['categoria']}; respalda {historia[k]['id']} | {f.get('_texto', '')[:200]}")  # fmt: skip
-    return criterio(PRUEBA, "C3: desplazamiento (el vigente es el que respalda)", f"{vigente_gana}/{distintos}",
-                    f">= {DESPLAZAMIENTO_MINIMO:.0%}",
-                    distintos > 0 and vigente_gana / distintos >= DESPLAZAMIENTO_MINIMO,
+    informativo = atribuciones != ATRIBUCION_C3
+    return criterio(PRUEBA, f"{nombre} (el vigente es el que respalda)", f"{vigente_gana}/{distintos}",
+                    "" if informativo else f">= {DESPLAZAMIENTO_MINIMO:.0%}",
+                    informativo or (distintos > 0 and vigente_gana / distintos >= DESPLAZAMIENTO_MINIMO),
                     f"{vigente_gana / distintos:.3f} IC {af.wilson(vigente_gana, distintos)}" if distintos else "",
                     )  # fmt: skip
 
@@ -523,7 +527,9 @@ def perturbaciones(nota, historia):
                 salida.append(_perturbada("estado", cambiado, fecha, historia, ("estado", nuevo), esperada))
         respaldadas = {f["valor"] for f in filas if f["dato"] == "fecha" and f["categoria"] == "respaldada"}
         for inicio, fin in sorted({s["span"] for s in a["segmentos"] if temporalidad.a_celda([s]) in respaldadas}):
-            if re.search(r"\b202[67]\b", texto[inicio:fin]):  # solo el año del segmento respaldado (arreglo D)
+            seg = next(s for s in a["segmentos"] if s["span"] == (inicio, fin))
+            fechas_del_segmento = 2 if seg["relacion"] == "rango" else 1
+            if len(re.findall(r"\b202[67]\b", texto[inicio:fin])) >= fechas_del_segmento:  # todos sus años explícitos
                 cambiado = texto[:inicio] + re.sub(r"\b202[67]\b", AÑO_PERTURBADO, texto[inicio:fin]) + texto[fin:]
                 salida.append(_perturbada("fecha", cambiado, fecha, historia, ("fecha", None), "sin respaldo actual"))
         verbos = [v for v in af.CONDICIONAL_VERBO.findall(texto) if v.lower() not in af.NO_SON_VERBOS]
@@ -698,7 +704,10 @@ def validar(parar, solo_oficial=False, ronda="b"):
         return filas
     filas_notas = _leer_muestra(parar, historia, ronda)
     validas = [n for n in filas_notas if not n["error"] and indice_vigente(historia, n["fecha"]) is not None]
-    return filas + [criterio_desplazamiento(validas, historia), criterio_perturbaciones(validas, historia),
+    terceros = ("oficial", "tercero")
+    return filas + [criterio_desplazamiento(validas, historia),
+                    criterio_desplazamiento(validas, historia, terceros, "C3 de otras entidades y terceros"),
+                    criterio_perturbaciones(validas, historia),
                     *criterio_dinamica(validas, historia), *descriptivos(filas_notas)]  # fmt: skip
 
 

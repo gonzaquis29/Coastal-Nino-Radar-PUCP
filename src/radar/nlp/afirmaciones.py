@@ -82,9 +82,16 @@ VALOR_DEL_SISTEMA = re.compile(rf"\bSISTEMA\b[^.;]{{0,50}}?\b(?:de|en|a|como)\s+
                                rf"|\bestado\s+de\s+{_VALOR}", re.I)  # fmt: skip
 
 
+def _es_actividad(texto, inicio, valor):
+    """ "dedicada a la vigilancia del fenómeno": el monitoreo, no el estado del sistema (arreglo del 7-nov)."""
+    return valor == "vigilancia" and re.search(r"\bla\s+$", texto[:inicio], re.I) is not None
+
+
 def _valores(regex, texto):
     for m in regex.finditer(texto):
         for g in range(1, (m.lastindex or 0) + 1):
+            if m.group(g) and _es_actividad(texto, m.start(g), m.group(g)):
+                continue
             if m.group(g) and not NO_ES_ESTADO.search(texto[m.end(g) :]):
                 yield m.start(g), ESTADOS[re.sub(r"\s+", " ", m.group(g).lower())]
 
@@ -215,7 +222,7 @@ OTRO_PAIS = re.compile(r"\bEcuador|\becuatorian|\bChile\b|\bchilen|\bColombia|\b
 CITA = re.compile(r"[\"“«]([^\"”»]{3,})[\"”»]")
 PALABRAS_CITA = 4
 ANIO = re.compile(r"\b(19[5-9]\d|20[0-2]\d)\b")
-ANIO_ACTUAL = re.compile(r"\b202[5-7]\b")
+ANIO_ACTUAL = re.compile(r"\b(?:202[5-9]|203\d)\b")  # "hasta 2028" habla del evento actual (arreglo del 7-nov)
 HISTORICO = re.compile(r"\b(?:el|los)\s+(?:último|últimos|anteriores?|pasados?)\s+(?:fen[óo]menos?\s+)?(?:de\s+)?"
                        r"(?:El\s+)?Niños?\b|\bNiños?\s+(?:de|del)\s+(?:19|20[01]|202[0-4])|\bhist[óo]ric|"
                        r"\ben\s+(?:19[5-9]\d|20[01]\d|202[0-4])\b", re.I)  # fmt: skip

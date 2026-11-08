@@ -185,3 +185,12 @@ def test_afirmacion_guarda_los_segmentos_temporales():
 
 def test_agencias_internacionales_son_otra_fuente():
     assert a.atribucion("Según agencias especializadas internacionales, El Niño sería extraordinario.")[0] == "agencia"
+
+
+def test_la_vigilancia_del_fenomeno_es_una_actividad():
+    assert a.estado("El Senamhi tiene una sección dedicada a la vigilancia del fenómeno de El Niño.") == ""
+    assert a.estado("El ENFEN mantiene el estado de vigilancia de El Niño Costero.") == "vigilancia"
+
+
+def test_anios_futuros_son_del_evento_actual():
+    assert a.momento("El Niño podría extenderse hasta 2028.", "2026-10-01") == "actual"
