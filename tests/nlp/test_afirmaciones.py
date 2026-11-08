@@ -176,3 +176,8 @@ def test_muestra_toma_las_que_citan_y_30_por_medio(monkeypatch):
     elegidas = a.muestra(notas, {("rpp", "1")})
     claves = [(n["medio"], n["id"]) for n in elegidas]
     assert claves[:2] == [("andina", "0"), ("rpp", "0")] and len(claves) == 6 and ("rpp", "1") not in claves
+
+
+def test_afirmacion_guarda_los_segmentos_temporales():
+    afs = a.afirmaciones("", "", "El Niño costero sería fuerte entre junio y septiembre.", "2026-06-01")
+    assert a.a_fila("rpp", "1", afs[0])["segmentos"] == "fuerte:2026-06>2026-09"

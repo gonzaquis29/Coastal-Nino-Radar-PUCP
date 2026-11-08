@@ -107,6 +107,25 @@ Las notas nuevas para esa validación son ~170:
   - 2 vienen de la referencia: el comunicado N.° 09 da el plazo como rango ("moderada entre mayo y agosto"), y la regla solo lee "hasta …".
 - **Sin notas reservadas por ver:** las de la ronda b eran todas las que quedaban. Llegan ~1,5 por día.
 
+### Temporalidad (plazo v2, aprobada el 7-nov)
+El plazo v1 solo lee "hasta …" y compara un mes. La v2 (`radar.nlp.temporalidad`) parte cada frase en **segmentos**: un sujeto (el evento o una magnitud) con inicio y fin como intervalos de meses.
+- **Normalización:** las estaciones son las del hemisferio sur (verano = dic. del año anterior a mar.). "Inicios", "mediados" y "fines" acotan el intervalo. Un año solo vale el año entero; "primer trimestre" vale de enero a marzo.
+- **Relaciones:** rango ("de/entre X a/y Y", paréntesis, guion), "hasta" (fin), "a partir de/desde" (inicio) e "iniciado en" (inicio del evento). El punto ("en julio") solo cuenta junto a una magnitud.
+- **Qué no es del evento:** las fechas de lluvias, temperatura del aire, condición neutra o publicación no son segmentos. Tras "luego disminuiría…", la fecha es de la fase que sigue.
+- **Comparación:** el mismo extractor corre sobre las frases costeras de los comunicados (`data/processed/nlp/temporalidad-oficial.csv`). Un segmento queda *respaldado* (cruce con ±1 mes), *desactualizado* (cruza solo con un comunicado anterior) o *sin respaldo*.
+- **Descartados:** HeidelTime (estaciones del hemisferio norte, sin "hasta"), dateparser y duckling (no hacen rangos de estación) y el NLI. Un LLM local queda solo como control informativo.
+
+**Resultado (7-nov).** `python -m radar.nlp.temporalidad validar`:
+
+| Criterio | Umbral | Resultado |
+|---|---|---|
+| T1. Normalización (casos conocidos) | 100 % | 32/32 |
+| T2. Completitud en los comunicados | ≥ 95 % | 113/114 |
+| T3. Paráfrasis oficiales (titular o resumen frente al cuerpo) | ≥ 90 % | 29/31 |
+| T4. Fin del evento en cada comunicado | 100 % | 19/19 |
+
+T2 a T4 se ajustaron mirando los mismos comunicados, así que son controles de desarrollo, no una validación independiente. En T4, el campo `plazo` de los N.° 17 a 19 es la duración de la magnitud, no la del evento; ahí se compara con el titular. La confirmación independiente es **T5** (informativo): las notas reservadas nuevas que lleguen hasta el 18-nov.
+
 ## Capa 5: cómo se evalúa (para definir en detalle)
 Cada método se evalúa con los mismos conjuntos, con criterios fijados antes y los umbrales calibrados con datos aparte:
 

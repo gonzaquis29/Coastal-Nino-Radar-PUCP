@@ -425,3 +425,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 
 **Resultado:** la IA revisó la definición con notas ya vistas, propuso 6 ajustes y escribió `radar.nlp.afirmaciones`. Validó con 150 notas nuevas, diagnosticó los desacuerdos, propuso 4 arreglos y los volvió a validar con otras 99. Estado y magnitud pasan; el plazo no (0,882).
 
+17. Evaluemos de manera crítica… / sí, defínela / sí, apruebo (temporalidad, plazo v2).
+
+**Resultado:** la IA revisó las alternativas (HeidelTime, dateparser, NLI, LLM local) y propuso reglas propias con segmentos de inicio y fin y estaciones del hemisferio sur. Fijó T1 a T5 antes de escribir `radar.nlp.temporalidad`. Pasan T1 a T4 (32/32, 113/114, 29/31, 19/19). Son controles de desarrollo sobre los comunicados; T5, con notas nuevas, queda para el 18-nov.

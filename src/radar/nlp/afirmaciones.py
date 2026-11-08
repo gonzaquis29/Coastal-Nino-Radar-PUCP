@@ -23,7 +23,7 @@ from radar.comun.candado import exclusivo
 from radar.comun.energia import sin_suspension
 from radar.comun.registro import configurar, describir
 from radar.comun.texto import MESES, ahora, sha1_corto
-from radar.nlp import esquemas, tfidf, viabilidad
+from radar.nlp import esquemas, temporalidad, tfidf, viabilidad
 from radar.noticias import rasgos
 from radar.noticias.medios import MEDIOS
 from radar.noticias.validar_texto import marcar_vistas, notas_vistas, reservada_capa3
@@ -250,8 +250,9 @@ def es_cita(frase):
 
 
 # "En su comunicado de julio, el ENFEN indicó…": cuenta un comunicado pasado (arreglo del 7-nov)
-COMUNICADO_PASADO = re.compile(rf"\b(?:comunicados?|bolet[íi]n(?:es)?|informes?|reportes?)\b[^.;]{{0,40}}?\b(?:de|del)"
-                               rf"\s+(?P<mes>{_MES})\b(?:\s+(?:de|del)\s+(?P<anio>20\d\d))?", re.I)  # fmt: skip
+COMUNICADO_PASADO = re.compile(rf"\b(?:comunicados?|bolet[íi]n(?:es)?|informes?|reportes?)\b[^.;]{{0,40}}?"
+                               rf"\b(?:de|del|en)\s+(?P<mes>{_MES})\b(?:\s+(?:de|del)\s+(?P<anio>20\d\d))?",
+                               re.I)  # fmt: skip
 MESES_ATRAS_PASADO = 2  # el de hace un mes puede seguir vigente; desde dos meses atrás ya es pasado
 
 # "Enfen descarta un Niño muy fuerte", "es prematuro afirmar…": la frase niega el dato (arreglo del 7-nov)
@@ -306,11 +307,12 @@ def datos(frase, fecha):
         "estado": estado(frase),
         "plazos": plazos(frase, fecha),
         "probabilidades": probabilidades(frase),
+        "segmentos": temporalidad.segmentos(frase, fecha),  # plazo v2: lo que usa la capa 5
     }
 
 
 def tiene_dato(d):
-    return bool(d["magnitudes"] or d["estado"] or d["plazos"] or d["probabilidades"])
+    return bool(d["magnitudes"] or d["estado"] or d["plazos"] or d["probabilidades"] or d["segmentos"])
 
 
 def afirmaciones(titular, resumen, cuerpo, fecha):
@@ -340,6 +342,7 @@ def afirmaciones(titular, resumen, cuerpo, fecha):
 def a_fila(medio, id_, a):
     """Fila de afirmaciones.csv: sin el texto de la frase."""
     fila = {k: v for k, v in a.items() if not k.startswith("_")}
+    fila["segmentos"] = temporalidad.a_celda(fila["segmentos"])
     for k in ("magnitudes", "magnitudes_posibles", "plazos", "probabilidades"):
         fila[k] = "|".join(map(str, fila[k]))
     return {"medio": medio, "id": id_, **fila}

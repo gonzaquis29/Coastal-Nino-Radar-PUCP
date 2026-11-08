@@ -64,9 +64,12 @@ def topicos_agregados(k):
 AFIRMACIONES = (
     "medio", "id", "frase", "origen", "sha1_frase", "palabras", "magnitudes", "magnitudes_posibles", "estado",
     "plazos", "probabilidades", "region", "atribucion", "heredada", "otro_pais", "cita", "momento", "modalidad",
-    "negada", "explicativa",
+    "negada", "explicativa", "segmentos",
 )  # fmt: skip
 AFIRMACIONES_LECTURA = ("medio", "id", "fecha", "error", "frases", "largas", "afirmaciones")
+
+
+TEMPORALIDAD_OFICIAL = ("comunicado", "seccion", "frase_n", "sujeto", "relacion", "inicio", "fin")
 
 
 def columnas_candidatos(modelos):
