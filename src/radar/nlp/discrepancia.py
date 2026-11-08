@@ -35,6 +35,7 @@ log = logging.getLogger(__name__)
 
 PRUEBA = "Capa 5: comparación"
 SEMILLA = "capa5-validacion-7nov"
+RONDAS = {"a": SEMILLA, "b": "capa5-validacion-7nov-b"}  # b: tras los arreglos A a D del 7-nov
 TAMANO_MUESTRA = 200
 RESPALDO_PROPIO_MINIMO = 0.98  # C2
 ESPERADA_MINIMA = 0.95  # C2
@@ -155,6 +156,18 @@ def _tiene_sujeto(seg, oficiales):
     return any(o["sujeto"] == seg["sujeto"] for o in oficiales)
 
 
+def _pasado(seg, mes):
+    """El segmento ya ocurrió en el mes de la nota: terminó antes, o solo tiene inicio y ya empezó."""
+    if seg["fin"] is not None:
+        return seg["fin"][1] < mes
+    return seg["inicio"] is not None and seg["inicio"][1] <= mes
+
+
+def _acumulados(historia, ref):
+    """Segmentos de todos los comunicados hasta ref (incluido): lo que el ENFEN dijo de lo ya ocurrido."""
+    return [s for r in historia if r["desde"] <= ref["desde"] for s in r["segmentos"]]
+
+
 def evaluable(a):
     """Habla del Niño actual, no niega el dato y no es explicativa ni pregunta (la atribución se ve aparte)."""
     return (a["momento"] == "actual" and not a["negada"] and not a["explicativa"]
@@ -200,9 +213,15 @@ def clasificar(a, fecha, historia, mismo_dia=None):
     if a["estado"] and a["region"] != CENTRAL:
         fila("estado", a["estado"], lambda r: r["estado"] == a["estado"], escala=COSTA)
     if a["region"] != CENTRAL:
+        mes = temporalidad._indice(int(fecha[:4]), int(fecha[5:7]))
         for seg in a["segmentos"]:
-            en = lambda r, s=seg: temporalidad.respaldado(s, r["segmentos"])  # noqa: E731
-            fila("fecha", temporalidad.a_celda([seg]), en, not _tiene_sujeto(seg, ref["segmentos"]), escala=COSTA)
+            if _pasado(seg, mes):  # "inició en marzo": un hecho pasado no caduca (arreglo A del 7-nov)
+                en = lambda r, s=seg: temporalidad.respaldado(s, _acumulados(historia, r))  # noqa: E731
+                referencia_ = _acumulados(historia, ref)
+            else:
+                en = lambda r, s=seg: temporalidad.respaldado(s, r["segmentos"])  # noqa: E731
+                referencia_ = ref["segmentos"]
+            fila("fecha", temporalidad.a_celda([seg]), en, not _tiene_sujeto(seg, referencia_), escala=COSTA)
     if not otra_fuente and mas_certeza(a):
         filas.append({"dato": "certeza", "valor": "futuro", "categoria": "mas_certeza", "escala": "", "atras": 0,
                       "adelantada": False, "sentido": "", "_en": None})  # fmt: skip
@@ -232,12 +251,24 @@ def _seg(sujeto, inicio=None, fin=None):
 
 
 # Historia sintética: el estado pasa a alerta en c1; la magnitud sube de débil a fuerte; c2 da Pacífico central
+def _mes(texto):
+    return temporalidad._indice(int(texto[:4]), int(texto[5:7]))
+
+
+def _par(texto):
+    return (_mes(texto), _mes(texto))
+
+
+# Historia sintética: el estado pasa a alerta en c1; la magnitud sube de débil a fuerte; c2 da Pacífico central; el
+# inicio del evento (enero) solo lo dice c0
 HISTORIA_SINTETICA = [
-    _ref(0, "2026-01-01", "vigilancia", ["débil"], segmentos=[_seg("evento", fin=(310, 310))]),
-    _ref(1, "2026-02-01", "alerta", ["débil", "moderada"], segmentos=[_seg("evento", fin=(311, 311))]),
-    _ref(2, "2026-03-01", "alerta", ["moderada", "fuerte"], ["muy fuerte"], segmentos=[_seg("evento", fin=(313, 313))]),
+    _ref(0, "2026-01-01", "vigilancia", ["débil"],
+         segmentos=[_seg("evento", fin=_par("2026-10")), _seg("evento", inicio=_par("2026-01"))]),
+    _ref(1, "2026-02-01", "alerta", ["débil", "moderada"], segmentos=[_seg("evento", fin=_par("2026-11"))]),
+    _ref(2, "2026-03-01", "alerta", ["moderada", "fuerte"], ["muy fuerte"],
+         segmentos=[_seg("evento", fin=_par("2027-01"))]),
     _ref(3, "2026-03-20", "alerta", ["fuerte", "extraordinaria"], ["muy fuerte"],
-         segmentos=[_seg("evento", fin=(313, 313))]),
+         segmentos=[_seg("evento", fin=_par("2027-01"))]),
 ]  # fmt: skip
 
 
@@ -270,14 +301,18 @@ CASOS = (
     ("estado nunca dicho", _afirmacion(estado="no_activo"), "2026-03-10", [("estado", "contradice", False)]),
     ("el día de emisión vale el anterior", _afirmacion(magnitudes=["débil"]), "2026-03-01",
      [("magnitud", "respaldada", False)]),
-    ("fecha respaldada", _afirmacion(segmentos=[_seg("evento", fin=(313, 313))]), "2026-03-10",
+    ("fecha respaldada", _afirmacion(segmentos=[_seg("evento", fin=_par("2027-01"))]), "2026-03-10",
      [("fecha", "respaldada", False)]),
-    ("fecha de antes", _afirmacion(segmentos=[_seg("evento", fin=(310, 310))]), "2026-03-10",
+    ("fecha de antes", _afirmacion(segmentos=[_seg("evento", fin=_par("2026-10"))]), "2026-03-10",
      [("fecha", "desactualizada", False)]),
-    ("fecha que contradice", _afirmacion(segmentos=[_seg("evento", fin=(330, 330))]), "2026-03-10",
+    ("fecha que contradice", _afirmacion(segmentos=[_seg("evento", fin=_par("2028-06"))]), "2026-03-10",
      [("fecha", "contradice", False)]),
-    ("fecha de algo sin plazo oficial", _afirmacion(segmentos=[_seg("fuerte", fin=(330, 330))]), "2026-03-10",
+    ("fecha de algo sin plazo oficial", _afirmacion(segmentos=[_seg("fuerte", fin=_par("2028-06"))]), "2026-03-10",
      [("fecha", "sin_respaldo", False)]),
+    ("inicio pasado dicho por un comunicado anterior", _afirmacion(segmentos=[_seg("evento", inicio=_par("2026-01"))]),
+     "2026-03-10", [("fecha", "respaldada", False)]),
+    ("inicio pasado que el ENFEN nunca dijo", _afirmacion(segmentos=[_seg("evento", inicio=_par("2025-06"))]),
+     "2026-03-10", [("fecha", "contradice", False)]),
     ("de otra agencia", _afirmacion(magnitudes=["extraordinaria"], atribucion="agencia"), "2026-02-10",
      [("magnitud", "otra_fuente", False)]),
     ("de otro país", _afirmacion(magnitudes=["extraordinaria"], otro_pais=True), "2026-02-10",
@@ -432,6 +467,9 @@ def criterio_desplazamiento(filas_notas, historia):
             if k is not None:
                 distintos += 1
                 vigente_gana += propio
+                if not propio:  # solo a pantalla, para el diagnóstico
+                    print(f"  [C3] {nota['medio']} {nota['id']} {nota['fecha']} {f['dato']}={f['valor']} "
+                          f"{f['categoria']}; respalda {historia[k]['id']} | {f.get('_texto', '')[:200]}")  # fmt: skip
     return criterio(PRUEBA, "C3: desplazamiento (el vigente es el que respalda)", f"{vigente_gana}/{distintos}",
                     f">= {DESPLAZAMIENTO_MINIMO:.0%}",
                     distintos > 0 and vigente_gana / distintos >= DESPLAZAMIENTO_MINIMO,
@@ -483,11 +521,11 @@ def perturbaciones(nota, historia):
                 cambiado = re.sub(rf"\b{palabra}\b", nuevo, texto, flags=re.I)
                 esperada = "desactualizada" if _historia_tiene(nuevo, "estado", historia, i, escalas) else "contradice"
                 salida.append(_perturbada("estado", cambiado, fecha, historia, ("estado", nuevo), esperada))
-        if any(f["dato"] == "fecha" and f["categoria"] == "respaldada" for f in filas) and re.search(
-            r"\b202[67]\b", texto
-        ):
-            cambiado = re.sub(r"\b202[67]\b", AÑO_PERTURBADO, texto)
-            salida.append(_perturbada("fecha", cambiado, fecha, historia, ("fecha", None), "sin respaldo actual"))
+        respaldadas = {f["valor"] for f in filas if f["dato"] == "fecha" and f["categoria"] == "respaldada"}
+        for inicio, fin in sorted({s["span"] for s in a["segmentos"] if temporalidad.a_celda([s]) in respaldadas}):
+            if re.search(r"\b202[67]\b", texto[inicio:fin]):  # solo el año del segmento respaldado (arreglo D)
+                cambiado = texto[:inicio] + re.sub(r"\b202[67]\b", AÑO_PERTURBADO, texto[inicio:fin]) + texto[fin:]
+                salida.append(_perturbada("fecha", cambiado, fecha, historia, ("fecha", None), "sin respaldo actual"))
         verbos = [v for v in af.CONDICIONAL_VERBO.findall(texto) if v.lower() not in af.NO_SON_VERBOS]
         if a["magnitudes"] and len(verbos) == 1 and not af.CONDICIONAL.search(texto) and "?" not in texto:
             cambiado = re.sub(rf"\b{verbos[0]}\b", re.sub(r"ría(n?)$", r"rá\1", verbos[0]), texto, count=1)
@@ -498,7 +536,7 @@ def perturbaciones(nota, historia):
 def _perturbada(tipo, texto, fecha, historia, clave, esperada):
     filas = [f for a in af.afirmaciones("", "", texto, fecha) for f in clasificar(a, fecha, historia)]
     if tipo == "fecha":
-        fechas = [f["categoria"] for f in filas if f["dato"] == "fecha"]
+        fechas = [f["categoria"] for f in filas if f["dato"] == "fecha" and AÑO_PERTURBADO in f["valor"]]
         ok = bool(fechas) and not {"respaldada", "desactualizada"} & set(fechas)
         return tipo, esperada, "|".join(fechas), ok, texto
     obtenida = next((f["categoria"] for f in filas if (f["dato"], f["valor"]) == clave), "")
@@ -575,20 +613,21 @@ def descriptivos(filas_notas):
 # ---------------------------------------------------------------- muestra y lectura
 
 
-def muestra(notas, vistas):
+def muestra(notas, vistas, semilla=SEMILLA):
     """TAMANO_MUESTRA notas sobre El Niño sin ver, en proporción por medio."""
     pool = [n for n in notas if n["sobre_nino"] == "1" and (n["medio"], n["id"]) not in vistas]
     por_medio = {m: [n for n in pool if n["medio"] == m] for m in MEDIOS}
     return [x for m, lista in por_medio.items()
-            for x in _muestra(lista, round(TAMANO_MUESTRA * len(lista) / max(1, len(pool))), SEMILLA, m)]  # fmt: skip
+            for x in _muestra(lista, round(TAMANO_MUESTRA * len(lista) / max(1, len(pool))), semilla, m)]  # fmt: skip
 
 
-def elegir_muestra():
-    if viabilidad.registrada(SEMILLA):
-        log.info(f"La muestra {SEMILLA} ya está en notas_vistas.csv; no se elige otra.")
+def elegir_muestra(ronda):
+    semilla = RONDAS[ronda]
+    if viabilidad.registrada(semilla):
+        log.info(f"La muestra {semilla} ya está en notas_vistas.csv; no se elige otra.")
         return []
-    elegidas = muestra(leer_csv(config.DIR_NOTICIAS / "notas.csv"), notas_vistas())
-    marcar_vistas(elegidas, SEMILLA)
+    elegidas = muestra(leer_csv(config.DIR_NOTICIAS / "notas.csv"), notas_vistas(), semilla)
+    marcar_vistas(elegidas, semilla)
     log.info(f"Muestra: {len(elegidas)} · {collections.Counter(n['medio'] for n in elegidas)}")
     return []
 
@@ -603,7 +642,12 @@ def fila_de_nota(nota, campos, historia):
     for a in af.afirmaciones(campos["titular"], campos["resumen"], campos["cuerpo"], salida["fecha"]):
         filas = clasificar(a, salida["fecha"], historia)
         for f in filas:
-            f["_atribucion"], f["_origen"], f["frase"] = a["atribucion"], a["origen"], a["frase"]
+            f["_atribucion"], f["_origen"], f["frase"], f["_texto"] = (
+                a["atribucion"],
+                a["origen"],
+                a["frase"],
+                a["_texto"],
+            )
             if f["categoria"] not in ("respaldada", "otra_fuente"):  # solo a pantalla: el texto no se guarda
                 print(f"  [{f['categoria']}{' adelantada' if f['adelantada'] else ''}] {nota['medio']} {nota['id']} "
                       f"{salida['fecha']} {f['dato']}={f['valor']} ({a['atribucion']}) | {a['_texto'][:200]}",
@@ -621,10 +665,10 @@ def a_filas_csv(nota):
 
 
 @exclusivo("radar.nlp.discrepancia")
-def _leer_muestra(parar, historia):
-    elegidas = set(viabilidad.registrada(SEMILLA))
+def _leer_muestra(parar, historia, ronda):
+    elegidas = set(viabilidad.registrada(RONDAS[ronda]))
     if not elegidas:
-        raise SystemExit("Falta la muestra: python -m radar.nlp.discrepancia muestra")
+        raise SystemExit(f"Falta la muestra: python -m radar.nlp.discrepancia muestra --ronda {ronda}")
     notas = [n for n in leer_csv(config.DIR_NOTICIAS / "notas.csv") if (n["medio"], n["id"]) in elegidas]
     filas_notas = []
     lectura = config.DIR_NLP / "discrepancia-notas.csv"
@@ -645,14 +689,14 @@ def _leer_muestra(parar, historia):
     return filas_notas
 
 
-def validar(parar, solo_oficial=False):
+def validar(parar, solo_oficial=False, ronda="b"):
     corpus = Corpus()
     historia = referencia(corpus)
     oficiales = afirmaciones_oficiales(corpus)
     filas = [criterio_logica(), *criterio_pares(corpus, historia, oficiales), criterio_certeza_oficial(oficiales)]
     if solo_oficial:
         return filas
-    filas_notas = _leer_muestra(parar, historia)
+    filas_notas = _leer_muestra(parar, historia, ronda)
     validas = [n for n in filas_notas if not n["error"] and indice_vigente(historia, n["fecha"]) is not None]
     return filas + [criterio_desplazamiento(validas, historia), criterio_perturbaciones(validas, historia),
                     *criterio_dinamica(validas, historia), *descriptivos(filas_notas)]  # fmt: skip
@@ -662,12 +706,13 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Capa 5: comparación con lo oficial.")
     ap.add_argument("paso", choices=("muestra", "validar"))
     ap.add_argument("--solo-oficial", action="store_true", help="solo C1, C2 y C5: no pide páginas")
+    ap.add_argument("--ronda", choices=tuple(RONDAS), default="b", help="a: primera validación; b: tras los arreglos")
     args = ap.parse_args(argv)
-    registro = configurar(f"nlp-discrepancia-{args.paso}")
+    registro = configurar(f"nlp-discrepancia-{args.paso}-{args.ronda}")
     inicio, parar = ahora(), threading.Event()
     config.DIR_NLP.mkdir(parents=True, exist_ok=True)
     try:
-        filas = elegir_muestra() if args.paso == "muestra" else validar(parar, args.solo_oficial)
+        filas = elegir_muestra(args.ronda) if args.paso == "muestra" else validar(parar, args.solo_oficial, args.ronda)
     except KeyboardInterrupt:
         parar.set()
         return 1

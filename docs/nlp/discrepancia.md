@@ -222,7 +222,29 @@ Con los tres, los controles oficiales dan lo mismo que antes:
 - Plazos y estado oficial de la capa 3: 15/15 y 33/33.
 - C1, C2 y C5: 28/28, 138/138, 1.273/1.273 y 0/40.
 
-Los arreglos A (hechos pasados) y D (diseño de C4) de la capa 5 y la ronda b con notas nuevas siguen pendientes.
+**Arreglos en la capa 5 (7-nov, aprobados):**
+- **A.** Un hecho ya ocurrido (un segmento que terminó, o que solo tiene inicio y ya empezó) se respalda con cualquier comunicado hasta el vigente.
+- **D.** C4 cambia el año solo dentro del segmento respaldado.
+
+**Ronda b (7-nov):** 199 notas nuevas, semilla `capa5-validacion-7nov-b`. **No pasa.**
+
+| Criterio | Resultado |
+|---|---|
+| C1 · C2 · C5 | 30/30 · 138/138 y 1.273/1.273 · 0/40 |
+| **C3. Desplazamiento** | **17/22 (0,773; IC 0,57–0,90): no pasa** |
+| **C4. Perturbaciones** | **27/29: no pasa** |
+| C6 | 3 desactualizadas, 0 adelantadas: informativo |
+
+- **Semáforo:** 177 notas sin afirmaciones, 19 verdes, 2 amarillas y 1 roja.
+- **Diagnóstico de C3:** de los 5 casos en que el vigente no respalda, 4 son discrepancias reales de terceros u otras entidades, no fallos del método:
+  - Minedu, el 16-jun, dice "extraordinaria" un mes antes que el ENFEN;
+  - un ingeniero da un plazo antiguo;
+  - Indeci, el 11-feb, da "desde marzo".
+
+  El quinto es un error de la capa 3: "dedicada a la vigilancia del fenómeno" sale como estado *vigilancia*. La premisa de C3 (el vigente respalda casi siempre) mezcla la validez del método con cuánto se alejan de verdad las fuentes.
+- **Diagnóstico de C4:** los 2 fallos vienen del diseño de la prueba.
+  - En un rango ("a finales de este año y principios de 2030"), cambiar solo el año del final deja el periodo cruzado con el oficial, y la regla aprobada lo respalda.
+  - Un año como 2030 hace que la capa 3 tome la frase como histórica: `ANIO_ACTUAL` solo acepta 2025 a 2027, así que "hasta 2028" también saldría histórica (error de la capa 3).
 
 ## Configuración del NLI (si se usa)
 - Modelo `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` (MIT; 83,2 % en XNLI en español).
