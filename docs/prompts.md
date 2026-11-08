@@ -455,3 +455,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 26. Sí, apruebo (estudio de eventos, ronda b).
 
 **Resultado:** la IA cambió a un contraste antes y después dentro de la ventana, con errores de Newey-West, y midió V1 y V2 en series simuladas. No pasa V1 (0,12), V2 (0,70) ni V4 (p = 0,006). Diagnosticó que 12 de los 18 comunicados salen un viernes, así que el contraste mide el fin de semana, y que con 18 eventos Newey-West rechaza de más.
+27. Ronda c (estudio de eventos).
+
+**Resultado:** la IA comparó cada comunicado con los mismos días de la semana anterior y aplicó la prueba de Wilcoxon sobre los 18 eventos. V3 y V4 pasan, pero V1 (0,087) y V2 (0,561) no. Con el cierre fijado antes, el estudio queda descriptivo: la proporción sobre El Niño sube en 14 de 18 comunicados (mediana +63 %).

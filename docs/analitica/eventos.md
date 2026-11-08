@@ -65,3 +65,22 @@ Cambios aprobados tras el diagnóstico de la ronda a: el contraste pasa a ser lo
 - **Pocos eventos:** con 18 comunicados, Newey-West rechaza de más. El tamaño baja de 0,10 a 0,08 con retardos de 14 o 28 días, y aun así queda por encima de 0,07 (diagnóstico con 300 series, no criterio).
 
 **Resultados (informativos, sin validar):** la proporción sobre El Niño da +17 % (p = 0,066) y el conteo da +12 % (p = 0,18).
+
+## Ronda c (8-nov): no pasa, y el estudio queda descriptivo
+
+Último intento, con el cierre fijado antes de correrlo. Cada comunicado se compara consigo mismo: los días 0 a +2 frente a los mismos días de la semana una semana antes (−7 a −5), como log((después + 0,5) / (antes + 0,5)), restando el mismo cociente del total de notas en la proporción. Con las 18 diferencias se aplica la prueba de rangos con signo de Wilcoxon. V1 y V2 usan 1.000 series simuladas, como en la ronda b.
+
+| | Resultado | Umbral | |
+|---|---|---|---|
+| V1 | 0,087 | ≤ 0,07 | **no pasa** |
+| V2 | 0,561 | ≥ 0,80 | **no pasa** |
+| V3 | +210 % (p < 0,001; suben 17 de 18) | p < 0,05 | pasa |
+| V4 | +1 % (p = 0,44; suben 10 de 18) | p ≥ 0,05 | pasa |
+
+**Decisión:** se cierra la inferencia y se aplica el respaldo del README (recorte 2: "Efecto comunicado solo con volumen"), sin valor p.
+
+**Qué se puede decir (descriptivo):** en 14 de los 18 comunicados, la proporción de notas sobre El Niño de los días 0 a +2 supera la de los mismos días de la semana anterior. La mediana es +63 % y los cuartiles van de +22 % a +223 %. Las citas a comunicados suben en 17 de 18, y las notas de otros temas no cambian. El archivo `data/processed/analitica/eventos-por-comunicado.csv` tiene la diferencia de cada comunicado, para el dashboard.
+
+**Por qué no se da como efecto probado:** con 18 eventos y una serie que va de 1 a 50 notas diarias, el método no controla bien el error (8,7 % de falsos positivos en lugar de 5 %), y detecta un pico de +50 % solo en el 56 % de las veces. Parte del exceso de V1 puede deberse al simulador, que remezcla residuos que ya contienen los picos reales. No se ajustó, para no seguir probando variantes hasta que algo pase.
+
+**Límites:** el N.° 19 (30-oct) y el N.° 20 entran cuando su ventana esté completa (`validar --ronda c` después del corte). YouTube y Trends se describen igual cuando haya datos.

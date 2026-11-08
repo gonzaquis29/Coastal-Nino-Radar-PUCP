@@ -71,7 +71,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 
 Además, en la semana 3:
 - Semáforo calibrado (punto 1).
-- Estudio de eventos: `radar.analitica.eventos` ([analitica/eventos.md](analitica/eventos.md)). Las rondas a y b (8-nov) no pasan: la nula de la a contiene el efecto, y en la b el contraste mide el fin de semana (12 de 18 comunicados salen un viernes) y Newey-West rechaza de más con 18 eventos. Falta decidir entre una ronda c y el respaldo descriptivo.
+- Estudio de eventos: `radar.analitica.eventos` ([analitica/eventos.md](analitica/eventos.md)). **Cerrado el 8-nov como descriptivo:** ninguna de las tres rondas controla el tamaño y la potencia con 18 eventos (la ronda c da V1 0,087 y V2 0,561, aunque V3 y V4 pasan). Se describe por comunicado: la proporción sobre El Niño sube en 14 de 18, con mediana +63 % frente a la semana anterior. Repetir `validar --ronda c` después del corte, con los N.° 19 y 20.
 - Modelo de engagement o su alternativa.
 - Recomendador híbrido.
 

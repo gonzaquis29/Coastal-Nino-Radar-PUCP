@@ -128,3 +128,29 @@ def test_hac_sin_retardo_es_el_sandwich_simple():
     v0 = ev.covarianza_hac(Xv, yv, mu, retardo=0)
     a = np.linalg.inv(X.T @ (mu[:, None] * X))
     assert np.sqrt(np.diag(v0)) == pytest.approx(np.sqrt(np.diag(a)), rel=0.15)  # Poisson bien especificado
+
+
+def test_diferencias_contra_la_semana_anterior():
+    dias = _dias(40)
+    y = np.full(40, 2.0)
+    y[20:23] = 6.0
+    expo = np.full(40, 100.0)
+    d = ev.diferencias(y, None, dias, [D0 + dt.timedelta(20)])
+    assert d[0] == pytest.approx(np.log(18.5 / 6.5))
+    expo[20:23] = 300.0  # la proporción no cambia si el total sube igual
+    assert ev.diferencias(y, expo, dias, [D0 + dt.timedelta(20)])[0] == pytest.approx(
+        np.log(18.5 / 6.5) - np.log(900.5 / 300.5)
+    )
+    with pytest.raises(ValueError):
+        ev.diferencias(y, None, dias, [D0 + dt.timedelta(3)])
+
+
+def test_prueba_c_detecta_y_no_inventa():
+    dias, rel, y = _serie_ciclica(1.6, 6)
+    eventos = [D0 + dt.timedelta(k) for k in range(10, 290, 14)]
+    e, p, _ = ev.prueba_c(y, None, dias, eventos)
+    assert e > 0.2 and p < 0.01
+    dias, rel, y = _serie_ciclica(1.0, 7)
+    e, p, _ = ev.prueba_c(y, None, dias, eventos)
+    assert p > 0.01
+    assert ev.prueba_c(np.zeros(300), None, dias, eventos)[1] == 1.0

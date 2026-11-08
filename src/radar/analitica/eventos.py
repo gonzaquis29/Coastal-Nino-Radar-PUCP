@@ -8,7 +8,11 @@ autocorrelación (Newey-West). La ronda a comparaba con los días fuera de las v
 que con un comunicado cada ~14 días deja el efecto real dentro de la nula. Solo usa metadatos de notas.csv (fecha,
 "sobre El Niño", citas): no pide páginas ni lee cuerpos.
 
-Uso: python -m radar.analitica.eventos validar [--ronda a|b]   # V1 a V4 y los resultados (informativos)
+Ronda c (la vigente; si no pasa, el estudio queda descriptivo): cada comunicado contra sí mismo, días 0 a +2 frente a
+los mismos días de la semana una semana antes (−7 a −5), con la prueba de rangos con signo de Wilcoxon sobre los
+eventos. Iguala el día de la semana (12 de 18 comunicados salen un viernes) y casi cancela la tendencia.
+
+Uso: python -m radar.analitica.eventos validar [--ronda a|b|c]   # V1 a V4 y los resultados (informativos)
 """
 
 import argparse
@@ -19,6 +23,7 @@ import random
 import sys
 
 import numpy as np
+from scipy import stats
 
 from radar import config
 from radar.comun.archivos import escribir_csv, leer_csv
@@ -48,6 +53,9 @@ BLOQUE_DIAS = 7  # V1b: remuestreo de residuos por semanas
 DIAS_ANTES = (-3, -2, -1)  # el contraste: días 0 a +2 frente a estos
 RETARDO_HAC = 7  # Newey-West con pesos de Bartlett hasta una semana
 CASOS_B = 1000  # V1 y V2 de la ronda b, sobre series simuladas sin efecto con las fechas reales
+# Ronda c (aprobada el 8-nov, último intento)
+DIAS_SEMANA_ANTES = (-7, -6, -5)  # los mismos días de la semana que 0 a +2, una semana antes
+SUAVIZADO = 0.5  # en log((después + 0,5) / (antes + 0,5)), por los días sin notas
 
 SERIES = {
     "proporcion_nino": "Proporción de notas sobre El Niño entre las del día",
@@ -411,15 +419,90 @@ def escribir_salidas(dias, s, eventos, perfiles):
                   for i, (d, r) in enumerate(zip(dias, relativos(dias, eventos), strict=True))])  # fmt: skip
 
 
+# ---------------------------------------------------------------- ronda c: cada evento contra su semana anterior
+
+
+def diferencias(y, exposicion, dias, eventos):
+    """Por evento: log del cociente entre los días 0 a +2 y los días −7 a −5 (de la proporción si hay exposición)."""
+    posicion = {d: i for i, d in enumerate(dias)}
+    salida = []
+    for e in eventos:
+        despues = [posicion[e + dt.timedelta(k)] for k in DIAS_EFECTO]
+        antes = [posicion.get(e + dt.timedelta(k)) for k in DIAS_SEMANA_ANTES]
+        if None in antes:
+            raise ValueError(f"sin semana anterior para {e}")
+        d = math.log((y[despues].sum() + SUAVIZADO) / (y[antes].sum() + SUAVIZADO))
+        if exposicion is not None:
+            d -= math.log((exposicion[despues].sum() + SUAVIZADO) / (exposicion[antes].sum() + SUAVIZADO))
+        salida.append(d)
+    return np.array(salida)
+
+
+def prueba_c(y, exposicion, dias, eventos):
+    """(mediana de las diferencias, valor p bilateral de Wilcoxon, diferencias)."""
+    d = diferencias(y, exposicion, dias, eventos)
+    if not np.any(d):
+        return 0.0, 1.0, d
+    p = stats.wilcoxon(d, zero_method="wilcox", alternative="two-sided").pvalue
+    return float(np.median(d)), float(p), d
+
+
+def criterios_c(fija, y, exposicion, dias, eventos, azar, casos=CASOS_B):
+    """V1 (tamaño) y V2 (potencia) en series simuladas sin efecto, con la estructura real y las fechas reales."""
+    rel = relativos(dias, eventos)
+    rechazos = detectados = 0
+    for _ in range(casos):
+        ys = nula_simulada(fija, y, exposicion, azar)
+        rechazos += prueba_c(ys, exposicion, dias, eventos)[1] < ALFA
+        e, p, _ = prueba_c(con_pico(ys, rel, PICO, azar), exposicion, dias, eventos)
+        detectados += e > 0 and p < ALFA
+    return [
+        criterio(PRUEBA, "V1. Tamaño: series simuladas sin efecto, significativas al 5 %", round(rechazos / casos, 3),
+                 f"≤ {TAMANO_MAXIMO}", rechazos / casos <= TAMANO_MAXIMO, f"{casos} series, fechas reales"),
+        criterio(PRUEBA, f"V2. Potencia: pico de +{PICO:.0%} detectado", round(detectados / casos, 3),
+                 f"≥ {POTENCIA_MINIMA}", detectados / casos >= POTENCIA_MINIMA, f"{casos} series, fechas reales"),
+    ]  # fmt: skip
+
+
+def fila_c(nombre, s, dias, eventos, prueba, nombre_criterio, pasa_de, umbral):
+    y, exposicion = objetivo(nombre, s)
+    e, p, d = prueba_c(y, exposicion, dias, eventos)
+    detalle = (f"suben {int(np.sum(d > 0))} de {len(d)} comunicados; cuartiles {_pct(np.percentile(d, 25))} a "
+               f"{_pct(np.percentile(d, 75))}")  # fmt: skip
+    return criterio(prueba, nombre_criterio, f"{_pct(e)} (p = {p:.3f})", umbral, pasa_de(e, p), detalle)
+
+
+def validar_c():
+    fin, dias, s, eventos = _datos()
+    fija = base(dias)
+    y, exposicion = objetivo("proporcion_nino", s)
+    filas = criterios_c(fija, y, exposicion, dias, eventos, random.Random(SEMILLA + "-c"))
+    filas.append(fila_c("citan_comunicado", s, dias, eventos, PRUEBA,
+                        "V3. Control positivo: citas al comunicado suben (0 a +2 frente a −7 a −5)",
+                        lambda e, p: e > 0 and p < ALFA, f"> 0 y p < {ALFA}"))  # fmt: skip
+    filas.append(fila_c("otros_temas", s, dias, eventos, PRUEBA, "V4. Control negativo: otros temas sin efecto",
+                        lambda e, p: p >= ALFA, f"p ≥ {ALFA}"))  # fmt: skip
+    for n in ("proporcion_nino", "notas_nino"):
+        filas.append(fila_c(n, s, dias, eventos, INFO, SERIES[n] + " (mediana por comunicado)", lambda e, p: True, ""))
+    filas.append(criterio(INFO, "Comunicados con la ventana completa", len(eventos), "", True,
+                          f"{eventos[0]} a {eventos[-1]}; serie de {len(dias)} días hasta {fin}"))  # fmt: skip
+    escribir_csv(config.DIR_ANALITICA / "eventos-por-comunicado.csv", ("fecha", *SERIES),
+                 [{"fecha": e.isoformat(), **{n: round(float(v), 4) for n, v in fila.items()}}
+                  for e, fila in zip(eventos, ({n: diferencias(*objetivo(n, s), dias, eventos)[i] for n in SERIES}
+                                              for i in range(len(eventos))), strict=True)])  # fmt: skip
+    return filas
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Estudio de eventos: efecto de cada comunicado del ENFEN.")
     ap.add_argument("paso", choices=("validar",))
-    ap.add_argument("--ronda", choices=("a", "b"), default="b", help="a: permutación (no pasa); b: Newey-West")
+    ap.add_argument("--ronda", choices=("a", "b", "c"), default="c",
+                    help="a: permutación; b: Newey-West (no pasan); c: Wilcoxon por comunicado")  # fmt: skip
     args = ap.parse_args(argv)
     registro = configurar(f"analitica-eventos-{args.ronda}")
     inicio = ahora()
     config.DIR_ANALITICA.mkdir(parents=True, exist_ok=True)
-    filas = validar_b() if args.ronda == "b" else validar()
+    filas = {"a": validar, "b": validar_b, "c": validar_c}[args.ronda]()
     guardar(filas, config.DIR_ANALITICA / "validacion.csv")
     reporte(filas, [], inicio)
     log.info(f"Registro: {registro.relative_to(config.RAIZ)}")
