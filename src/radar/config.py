@@ -18,6 +18,7 @@ DIR_RAW_INEI = DIR_RAW / "inei"  # ubigeos descargados del INEI (la lista decidi
 DIR_REGION = DIR_DATOS / "processed" / "region"  # validación de la asignación de macro-región
 DIR_RED = DIR_DATOS / "processed" / "red"  # red de enlaces y citas de las notas
 DIR_NLP = DIR_DATOS / "processed" / "nlp"  # vectores, conteos y validación del NLP (nunca la secuencia de lemas)
+DIR_ANALITICA = DIR_DATOS / "processed" / "analitica"  # estudio de eventos y KPIs (solo agregados por día)
 
 # ---------------------------------------------------------------- fechas del proyecto (README, "Ventana de datos")
 LIMA = dt.timezone(dt.timedelta(hours=-5))  # el Perú no tiene horario de verano

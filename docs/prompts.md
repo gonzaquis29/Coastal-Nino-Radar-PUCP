@@ -449,3 +449,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 24. ¿Con qué seguimos? / Procede a realizar lo que tú puedes hacer ahora mismo.
 
 **Resultado:** la IA corrigió el bug de `corpus --solo`, que borraba la validación de la otra fuente. Escribió el paso `calcular` de la capa 5 y no lo corrió, porque habría leído las notas reservadas para T5. Actualizó el README: índice por capas sin NLI, polaridad descriptiva y la app solo con el embedding.
+25. Sí, apruebo (estudio de eventos).
+
+**Resultado:** la IA midió, sin red, que los comunicados salen cada ~14 días y que el volumen se multiplicó por 30. Propuso una regresión de Poisson diaria con tendencia y placebo por permutación, con V1 a V4 fijados antes, y escribió `radar.analitica.eventos`. La ronda a no pasa V2 (0,745) ni V3 (p = 0,11): las fechas falsas caen cerca de las reales y la nula contiene el efecto.
