@@ -373,3 +373,49 @@ python -m radar.nlp.semaforo validar     # S1 a S6 (pide páginas para los 100 c
 - La versión cuantizada (ONNX) cambia las respuestas: descartada.
 - En la laptop del equipo (i9-13900H) hace falta estar enchufada, con Windows en "Máximo rendimiento" y ASUS en "Rendimiento dinámico" (Fn + F). Si no, todo va de 3 a 8 veces más lento.
 - `torch` no está en `pyproject.toml`: se instala para CPU con `pip install torch --index-url https://download.pytorch.org/whl/cpu`.
+
+## Único intento con NLI (punto 5.2; definición aprobada el 8-nov)
+**Medición previa** (sin red, con los titulares y resúmenes de las notas sobre El Niño y las frases del ENFEN):
+- 2.671 de las 3.050 frases que nombran El Niño no tienen datos (87 %). Solo 187 (7 %) pronostican un impacto sin hablar de medidas, y de ellas 12 se atribuyen al ENFEN. El resto trata de medidas, precios o prevención, donde el NLI solo daría falsas alarmas, como en el piloto del 28-oct.
+- Solo 12 frases usan la categoría oficial ("por encima de lo normal"), así que una regla léxica de impacto no cubre las notas.
+- El ENFEN tiene 303 frases sin datos, de las cuales 72 son simples (una variable y una categoría). Muchos caudales no dicen de qué región son.
+
+**Enfoques:** una regla léxica de impacto (cubre 12 de 2.671: descartada); mDeBERTa con premisas filtradas (**se prueba una vez**); NLI solo por implicación, para dar verde (descartado: daría por respaldado lo que no lo está); ajuste fino o un modelo más grande (sin etiquetas y con un solo intento: descartado); LLM como juez offline (solo si el equipo lo decide); no usar NLI (el cierre previsto si no pasa).
+
+**Definición:**
+- **Población:** frases de la capa 3 que nombran El Niño, sin datos, evaluables y no de otra fuente, con una variable de impacto (lluvias, caudales, temperatura, mar, anchoveta, huaicos…), con una marca de pronóstico (futuro, condicional, "se espera", "prevé"…) y sin hablar de medidas (planes, emergencias, obras, precios…).
+- **Premisas:** las 3 frases más parecidas, según minilm, de los párrafos de `impactos` y `pronostico` del comunicado vigente, sin los del Pacífico central (`nino_3.4`).
+- **Regla:** marca si alguna premisa da contradicción > τ y ninguna da implicación > τ.
+- **τ:** el menor valor de la grilla 0,50, 0,55… 0,95 que en enero a junio cumple N1 ≤ 5 % y el lado "no cambia" de N2 ≤ 10 %. Si ninguno cumple, el NLI se cierra.
+- **Salida:** "posible diferencia (NLI)", que pone amarillo y nunca rojo. La implicación no cambia el color. Solo corre en la app local.
+
+**Criterios (fijados el 8-nov, antes del código; deciden con julio a octubre):**
+
+| | Prueba | Umbral |
+|---|---|---|
+| N1 | Cada frase de impacto del ENFEN frente a su propio comunicado, sin ella misma: marcadas | ≤ 5 % |
+| N2 | Pares naturales: frases simples con la misma variable y la misma región explícita, frente a otro comunicado a 31 días o menos. Detecta si la categoría cambia; marca si no cambia | ≥ 60 % · ≤ 10 %; **con menos de 20 casos que cambian, el NLI se cierra** |
+| N3 | Perturbaciones de frases oficiales simples ("por encima" ↔ "por debajo"), frente a su comunicado | ≥ 80 % (prueba fácil) |
+| N4 | Frases de la población en los 30 positivos limpios (ya vistos): marcadas | ≤ 10 % |
+| N5 | Tiempo de una consulta corta | ≤ 2 s |
+
+**Límites:** en N1 a N3, las frases oficiales casi nunca nombran El Niño, así que ahí la población no exige la mención. No se usan notas nuevas, porque las que quedan están reservadas para T5. T5 solo lo reportará como informativo.
+
+```bash
+python -m radar.nlp.nli validar   # N1 a N3 y N5 sin red; N4 pide páginas (30 notas)
+```
+
+### Resultado (8-nov): el NLI se cierra sin medir
+
+N2 es la única prueba con pares naturales, y su mínimo de casos no se alcanza. Por eso el modelo no llegó a cargarse, no se eligió τ y no se pidieron páginas. `python -m radar.nlp.nli validar` lo comprueba antes de cargar mDeBERTa.
+
+| Casos con texto oficial | Enero a junio (calibra) | Julio a octubre (decide) |
+|---|---|---|
+| N1, frases de impacto sin datos | 41 | 36 |
+| N2, la categoría cambia | 2 | **0** (mínimo 20) |
+| N2, la categoría no cambia | 5 | 3 |
+| N3, perturbaciones | 2 | 4 |
+
+- **Causa:** en los párrafos de impactos y pronóstico de los 20 comunicados hay 187 frases. Solo 11 son simples (una variable, una región explícita y una categoría). Las demás mezclan variables o regiones, o no dicen la región.
+- **No depende de lo estricta que sea la regla:** con la región opcional hay 52 frases simples, pero en julio a octubre solo salen 6 casos que cambian (mínimo 20). Tampoco se puede calibrar τ con 2 casos que cambian en enero a junio.
+- **Qué queda:** las frases sin datos siguen fuera del índice. El semáforo se queda con las reglas por dato y la distancia (punto 5.1). En la app, el NLI no se usa y no se muestra. El módulo y sus pruebas quedan como registro del intento.

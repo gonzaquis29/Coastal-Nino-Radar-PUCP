@@ -82,6 +82,8 @@ SEMAFORO_UMBRALES = ("tipo", "cercano", "lejano", "auc", "auc_ic", "p25_positivo
                      "negativos", "con_color", "fecha")  # fmt: skip
 SEMAFORO_LECTURA = ("medio", "id", "grupo", "error", "palabras", "coseno", "parrafo", "tipo_parrafo", "color_capa5",
                     "color", "origen")  # fmt: skip
+NLI = ("prueba", "mitad", "comunicado", "referencia", "etiqueta", "sha1", "contra", "implica")
+NLI_NOTAS = ("medio", "id", "error", "frases")
 
 
 def columnas_candidatos(modelos):

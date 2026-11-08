@@ -6,7 +6,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 - **Noticias:** 76.961 notas de los 4 medios (1-ene a hoy), con el texto limpio, y 2.388 notas sobre El Niño. Enlaces limpios: 117.516, de los que 7.616 apuntan a fuentes oficiales. La macro-región está asignada y validada (`region.notas` pasa).
 - **Corpus oficial:** ENFEN hasta el comunicado N.° 19 (30-oct) y avisos del Senamhi; 865 párrafos.
 - **Viabilidad cerrada:** histórico, filtro, volumen, calidad, control positivo (con el respaldo), macro-región, precisión de "sobre El Niño", pysentimiento (no pasa: solo polaridad en las notas) y memoria para la app (el NLI queda offline; el embedding cabe). Detalle: [nlp/viabilidad-modelos.md](nlp/viabilidad-modelos.md) y [noticias/definicion.md](noticias/definicion.md#diagnóstico-de-falsos-positivos-31-oct-2026).
-- **NLP:** TF-IDF (no pasa T4) y embeddings (pasan con e5-small) hechos el 1-nov. Tópicos y polaridad cerrados el 7-nov (BERTopic k=12; la polaridad queda descriptiva, [nlp/topicos.md](nlp/topicos.md)). Capa 3 (afirmaciones y temporalidad) y capa 5 (comparación con lo oficial) hechas y validadas el 7-nov ([nlp/discrepancia.md](nlp/discrepancia.md)). El semáforo (`radar.nlp.semaforo.medir_discrepancia`) quedó hecho y validado el 7-nov. **Sin empezar:** el intento con NLI, YouTube y Trends, y la app.
+- **NLP:** TF-IDF (no pasa T4) y embeddings (pasan con e5-small) hechos el 1-nov. Tópicos y polaridad cerrados el 7-nov (BERTopic k=12; la polaridad queda descriptiva, [nlp/topicos.md](nlp/topicos.md)). Capa 3 (afirmaciones y temporalidad) y capa 5 (comparación con lo oficial) hechas y validadas el 7-nov ([nlp/discrepancia.md](nlp/discrepancia.md)). El semáforo (`radar.nlp.semaforo.medir_discrepancia`) quedó hecho y validado el 7-nov. El único intento con NLI se cerró el 8-nov sin medir: solo hay 0 pares naturales que cambian en julio a octubre (mínimo 20). **Sin empezar:** YouTube y Trends, y la app.
 
 ## Siempre (rutina hasta el corte del 20-nov)
 - Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. La última fue el 7-nov a las 09:49, así que la próxima vence el **9-nov a las 09:49**. Un solo proceso a la vez pide páginas (`data/red.lock`): si un proceso largo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo.
@@ -58,7 +58,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 ## 5. Semana 3 (9 a 15-nov)
 Índice de discrepancia, por orden:
 1. ~~**Distancia dentro del semáforo**~~ Hecha el 7-nov: `radar.nlp.semaforo.medir_discrepancia(texto, fecha)` ([nlp/discrepancia.md](nlp/discrepancia.md#distancia-en-el-semáforo-punto-51-definición-aprobada-el-7-nov)). Usa los párrafos vigentes sin `definicion`, umbrales propios para corto (100 palabras o menos) y cuerpo, el verde desde el p95 del negativo y lo lejano en gris, nunca rojo. Si hay afirmaciones evaluables, manda la capa 5. Pasan S1 a S6. Se encontró que el control positivo de E3 tenía citas falsas (punto 2). Antes de usar los umbrales tras el recálculo final, hay que repetir `python -m radar.nlp.semaforo calibrar` y `validar`.
-2. **El único intento con NLI**, solo para las frases sin datos: se calibra con los pares naturales de enero a junio y se evalúa con los de julio a octubre. Si no mejora a las reglas, se cierra y se documenta. Si pasa, puede ir en la app local; la versión pública se queda con la distancia y las reglas.
+2. ~~**El único intento con NLI**~~ **Cerrado el 8-nov** sin cargar el modelo: con los pares naturales hay 0 casos que cambian en julio a octubre (mínimo 20), y 6 si la región es opcional. La app se queda con las reglas y la distancia ([nlp/discrepancia.md](nlp/discrepancia.md#resultado-8-nov-el-nli-se-cierra-sin-medir)).
 3. **Comunicado N.° 20 (hacia el 13-nov):** correr `python -m radar.oficial.corpus` sin `--solo` y repetir `python -m radar.nlp.temporalidad validar` y `python -m radar.nlp.discrepancia validar --solo-oficial`.
 4. **Después del recálculo final:** calcular la capa 5 sobre todas las notas sobre El Niño. Falta el paso `calcular` en `radar.nlp.discrepancia`; hoy solo están `muestra` y `validar`.
 5. **T5 (informativo, hasta el 18-nov):** las 242 notas sobre El Niño sin ver, más las que vayan llegando y las nuevas que citan al ENFEN. Con ellas se confirma de forma independiente la temporalidad y la capa 5, y se cuentan las rojas en notas que citan al ENFEN. No se usan para ajustar nada.
@@ -81,7 +81,7 @@ Además, en la semana 3:
 
 ## README
 Hay que actualizar:
-- el índice de discrepancia: capas, cuatro dimensiones (dato, escala, tiempo, certeza), NLI en la app local solo si pasa su prueba, sin "párrafo más parecido" ni prueba sintética, y sus límites;
+- el índice de discrepancia: capas, cuatro dimensiones (dato, escala, tiempo, certeza), sin NLI (cerrado el 8-nov por falta de pares naturales), sin "párrafo más parecido" ni prueba sintética, y sus límites;
 - las emociones de las notas, que pasan a ser solo polaridad;
 - el producto: la pestaña Consulta ya no muestra el NLI (el semáforo y su descripción en Consulta ya están al día, 8-nov).
 

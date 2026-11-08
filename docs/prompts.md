@@ -443,3 +443,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 22. ¿Con qué continuamos? ¿Hay algo que revisar antes? / Procedemos con lo que sí podemos corregir, actualizar o validar ahora mismo.
 
 **Resultado:** la IA releyó en memoria las 5 notas no verdes del control positivo. Las 3 amarillas y una roja eran diferencias reales; la otra roja era un fallo de la capa 3 ("hacia 2030"), que se corrigió sin cambiar los controles oficiales. Arregló la regla de citas por número (solo cuenta si cerca se nombra al ENFEN o a El Niño), con criterios fijados antes: R2 53/54 y R3 7/7, y salen 34 citas de otras entidades (Ceplan, COEP, FAP), que llegan con el recálculo final. Actualizó el semáforo en el README.
+23. Sí, define el NLI / sí, apruebo (punto 5.2).
+
+**Resultado:** la IA midió que el 87 % de las frases sobre El Niño no traen datos y que solo el 7 % pronostica un impacto. Propuso aplicar el NLI solo a esas frases y comparar con las de impactos y pronóstico del comunicado vigente. Fijó N1 a N5 y el cierre si N2 tiene menos de 20 casos que cambian en julio a octubre, y escribió `radar.nlp.nli`. Hubo 0 casos, y 6 con la región opcional, así que el NLI se cerró sin cargar el modelo ni pedir páginas.

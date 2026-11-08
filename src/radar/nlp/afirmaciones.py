@@ -330,8 +330,9 @@ def tiene_dato(d):
     return bool(d["magnitudes"] or d["estado"] or d["plazos"] or d["probabilidades"] or d["segmentos"])
 
 
-def afirmaciones(titular, resumen, cuerpo, fecha):
-    """Filas de las frases que nombran a El Niño con algún dato; la atribución pasa a la frase siguiente del párrafo."""
+def afirmaciones(titular, resumen, cuerpo, fecha, sin_datos=False):
+    """Filas de las frases que nombran a El Niño con algún dato; la atribución pasa a la frase siguiente del párrafo.
+    Con sin_datos, las que nombran a El Niño y no tienen ningún dato (el único intento con NLI, punto 5.2)."""
     salida, anterior = [], (None, "sin")
     for n, (origen, linea, frase, corta) in enumerate(frases(titular, resumen, cuerpo)):
         fuente, pais = atribucion(frase)
@@ -342,7 +343,7 @@ def afirmaciones(titular, resumen, cuerpo, fecha):
         if corta or not rasgos.menciones(frase):
             continue
         d = datos(frase, fecha)
-        if not tiene_dato(d):
+        if tiene_dato(d) == sin_datos:
             continue
         salida.append({
             "frase": n, "origen": origen, "sha1_frase": sha1_corto(frase), "palabras": len(frase.split()), **d,
