@@ -72,5 +72,11 @@ AFIRMACIONES_LECTURA = ("medio", "id", "fecha", "error", "frases", "largas", "af
 TEMPORALIDAD_OFICIAL = ("comunicado", "seccion", "frase_n", "sujeto", "relacion", "inicio", "fin")
 
 
+# capa 5 (radar.nlp.discrepancia): una fila por dato de cada afirmación, y una por nota leída
+DISCREPANCIA = ("medio", "id", "fecha", "frase", "dato", "valor", "categoria", "escala", "atras", "adelantada",
+                "sentido")  # fmt: skip
+DISCREPANCIA_NOTAS = ("medio", "id", "fecha", "error", "color", "afirmaciones", "filas")
+
+
 def columnas_candidatos(modelos):
     return CANDIDATOS_BASE + tuple(f"{m}_{p}" for m in modelos for p in PUNTAJES_CANDIDATO)

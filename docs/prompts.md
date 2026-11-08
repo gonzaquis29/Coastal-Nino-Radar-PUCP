@@ -428,3 +428,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 17. Evaluemos de manera crítica… / sí, defínela / sí, apruebo (temporalidad, plazo v2).
 
 **Resultado:** la IA revisó las alternativas (HeidelTime, dateparser, NLI, LLM local) y propuso reglas propias con segmentos de inicio y fin y estaciones del hemisferio sur. Fijó T1 a T5 antes de escribir `radar.nlp.temporalidad`. Pasan T1 a T4 (32/32, 113/114, 29/31, 19/19). Son controles de desarrollo sobre los comunicados; T5, con notas nuevas, queda para el 18-nov.
+18. Hay que analizar e investigar mejor, desde otra perspectiva / sí, reescríbela / sí, apruebo (capa 5).
+
+**Resultado:** la IA revisó estudios que comparan noticias de ciencia con su fuente (Sumner, Wright y Augenstein, Pei y Jurgens) y exploró titulares ya vistos. Encontró que "muy fuerte" es la escala del Pacífico central, que muchas supuestas contradicciones se adelantaban a lo oficial y que algunas notas afirman con más certeza que el ENFEN. Reescribió la capa 5 en cuatro dimensiones, con C1 a C6 fijados antes, y escribió `radar.nlp.discrepancia`. En la ronda a, con 200 notas nuevas, pasan C1, C2, C3 y C5; C4 no pasa (42/45) por tres fallos de fechas ya diagnosticados.

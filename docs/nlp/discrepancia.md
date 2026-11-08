@@ -36,7 +36,7 @@ Pilotos fuera del repositorio, con notas reales leídas en memoria y sin guardar
 | 2. Corpus oficial limpio | Sin encabezados de tabla; `tipo` y `region_enso` por párrafo (`oficial/`) | **Hecha** (28-oct): [../oficial/definicion.md](../oficial/definicion.md) |
 | 3. Frases y afirmaciones | Qué dato afirma cada frase, quién lo dice, de cuándo, con qué seguridad | **Hecha** (7-nov): estado y magnitud pasan; plazo no pasa (0,882) |
 | 4. Referencia oficial | Comunicado vigente y anterior de cada nota, con datos comparables (plazos en mes y año) | Por definir; `radar.oficial.vigencia.Corpus` ya da el vigente |
-| 5. Comparación | Reglas por dato + distancia (+ NLI acotado) → índice y semáforo | Por definir; evaluación descrita abajo |
+| 5. Comparación | Reglas por dato en cuatro dimensiones (dato, escala, tiempo, certeza) + distancia → semáforo | Definida y aprobada (7-nov); en construcción |
 
 ## Capa 3: frases y afirmaciones (definición aprobada para construir)
 **Responsabilidad única:** partir el texto limpio en frases y, de cada frase que afirma algo sobre El Niño, sacar qué dato afirma, quién lo dice, de qué momento habla y con qué seguridad. No compara con lo oficial. Va en `src/radar/nlp/`.
@@ -126,15 +126,91 @@ El plazo v1 solo lee "hasta …" y compara un mes. La v2 (`radar.nlp.temporalida
 
 T2 a T4 se ajustaron mirando los mismos comunicados, así que son controles de desarrollo, no una validación independiente. En T4, el campo `plazo` de los N.° 17 a 19 es la duración de la magnitud, no la del evento; ahí se compara con el titular. La confirmación independiente es **T5** (informativo): las notas reservadas nuevas que lleguen hasta el 18-nov.
 
-## Capa 5: cómo se evalúa (para definir en detalle)
-Cada método se evalúa con los mismos conjuntos, con criterios fijados antes y los umbrales calibrados con datos aparte:
+## Capa 5: comparación (definición aprobada el 7-nov)
+**Qué hace:** mide qué tan lejos está cada afirmación de lo oficial y en qué dimensión. No dice si una nota es verdadera o falsa. Es la misma idea con la que se compara una nota de ciencia con su comunicado de prensa ([Sumner et al., 2014](https://www.bmj.com/content/349/bmj.g7465); [Wright y Augenstein, 2021](https://aclanthology.org/2021.emnlp-main.845); [Pei y Jurgens, 2021](https://arxiv.org/abs/2109.14776)). Código: `radar.nlp.discrepancia`, sobre lo que entrega la capa 3.
 
-1. **Contradicciones sintéticas.** Un piso mínimo; no basta.
-2. **Pares naturales de la historia del ENFEN.** El estado pasó de Vigilancia a Alerta el 13-feb y la magnitud subió de débil a moderada (15-may), fuerte (15-jun) y extraordinaria (14-ago). Las frases de comunicados con datos distintos son contradicciones reales; las de comunicados con los mismos datos, paráfrasis reales. Se calibra con enero a junio y se evalúa con julio a octubre.
-3. **Notas nuevas que citan un comunicado.** Mide falsas alarmas en noticias reales, reportadas por medio.
-4. **Muestra al azar.** Solo descriptiva: cuántas alarmas da cada método y cuánto coinciden.
+**Por qué cambió el plan** (exploración del 7-nov con los titulares y resúmenes de 1.683 notas ya vistas, sin validar):
+- **La escala del Pacífico central.** "Muy fuerte" es la escala del Pacífico central y el ENFEN también la usa para Niño 3.4, desde el N.° 13. Comparar solo con la costa marcaba esos casos como contradicción.
+- **Fuentes que se adelantan.** Casi todas las "contradicciones" restantes aparecieron más de 8 días después del último comunicado y venían de la NOAA o el Senamhi, o se adelantaron a lo que el ENFEN dijo después.
+- **La certeza.** El ENFEN da todas sus magnitudes con cautela (89 de 89 frases). Algunos titulares las dan en futuro simple ("será moderado", "provocará").
 
-El índice separa **"contradice"** de **"desactualizada"**: una nota que reporta bien un comunicado anterior.
+**Referencia de cada comunicado:**
+- **Costa:** el estado del encabezado, `magnitudes_mencionadas` de `comunicados.csv` y los segmentos de `temporalidad.oficial`.
+- **Pacífico central:** las magnitudes de las frases que hablan de esa región, más las frases sin región de los párrafos `nino_3.4`.
+- Las fechas se comparan solo en la costa.
+
+**Afirmaciones evaluables:**
+- Región costa, Pacífico central, ambas o ambigua.
+- Momento actual.
+- Ni negada, ni explicativa, ni pregunta.
+- Las que se atribuyen a otra agencia (NOAA, OMM) o a otro país quedan como **de otra fuente** y no se comparan.
+
+**Categorías de cada dato:**
+
+| Dimensión | Categoría | Regla |
+|---|---|---|
+| Dato (magnitud, estado, fechas) | respaldada | Está en el comunicado vigente, en la escala de la afirmación. Si la región es ambigua, vale cualquiera de las dos escalas. |
+| | desactualizada | Solo está en un comunicado anterior (se guarda cuántos atrás). |
+| | sin respaldo | Una magnitud "posible" que no está en lo oficial, o una fecha de algo de lo que el ENFEN no da plazo. |
+| | contradice | El resto. |
+| Escala | otra escala | Dice "costero" con una magnitud que solo está en el Pacífico central, o al revés. |
+| Tiempo (solo en el análisis retrospectivo) | adelantada | Lo que no tenía respaldo aparece en uno de los dos comunicados siguientes, dentro de 30 días. |
+| Certeza | más certeza que lo oficial | Un pronóstico con magnitud en futuro simple y sin ninguna cautela ("podría", "se espera", "probable", condicional). |
+| Dirección | mayor, igual o menor | Frente a la magnitud máxima de su escala. Solo descriptiva. |
+
+**Nota y semáforo:**
+- 🔴 si alguna afirmación evaluable contradice.
+- 🟡 si hay alguna desactualizada, sin respaldo, de otra escala o con más certeza.
+- 🟢 si todas están respaldadas.
+- Sin afirmaciones: solo la distancia con minilm, con los umbrales del README y sin los párrafos de `definicion`.
+
+El NLI queda fuera de esta capa. Su único intento se decide después, solo para frases sin datos.
+
+**Muestra:** 200 de las notas sobre El Niño que nadie ha visto, en proporción por medio, con la semilla `capa5-validacion-7nov`. Se agregan a `notas_vistas.csv`.
+
+**Criterios (fijados el 7-nov, antes del código):**
+
+| | Prueba | Umbral |
+|---|---|---|
+| C1 | Lógica: casos sintéticos, al menos uno por categoría | 100 % |
+| C2 | Pares naturales: cada frase oficial frente a su propio comunicado, y la magnitud costera y el estado frente a los demás (lo esperado sale de `comunicados.csv`) | ≥ 98 % respaldada con el suyo; ≥ 95 % de la categoría esperada con los demás |
+| C3 | Desplazamiento: en los datos que distinguen al vigente del comunicado más cercano con otros datos, el vigente es el que respalda | ≥ 80 % |
+| C4 | Perturbaciones de frases respaldadas de la muestra. Cambiar la magnitud o el estado deja de respaldar y da la categoría que le toca por la historia (contradice, o desactualizada si ese valor ya se dijo antes). Cambiar el año de la fecha deja de respaldar. Cambiar el condicional por el futuro da "más certeza" | 100 % |
+| C5 | Frases oficiales marcadas "más certeza" | ≤ 2 % |
+| C6 | Dinámica: las desactualizadas se juntan en los 7 días después de cada comunicado y las adelantadas en los 14 días antes del siguiente | Dirección esperada; informativo si hay menos de 20 casos |
+
+**Solo descriptivos:**
+- Reparto de categorías por atribución y por origen (titular o cuerpo de la misma nota), nunca por medio.
+- Rojas en las notas nuevas que citan al ENFEN hasta el 18-nov.
+
+**Límites:**
+- C2 y C3 prueban que el método es coherente y responde a los datos, no su exactitud: no hay etiquetas.
+- La certeza solo se mide en un sentido: lo oficial siempre sale condicional. El otro sentido solo tiene casos sintéticos (C4).
+- Antes del cálculo final hay que correr `corpus` con el comunicado N.° 20 (~13-nov).
+
+**Precisiones al construir (7-nov), dentro de lo definido:**
+- *Desactualizada* va antes que *otra escala*. Un "costero débil" cuando la costa ya es moderada está desactualizado, aunque el Pacífico central siga en débil. Sin este orden, C2 daba 13 desacuerdos frente al N.° 10.
+- En C2, la frase oficial sin región hereda la de la frase anterior del párrafo ("en esta región…"), con la misma regla que construye la referencia.
+- El día de emisión de un comunicado, también respalda el anterior: no se sabe la hora de la nota (regla de `radar.oficial.vigencia`).
+
+**Ronda a (7-nov):** `python -m radar.nlp.discrepancia validar`, con 199 notas leídas de 200.
+
+| Criterio | Resultado |
+|---|---|
+| C1. Lógica | 28/28 |
+| C2. Frases oficiales frente a su comunicado | 138/138 |
+| C2. Magnitud costera y estado frente a los demás | 1.273/1.273 |
+| C3. Desplazamiento | 24/27 (0,889; IC 0,72–0,96) |
+| **C4. Perturbaciones** | **42/45: no pasa** |
+| C5. Certeza oficial | 0/40 |
+| C6. Dinámica | 3 desactualizadas y 0 adelantadas: informativo |
+
+- **Cobertura:** 167 de 199 notas no tienen afirmaciones evaluables, así que su color lo da la distancia. De las otras 32, 27 salen en verde, 5 en amarillo y ninguna en rojo.
+- **Diagnóstico de los 3 fallos de C4 (perturbaciones de fechas) y de las 3 desactualizadas:**
+  - **Rango con un solo año.** En "entre enero y marzo del 2030", el primer mes no hereda el año del segundo: es un error de la temporalidad (capa 3).
+  - **La prueba cambiaba años fuera del segmento.** El año que se reemplazaba no era el del segmento respaldado: es un error de diseño de C4.
+  - **Fechas económicas.** "Los próximos dos trimestres… el PBI" sale como fecha de El Niño (capa 3).
+  - **Hechos pasados.** "Inició en marzo de este año" queda *desactualizada* porque el vigente ya no repite el inicio. Un hecho pasado no caduca: es un error de la regla.
 
 ## Configuración del NLI (si se usa)
 - Modelo `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` (MIT; 83,2 % en XNLI en español).
