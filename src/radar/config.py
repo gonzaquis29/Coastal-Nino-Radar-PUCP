@@ -104,5 +104,6 @@ ARCHIVO_LUGARES = DIR_CONFIG / "lugares.csv"
 ARCHIVO_LUGARES_LA_NINA = DIR_CONFIG / "lugares_la_nina.csv"  # "laguna La Niña" no es el fenómeno
 # Notas ya vistas en pilotos y validaciones (solo medio, id y muestra): ninguna muestra nueva las repite
 ARCHIVO_NOTAS_VISTAS = DIR_CONFIG / "notas_vistas.csv"
+ARCHIVO_UMBRALES_SEMAFORO = DIR_CONFIG / "semaforo_umbrales.csv"  # los usa la app: solo cosenos y AUC
 # Un solo proceso a la vez pide páginas (medios y fuentes oficiales): así se respeta el ritmo por host entre procesos
 ARCHIVO_CANDADO = DIR_DATOS / "red.lock"

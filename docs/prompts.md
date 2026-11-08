@@ -437,3 +437,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 20. Entonces, ¿cómo debemos resolverlo? / sí (silencio del vigente y C3).
 
 **Resultado:** la IA hizo que cada escala tome lo último que dijo el ENFEN (Pacífico central y plazo de cada magnitud) y repitió las tres rondas con el código final. Así encontró y corrigió un falso negativo de su propia regla de "vigilancia". Pasan C3 (23/23 juntas, sin independencia) y C4 en las tres rondas; las notas que quedan se reservan para T5.
+21. Define el punto 5.1 de los pendientes (la distancia dentro del semáforo): mapea los enfoques, fija los criterios antes del código, valida con muestras nuevas sin T5 y sin etiquetado manual / sí, apruebo / positivo limpio por regla y resúmenes del ENFEN en S4.
+
+**Resultado:** la IA midió, sin pedir páginas, que el imán de minilm es el párrafo genérico de recomendación y no la definición, y que el umbral verde era inestable. Encontró la causa: citas falsas de "Comunicado N.°" en el control positivo de E3. Propuso párrafos vigentes sin definiciones, umbrales por tipo de texto, el verde desde el negativo, lo lejano en gris y las reglas primero. Escribió `radar.nlp.semaforo` y pasan S1 a S6 (con 400 y 100 negativos nuevos y 93 resúmenes oficiales). S2 en cuerpo y S4 son pruebas fáciles, y se declara.

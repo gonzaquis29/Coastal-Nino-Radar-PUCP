@@ -292,6 +292,73 @@ Con estos cambios, los controles oficiales no cambian (T1 a T4, plazos, estado o
 - Con la herencia, el único cambio en la ronda c es el "muy fuerte" del Senamhi del 27-ago, que pasa a *respaldada*. Su fecha ("muy fuerte en enero de 2027") sigue *sin respaldo*, porque las fechas del Pacífico central no se comparan.
 - Las 242 notas sobre El Niño que quedan sin ver se reservan para T5. No hay una ronda d.
 
+## Distancia en el semáforo (punto 5.1; definición aprobada el 7-nov)
+**Qué hace:** una función única, `radar.nlp.semaforo.medir_discrepancia(texto, fecha)`, para la app, el agente y los videos. Une la capa 5 con la distancia de minilm a los párrafos oficiales. Entre el 84 y el 89 % de las notas no tiene afirmaciones evaluables, así que su color lo da la distancia.
+
+**Exploración previa** (texto corto, sin red, con los controles de E3 ya vistos; no es validación):
+
+| Variante (minilm, texto corto) | E3 | E4 | Definición elegida | Recomendación elegida |
+|---|---|---|---|---|
+| Todo el ENFEN | 0,877 | 0,832 | 4 % | 29 % |
+| Vigentes | 0,864 | 0,859 | 3 % | 43 % |
+| Vigentes sin `definicion` | 0,865 | 0,862 | 0 % | 44 % |
+| Vigentes sin `definicion` ni `recomendacion` | 0,873 | 0,800 | 0 % | 0 % |
+| Vigentes con corrección de hubness (CSLS) | 0,877 | 0,850 | 5 % | 33 % |
+
+- **El 11,5 % de embeddings.md es de e5 frente a todo el ENFEN.** Con minilm y los vigentes, la definición es el párrafo elegido solo en el 3 %. El "imán" es el párrafo genérico de recomendación ("Se recomienda a los tomadores de decisiones…"), pero ese párrafo sí aporta tema: quitarlo baja E4 a 0,800.
+- **El control positivo de E3 tenía citas falsas.** El nivel `numero` de `rasgos.comunicados_citados` toma cualquier "Comunicado N.°" (FAP, PNP, Minedu): 11 de los 41 positivos no mencionan El Niño. Con los 41, el p25 del positivo tiene un IC del 95 % de 0,20 a 0,53 y el 17 % de los positivos caería en "lejano". Con el **positivo limpio** (los 30 que mencionan El Niño), E3 en corto es 0,993, el IC del p25 va de 0,48 a 0,67 y ningún positivo queda lejano. El arreglo de `rasgos` queda para el recálculo final ([../pendientes.md](../pendientes.md)), y los E3 del 1-nov se declaran como medidos con ese control.
+- **Corto y cuerpo se separan solos:** el titular con el resumen llega a 74 palabras en el p99; el cuerpo, a 117 en el p1.
+
+**Decisiones:**
+1. **Párrafos:** los del ENFEN vigentes en la fecha (`candidatos.vigentes`, la misma regla de `vigente_desde` y `vigente_hasta`), sin los de `definicion`. Los de `recomendacion` se quedan.
+2. **Puntaje:** el coseno máximo de minilm entre los tramos del texto y los de cada párrafo, como en B.
+3. **Tipo de texto:** corto si tiene 100 palabras o menos; si no, cuerpo. Cada tipo tiene sus umbrales. Con menos de 5 palabras, "texto insuficiente".
+4. **Umbrales (README, ajustado):** *cercano* si el coseno llega al p95 del control negativo (`otros_temas`, 400 notas); *lejano* si no pasa del p75 del negativo; *intermedio* entre ambos. El verde sale del negativo porque el p25 de un positivo chico es inestable. Si un tipo no pasa E3 (AUC < 0,80 con el positivo limpio, o p25 del positivo ≤ p75 del negativo), ese tipo muestra la distancia sin color.
+5. **Combinación, por orden:** si hay afirmaciones evaluables, el color es el de la capa 5 (rojo, amarillo o verde). Si no, lo da la distancia: verde (cercano), amarillo (intermedio) o **gris (lejano)**. **Lejos no es contradecir:** el rojo queda solo para "contradice". Es un cambio frente al README ("distancia por encima del p25 del negativo → rojo") que se declara.
+6. **Salida:** el color, su origen (reglas o distancia), el tipo de texto, el coseno, la banda, el párrafo más parecido (id y tipo), los umbrales y las filas de la capa 5. Las dos señales se entregan aunque mande una.
+
+**Criterios (fijados el 7-nov, antes del código):**
+
+| | Prueba | Umbral |
+|---|---|---|
+| S1 | Lógica de la combinación y de las bandas (casos sintéticos) | 100 % |
+| S2 | E3 con la configuración final y el positivo limpio, en corto y cuerpo por separado | AUC ≥ 0,80 y p25 del positivo > p75 del negativo |
+| S3 | **Negativos nuevos:** 400 notas de otros temas no vistas (100 por medio, con la definición de `otros_temas`) en corto, sin red, y 100 de ellas (25 por medio) en cuerpo | Cercano ≤ 10 %; lejano ≥ 60 %, en cada tipo |
+| S4 | **Positivos nuevos:** los párrafos de `resumen` de cada comunicado (sin duplicados), frente a los párrafos vigentes el día anterior a su emisión, en corto | Lejano ≤ 25 % |
+| S5 | Las notas de las muestras con afirmaciones evaluables conservan el color de la capa 5 | 100 % |
+| S6 | Tiempo por consulta (mediana de 20 textos cortos) | ≤ 2 s |
+
+**Cambio aprobado al construir (7-nov):** S4 iba a usar las 23 notas no vistas que citan un comunicado, pero todas son citas falsas de otras entidades, y las demás notas sobre El Niño están vistas o reservadas para T5. Se reemplazó por texto oficial. Como el comunicado repite mucho del anterior, S4 es una prueba fácil: solo descarta un fallo grueso. En cuerpo no hay positivo nuevo, y se declara. Los comunicados casi no traen titular (3 de 20), así que se usan sus párrafos de resumen.
+
+**Muestras:** semilla `semaforo-negativos-7nov`, que se agrega a `notas_vistas.csv`. La calibración de cuerpos lee los 430 controles (no es un recálculo).
+
+```bash
+python -m radar.nlp.semaforo muestra     # elige los negativos nuevos y los agrega a notas_vistas
+python -m radar.nlp.semaforo calibrar    # umbrales de corto (sin red) y de cuerpo (pide páginas)
+python -m radar.nlp.semaforo validar     # S1 a S6 (pide páginas para los 100 cuerpos nuevos)
+```
+
+**Resultado (7-nov): pasa.** La calibración leyó 430 cuerpos en 2,8 min y la validación, 100 en 1,1 min, sin errores. Los umbrales quedan en `config/semaforo_umbrales.csv` (solo cosenos y AUC), que la app necesita.
+
+| Criterio | Resultado |
+|---|---|
+| S1. Lógica | 21/21 |
+| S2. E3 en corto | 0,993 (IC 0,985–0,999); p25 del positivo 0,552 > p75 del negativo 0,302 |
+| S2. E3 en cuerpo | 1,000 (IC 1,000–1,000); 0,808 > 0,448 |
+| S3. Negativos nuevos en corto (400): cercano / lejano | 0,058 / 0,730 |
+| S3. Negativos nuevos en cuerpo (100): cercano / lejano | 0,060 / 0,760 |
+| S4. Resúmenes del ENFEN frente al comunicado anterior (93): lejano | 0,000 (todos cercanos) |
+| S5. Con afirmaciones, manda la capa 5 | 29/29 |
+| S6. Tiempo por consulta | 0,023 s |
+
+**Umbrales:** corto cercano ≥ 0,411 y lejano ≤ 0,302; cuerpo cercano ≥ 0,545 y lejano ≤ 0,448.
+
+**Lecturas críticas:**
+- **S2 en cuerpo (1,000) y S4 son fáciles.** Las notas de Andina que citan un comunicado lo resumen casi al pie de la letra, y cada comunicado repite mucho del anterior. Solo descartan un fallo grueso. El lado positivo no tiene una muestra nueva independiente: el control limpio son 30 notas ya vistas.
+- **S5 se apoya solo en los positivos de la calibración.** Ninguno de los 100 negativos nuevos tenía afirmaciones evaluables. Es un control de integración: el color de la capa 5 llega intacto.
+- **La separación es de tema, no de alineación** (como E3 y E4): una nota sobre El Niño que habla de otro aspecto puede salir intermedia o lejana. Por eso lo lejano es gris, no rojo. El E4 de minilm en texto corto (0,860) sigue debajo de 0,90 y se declara.
+- **Informativo:** en los 30 positivos, la capa 5 da 24 verdes, 3 amarillas, 2 rojas y 1 sin afirmaciones. En los 100 cuerpos nuevos, 76 grises, 18 amarillos y 6 verdes, y el párrafo más parecido es de `recomendacion` en 51.
+
 ## Configuración del NLI (si se usa)
 - Modelo `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` (MIT; 83,2 % en XNLI en español).
 - **Cargar con `dtype=torch.float32`.** `transformers` 5.x lo carga en float16, el formato en que está guardado, y en CPU eso es de 6 a 18 veces más lento con los mismos resultados.

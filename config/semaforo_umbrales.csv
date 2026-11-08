@@ -1,0 +1,3 @@
+tipo,cercano,lejano,auc,auc_ic,p25_positivo,p75_negativo,positivos,negativos,con_color,fecha
+corto,0.411,0.3019,0.9931,0.9848-0.9988,0.5519,0.3019,30,400,1,2026-11-07
+cuerpo,0.5451,0.4475,1.0,1.0-1.0,0.8075,0.4475,30,400,1,2026-11-07

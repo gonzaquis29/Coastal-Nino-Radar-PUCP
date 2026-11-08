@@ -77,6 +77,12 @@ DISCREPANCIA = ("medio", "id", "fecha", "frase", "dato", "valor", "categoria", "
                 "sentido")  # fmt: skip
 DISCREPANCIA_NOTAS = ("medio", "id", "fecha", "error", "color", "afirmaciones", "filas")
 
+# semáforo (radar.nlp.semaforo): umbrales por tipo de texto y una fila por nota leída, sin el texto
+SEMAFORO_UMBRALES = ("tipo", "cercano", "lejano", "auc", "auc_ic", "p25_positivo", "p75_negativo", "positivos",
+                     "negativos", "con_color", "fecha")  # fmt: skip
+SEMAFORO_LECTURA = ("medio", "id", "grupo", "error", "palabras", "coseno", "parrafo", "tipo_parrafo", "color_capa5",
+                    "color", "origen")  # fmt: skip
+
 
 def columnas_candidatos(modelos):
     return CANDIDATOS_BASE + tuple(f"{m}_{p}" for m in modelos for p in PUNTAJES_CANDIDATO)
