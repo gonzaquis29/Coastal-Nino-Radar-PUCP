@@ -212,6 +212,18 @@ El NLI queda fuera de esta capa. Su único intento se decide después, solo para
   - **Fechas económicas.** "Los próximos dos trimestres… el PBI" sale como fecha de El Niño (capa 3).
   - **Hechos pasados.** "Inició en marzo de este año" queda *desactualizada* porque el vigente ya no repite el inicio. Un hecho pasado no caduca: es un error de la regla.
 
+**Arreglos en la capa 3 (7-nov, aprobados):**
+1. En un rango, el primer mes sin año hereda el del segundo.
+2. Las fechas de la economía (PBI, "trimestres", inflación, exportaciones) no son segmentos de El Niño.
+3. "Agencias (especializadas) internacionales" cuenta como otra agencia.
+
+Con los tres, los controles oficiales dan lo mismo que antes:
+- T1 a T4: 32/32, 113/114, 29/31 y 19/19.
+- Plazos y estado oficial de la capa 3: 15/15 y 33/33.
+- C1, C2 y C5: 28/28, 138/138, 1.273/1.273 y 0/40.
+
+Los arreglos A (hechos pasados) y D (diseño de C4) de la capa 5 y la ronda b con notas nuevas siguen pendientes.
+
 ## Configuración del NLI (si se usa)
 - Modelo `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` (MIT; 83,2 % en XNLI en español).
 - **Cargar con `dtype=torch.float32`.** `transformers` 5.x lo carga en float16, el formato en que está guardado, y en CPU eso es de 6 a 18 veces más lento con los mismos resultados.

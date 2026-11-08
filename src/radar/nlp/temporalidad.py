@@ -150,6 +150,7 @@ ANCLA = re.compile(r"Niño|evento|fen[óo]meno|calentamiento\s+del\s+mar|condici
                    r"|alerta", re.I)  # fmt: skip
 CLIMA = re.compile(r"lluvi|precipitaci|caudal|r[íi]os?\b|crecid|viento|olea|temperatura|calor|fr[íi]o|sequ[íi]a"
                    r"|huaico|emergencia|declaratoria|bono|vigencia|medida|pesca|r[ée]cord|aire", re.I)  # fmt: skip
+ECONOMIA = re.compile(r"\bPBI\b|\becon[óo]m|\binflaci|\bexportaci|\bcrecimiento\s+econ|\btrimestres\b", re.I)
 OTRA_CONDICION = re.compile(r"condici[óo]n(?:es)?\s+neutra|Niña|condiciones\s+fr[íi]as|transici[óo]n", re.I)
 # Desde aquí empieza otra fase del pronóstico: lo de antes no le da su magnitud
 CORTE = re.compile(r";|\.\s|\bluego\b|\bposteriormente\b|\breduci\w*|\bdisminu\w*|\bdeclive\b|\btender[íi]a\b",
@@ -186,6 +187,8 @@ def sujetos(frase, inicio, fin):
     clima = [m.end() for m in CLIMA.finditer(ventana)]
     ancla = [m.end() for m in ANCLA.finditer(ventana)]
     del_clima = bool(clima) and (not ancla or clima[-1] > ancla[-1])
+    if not ancla and ECONOMIA.search(f"{ventana} {' '.join(despues.split()[:PALABRAS_VENTANA])}"):
+        return []  # "los próximos dos trimestres… el PBI podría caer": plazo de la economía (arreglo del 7-nov)
     if not mags and not del_clima and VERBO_DE_DURACION.search(antes) and ancla:
         return [EVENTO]  # "se extendería hasta diciembre, con probabilidad de moderada…": es la duración del evento
     if not mags:
@@ -226,6 +229,12 @@ def segmentos(frase, fecha):
             if libre(m):
                 f2 = intervalo(m, 2, fecha, frase[: m.start()])
                 f1 = intervalo(m, 1, fecha, frase[: m.start()])
+                if _anio_explicito(m, 1, frase[: m.start()], dt.date.fromisoformat(fecha[:10])) is None and \
+                        _meses(m, 1)[1] is None and _anio_explicito(m, 2, frase[: m.start()],
+                                                                   dt.date.fromisoformat(fecha[:10])):  # fmt: skip
+                    (ini, fin), _ = _meses(m, 1)  # "entre enero y marzo del 2030": enero de 2030
+                    anio = f2[1] // 12
+                    f1 = (_indice(anio, ini), _indice(anio, fin))
                 if f1[0] > f2[1]:  # "de setiembre a enero" sin años: el inicio es del año anterior
                     f1 = (f1[0] - 12, f1[1] - 12)
                 agregar(m, "rango", f1, f2)

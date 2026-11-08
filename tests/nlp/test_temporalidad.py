@@ -64,3 +64,15 @@ def test_respaldado():
     assert t.respaldado(seg("extraordinaria", (101, 101), (104, 104)), oficiales)
     assert not t.respaldado(seg("extraordinaria", None, (110, 110)), oficiales)
     assert not t.respaldado(seg("moderada", None, (104, 104)), oficiales)
+
+
+def test_rango_el_primer_mes_hereda_el_anio():
+    frase = "El Niño sería extraordinario y entre enero y marzo del 2030 sería la etapa más fuerte del evento."
+    assert celda(frase, "2026-10-15") == "extraordinaria:2030-01>2030-03"
+    assert celda("El Niño sería fuerte de noviembre a marzo de 2027.", "2026-10-15") == "fuerte:2026-11>2027-03"
+
+
+def test_fechas_de_la_economia_no_son_de_el_nino():
+    frase = ("Esto se mantendrá en los próximos dos trimestres, hasta diciembre, y el PBI podría caer por "
+             "El Niño fuerte.")  # fmt: skip
+    assert celda(frase, "2026-10-15") == ""

@@ -181,3 +181,7 @@ def test_muestra_toma_las_que_citan_y_30_por_medio(monkeypatch):
 def test_afirmacion_guarda_los_segmentos_temporales():
     afs = a.afirmaciones("", "", "El Niño costero sería fuerte entre junio y septiembre.", "2026-06-01")
     assert a.a_fila("rpp", "1", afs[0])["segmentos"] == "fuerte:2026-06>2026-09"
+
+
+def test_agencias_internacionales_son_otra_fuente():
+    assert a.atribucion("Según agencias especializadas internacionales, El Niño sería extraordinario.")[0] == "agencia"

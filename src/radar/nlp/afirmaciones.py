@@ -204,7 +204,8 @@ ATRIBUCION_OFICIAL = re.compile(r"\bSenamhi\b|\bSENAMHI\b|\bImarpe\b|\bIMARPE\b|
                                 r"|\bANA\b|Autoridad Nacional del Agua", re.I)  # fmt: skip
 ATRIBUCION_AGENCIA = re.compile(r"\bNOAA\b|\bOMM\b|Organizaci[óo]n Meteorol[óo]gica Mundial|\bBoM\b|Bureau of Meteor"
                                 r"|Copernicus|\bIRI\b|\bCPC\b|Centro de Predicci[óo]n Clim[áa]tica|\bNASA\b|\bECMWF\b"
-                                r"|\bINAMHI\b|\bWMO\b|\bCIIFEN\b", re.I)  # fmt: skip
+                                r"|\bINAMHI\b|\bWMO\b|\bCIIFEN\b"
+                                r"|\bagencias?\s+(?:especializadas?\s+)?(?:internacional|extranjer)", re.I)  # fmt: skip
 ATRIBUCION_TERCERO = re.compile(r"\bseg[úu]n\b|\b(?:dijo|afirm[óa]|indic[óa]|explic[óa]|señal[óa]|advirti[óo]|sostuvo"
                                 r"|precis[óo]|coment[óo]|declar[óo]|anunci[óo]|alert[óo]|manifest[óo]|aseguró|refirió)\b"
                                 r"|\b(?:experto|especialista|científico|climatólogo|meteorólogo|investigador|ingenier)",
