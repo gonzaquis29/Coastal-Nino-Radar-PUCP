@@ -92,3 +92,39 @@ def test_con_pico_solo_toca_los_dias_del_efecto():
     nueva = ev.con_pico(y, rel, 0.5, random.Random(0))
     cambiados = {rel[i] for i in range(20) if nueva[i] != y[i]}
     assert cambiados <= set(ev.DIAS_EFECTO) and (nueva >= y).all()
+
+
+def _serie_ciclica(efecto, semilla):
+    rng = np.random.default_rng(semilla)
+    dias = _dias(300)
+    eventos = [D0 + dt.timedelta(k) for k in range(10, 290, 14)]
+    rel = ev.relativos(dias, eventos)
+    lam = np.exp(2 + np.arange(300) / 150)
+    lam = np.array([lam[i] * (efecto if r in ev.DIAS_EFECTO else 1) for i, r in enumerate(rel)])
+    return dias, rel, rng.poisson(lam).astype(float)
+
+
+def test_contraste_resta_los_dias_antes():
+    fija = np.ones((5, 2))
+    c = ev.vector_contraste(fija)
+    assert c.sum() == pytest.approx(0)
+    assert c[2 + ev.ANTES] == pytest.approx(1 / 3) and c[2 + ev.ANTES - 1] == pytest.approx(-1 / 3)
+
+
+def test_prueba_b_detecta_y_no_inventa():
+    dias, rel, y = _serie_ciclica(1.6, 3)
+    e, p, _ = ev.prueba_b(ev.base(dias), y, None, rel)
+    assert e == pytest.approx(np.log(1.6), abs=0.15) and p < 0.01
+    dias, rel, y = _serie_ciclica(1.0, 4)
+    e, p, _ = ev.prueba_b(ev.base(dias), y, None, rel)
+    assert abs(e) < 0.15 and p > 0.01
+
+
+def test_hac_sin_retardo_es_el_sandwich_simple():
+    rng = np.random.default_rng(5)
+    X = np.column_stack([np.ones(500), rng.normal(size=500)])
+    y = rng.poisson(np.exp(1 + 0.2 * X[:, 1])).astype(float)
+    beta, Xv, yv, mu = ev.ajuste(X, y)
+    v0 = ev.covarianza_hac(Xv, yv, mu, retardo=0)
+    a = np.linalg.inv(X.T @ (mu[:, None] * X))
+    assert np.sqrt(np.diag(v0)) == pytest.approx(np.sqrt(np.diag(a)), rel=0.15)  # Poisson bien especificado

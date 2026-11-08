@@ -3,16 +3,18 @@
 
 Serie diaria desde el 1-ene. Regresión de Poisson con tendencia lineal por tramos (un nodo cada 28 días), día de la
 semana y una variable por cada día relativo al comunicado (−3 a +7). El efecto es la media de los coeficientes de los
-días 0 a +2 frente a los días fuera de las ventanas. La inferencia es por permutación: conjuntos de fechas falsas con
-los mismos intervalos entre comunicados, barajados, y un inicio al azar. Solo usa metadatos de notas.csv (fecha,
+días 0 a +2 frente a los días −3 a −1 de la misma ventana (ronda b), con errores robustos a la sobredispersión y a la
+autocorrelación (Newey-West). La ronda a comparaba con los días fuera de las ventanas y usaba permutación de fechas,
+que con un comunicado cada ~14 días deja el efecto real dentro de la nula. Solo usa metadatos de notas.csv (fecha,
 "sobre El Niño", citas): no pide páginas ni lee cuerpos.
 
-Uso: python -m radar.analitica.eventos validar   # V1 a V4 y los resultados (informativos)
+Uso: python -m radar.analitica.eventos validar [--ronda a|b]   # V1 a V4 y los resultados (informativos)
 """
 
 import argparse
 import datetime as dt
 import logging
+import math
 import random
 import sys
 
@@ -42,6 +44,10 @@ TAMANO_MAXIMO = 0.07
 CASOS_POTENCIA, PICO = 200, 0.50
 POTENCIA_MINIMA = 0.80
 BLOQUE_DIAS = 7  # V1b: remuestreo de residuos por semanas
+# Ronda b (aprobada el 8-nov, tras el diagnóstico de la a)
+DIAS_ANTES = (-3, -2, -1)  # el contraste: días 0 a +2 frente a estos
+RETARDO_HAC = 7  # Newey-West con pesos de Bartlett hasta una semana
+CASOS_B = 1000  # V1 y V2 de la ronda b, sobre series simuladas sin efecto con las fechas reales
 
 SERIES = {
     "proporcion_nino": "Proporción de notas sobre El Niño entre las del día",
@@ -266,12 +272,8 @@ def fila_resultado(r, prueba, nombre_criterio, pasa, umbral):
 
 
 def validar():
-    notas = leer_csv(config.DIR_NOTICIAS / "notas.csv")
-    fin = max(n["fecha_publicacion"][:10] for n in notas)
-    dias, s = series(notas, INICIO, fin)
-    emision = [dt.date.fromisoformat(c["fecha_emision"]) for c in leer_csv(config.DIR_OFICIAL / "comunicados.csv")]
-    eventos = eventos_completos(emision, dias)
-    log.info(f"Serie {INICIO} a {fin} ({len(dias)} días) · {len(eventos)} comunicados con la ventana completa")
+    """Ronda a: permutación de fechas frente a los días fuera de las ventanas (no pasa V2 ni V3)."""
+    fin, dias, s, eventos = _datos()
     fija = base(dias)
     azar = random.Random(SEMILLA)
     resultados = {n: resultado(n, fija, s, eventos, dias, azar) for n in SERIES}
@@ -291,24 +293,133 @@ def validar():
         filas.append(fila_resultado(resultados[n], INFO, SERIES[n], True, ""))
     filas.append(criterio(INFO, "Comunicados con la ventana completa", len(eventos), "", True,
                           f"{eventos[0]} a {eventos[-1]}; serie de {len(dias)} días hasta {fin}"))  # fmt: skip
-    escribir_csv(config.DIR_ANALITICA / "eventos-perfil.csv", ("serie", "dia_relativo", "coeficiente", "cambio"),
-                 [{"serie": r["serie"], "dia_relativo": k, "coeficiente": round(b, 4), "cambio": round(np.expm1(b), 4)}
-                  for r in resultados.values() for k, b in r["coef"].items()])  # fmt: skip
-    escribir_csv(config.DIR_ANALITICA / "eventos-series.csv", ("fecha", "total", "nino", "citan", "otros",
-                 "dia_relativo"), [{"fecha": d.isoformat(), **{k: int(s[k][i]) for k in ("total", "nino", "citan",
-                 "otros")}, "dia_relativo": r if r is not None else ""}
-                 for i, (d, r) in enumerate(zip(dias, relativos(dias, eventos), strict=True))])  # fmt: skip
+    escribir_salidas(dias, s, eventos, {r["serie"]: r["coef"] for r in resultados.values()})
     return filas
+
+
+# ---------------------------------------------------------------- ronda b: contraste antes y después con Newey-West
+
+
+def ajuste(X, y, exposicion=None):
+    """(beta, X, y, mu) de Poisson, solo con los días con exposición."""
+    if exposicion is not None:
+        validos = exposicion > 0
+        X, y, offset = X[validos], y[validos], np.log(exposicion[validos])
+    else:
+        offset = np.zeros(len(y))
+    beta = poisson(X, y, np.exp(offset))
+    return beta, X, y, np.exp(np.clip(X @ beta + offset, -30, 30))
+
+
+def covarianza_hac(X, y, mu, retardo=RETARDO_HAC):
+    """Sándwich de Newey-West para Poisson: inv(A) B inv(A), con A = X' diag(mu) X y B de los puntajes x (y - mu)."""
+    a = np.linalg.inv(X.T @ (mu[:, None] * X) + 1e-9 * np.eye(X.shape[1]))
+    puntajes = X * (y - mu)[:, None]
+    b = puntajes.T @ puntajes
+    for k in range(1, retardo + 1):
+        g = puntajes[k:].T @ puntajes[:-k]
+        b += (1 - k / (retardo + 1)) * (g + g.T)
+    return a @ b @ a
+
+
+def vector_contraste(fija):
+    """c tal que c'beta = media de los días 0 a +2 menos media de los días −3 a −1."""
+    c = np.zeros(fija.shape[1] + ANTES + DESPUES + 1)
+    for k in DIAS_EFECTO:
+        c[fija.shape[1] + k + ANTES] += 1 / len(DIAS_EFECTO)
+    for k in DIAS_ANTES:
+        c[fija.shape[1] + k + ANTES] -= 1 / len(DIAS_ANTES)
+    return c
+
+
+def prueba_b(fija, y, exposicion, rel):
+    """(contraste, valor p bilateral, coeficientes por día) con el error de Newey-West."""
+    beta, X, yv, mu = ajuste(diseno(fija, rel), y, exposicion)
+    c = vector_contraste(fija)
+    error = math.sqrt(max(float(c @ covarianza_hac(X, yv, mu) @ c), 1e-12))
+    z = float(c @ beta) / error
+    coef = dict(zip(range(-ANTES, DESPUES + 1), beta[fija.shape[1] :], strict=True))
+    return float(c @ beta), math.erfc(abs(z) / math.sqrt(2)), coef
+
+
+def criterios_b(fija, y, exposicion, rel, azar, casos=CASOS_B):
+    """V1 (tamaño) y V2 (potencia) en series simuladas sin efecto, con la estructura real y las fechas reales."""
+    rechazos = detectados = 0
+    for _ in range(casos):
+        ys = nula_simulada(fija, y, exposicion, azar)
+        rechazos += prueba_b(fija, ys, exposicion, rel)[1] < ALFA
+        e, p, _ = prueba_b(fija, con_pico(ys, rel, PICO, azar), exposicion, rel)
+        detectados += e > 0 and p < ALFA
+    return [
+        criterio(PRUEBA, "V1. Tamaño: series simuladas sin efecto, significativas al 5 %", round(rechazos / casos, 3),
+                 f"≤ {TAMANO_MAXIMO}", rechazos / casos <= TAMANO_MAXIMO, f"{casos} series, fechas reales"),
+        criterio(PRUEBA, f"V2. Potencia: pico de +{PICO:.0%} detectado", round(detectados / casos, 3),
+                 f"≥ {POTENCIA_MINIMA}", detectados / casos >= POTENCIA_MINIMA, f"{casos} series, fechas reales"),
+    ]  # fmt: skip
+
+
+def fila_b(nombre, fija, s, dias, eventos, prueba, nombre_criterio, pasa_de, umbral):
+    y, exposicion = objetivo(nombre, s)
+    e, p, coef = prueba_b(fija, y, exposicion, relativos(dias, eventos))
+    sin_uno = [prueba_b(fija, y, exposicion, relativos(dias, [x for x in eventos if x != q]))[0] for q in eventos]
+    perfil_txt = " ".join(f"{k:+d}:{_pct(b)}" for k, b in coef.items())
+    detalle = f"sin cada comunicado: {_pct(min(sin_uno))} a {_pct(max(sin_uno))}; perfil {perfil_txt}"
+    return criterio(prueba, nombre_criterio, f"{_pct(e)} (p = {p:.3f})", umbral, pasa_de(e, p), detalle), coef
+
+
+def _datos():
+    notas = leer_csv(config.DIR_NOTICIAS / "notas.csv")
+    fin = max(n["fecha_publicacion"][:10] for n in notas)
+    dias, s = series(notas, INICIO, fin)
+    emision = [dt.date.fromisoformat(c["fecha_emision"]) for c in leer_csv(config.DIR_OFICIAL / "comunicados.csv")]
+    eventos = eventos_completos(emision, dias)
+    log.info(f"Serie {INICIO} a {fin} ({len(dias)} días) · {len(eventos)} comunicados con la ventana completa")
+    return fin, dias, s, eventos
+
+
+def validar_b():
+    fin, dias, s, eventos = _datos()
+    fija = base(dias)
+    rel = relativos(dias, eventos)
+    y, exposicion = objetivo("proporcion_nino", s)
+    filas = criterios_b(fija, y, exposicion, rel, random.Random(SEMILLA + "-b"))
+    v3, _ = fila_b("citan_comunicado", fija, s, dias, eventos, PRUEBA,
+                   "V3. Control positivo: citas al comunicado suben (días 0 a +2 frente a −3 a −1)",
+                   lambda e, p: e > 0 and p < ALFA, f"> 0 y p < {ALFA}")  # fmt: skip
+    v4, _ = fila_b("otros_temas", fija, s, dias, eventos, PRUEBA, "V4. Control negativo: otros temas sin efecto",
+                   lambda e, p: p >= ALFA, f"p ≥ {ALFA}")  # fmt: skip
+    filas += [v3, v4]
+    perfiles = {}
+    for n in SERIES:
+        fila, perfiles[n] = fila_b(n, fija, s, dias, eventos, INFO, SERIES[n], lambda e, p: True, "")
+        if n in ("proporcion_nino", "notas_nino"):
+            filas.append(fila)
+    filas.append(criterio(INFO, "Comunicados con la ventana completa", len(eventos), "", True,
+                          f"{eventos[0]} a {eventos[-1]}; serie de {len(dias)} días hasta {fin}"))  # fmt: skip
+    escribir_salidas(dias, s, eventos, perfiles)
+    return filas
+
+
+def escribir_salidas(dias, s, eventos, perfiles):
+    escribir_csv(config.DIR_ANALITICA / "eventos-perfil.csv", ("serie", "dia_relativo", "coeficiente", "cambio"),
+                 [{"serie": n, "dia_relativo": k, "coeficiente": round(b, 4), "cambio": round(np.expm1(b), 4)}
+                  for n, coef in perfiles.items() for k, b in coef.items()])  # fmt: skip
+    columnas = ("total", "nino", "citan", "otros")
+    escribir_csv(config.DIR_ANALITICA / "eventos-series.csv", ("fecha", *columnas, "dia_relativo"),
+                 [{"fecha": d.isoformat(), **{k: int(s[k][i]) for k in columnas},
+                   "dia_relativo": r if r is not None else ""}
+                  for i, (d, r) in enumerate(zip(dias, relativos(dias, eventos), strict=True))])  # fmt: skip
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Estudio de eventos: efecto de cada comunicado del ENFEN.")
     ap.add_argument("paso", choices=("validar",))
-    ap.parse_args(argv)
-    registro = configurar("analitica-eventos")
+    ap.add_argument("--ronda", choices=("a", "b"), default="b", help="a: permutación (no pasa); b: Newey-West")
+    args = ap.parse_args(argv)
+    registro = configurar(f"analitica-eventos-{args.ronda}")
     inicio = ahora()
     config.DIR_ANALITICA.mkdir(parents=True, exist_ok=True)
-    filas = validar()
+    filas = validar_b() if args.ronda == "b" else validar()
     guardar(filas, config.DIR_ANALITICA / "validacion.csv")
     reporte(filas, [], inicio)
     log.info(f"Registro: {registro.relative_to(config.RAIZ)}")

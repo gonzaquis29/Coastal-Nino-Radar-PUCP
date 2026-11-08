@@ -71,7 +71,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 
 Además, en la semana 3:
 - Semáforo calibrado (punto 1).
-- Estudio de eventos: `radar.analitica.eventos` ([analitica/eventos.md](analitica/eventos.md)). La ronda a (8-nov) no pasa V2 ni V3, porque las fechas falsas caen cerca de las reales y la nula contiene el efecto. Falta aprobar la ronda b.
+- Estudio de eventos: `radar.analitica.eventos` ([analitica/eventos.md](analitica/eventos.md)). Las rondas a y b (8-nov) no pasan: la nula de la a contiene el efecto, y en la b el contraste mide el fin de semana (12 de 18 comunicados salen un viernes) y Newey-West rechaza de más con 18 eventos. Falta decidir entre una ronda c y el respaldo descriptivo.
 - Modelo de engagement o su alternativa.
 - Recomendador híbrido.
 

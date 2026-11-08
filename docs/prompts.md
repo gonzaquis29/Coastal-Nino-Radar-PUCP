@@ -452,3 +452,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 25. Sí, apruebo (estudio de eventos).
 
 **Resultado:** la IA midió, sin red, que los comunicados salen cada ~14 días y que el volumen se multiplicó por 30. Propuso una regresión de Poisson diaria con tendencia y placebo por permutación, con V1 a V4 fijados antes, y escribió `radar.analitica.eventos`. La ronda a no pasa V2 (0,745) ni V3 (p = 0,11): las fechas falsas caen cerca de las reales y la nula contiene el efecto.
+26. Sí, apruebo (estudio de eventos, ronda b).
+
+**Resultado:** la IA cambió a un contraste antes y después dentro de la ventana, con errores de Newey-West, y midió V1 y V2 en series simuladas. No pasa V1 (0,12), V2 (0,70) ni V4 (p = 0,006). Diagnosticó que 12 de los 18 comunicados salen un viernes, así que el contraste mide el fin de semana, y que con 18 eventos Newey-West rechaza de más.
