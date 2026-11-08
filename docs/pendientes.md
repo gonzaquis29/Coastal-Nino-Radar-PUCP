@@ -1,4 +1,4 @@
-# Pendientes, por prioridad (actualizado el 7-nov-2026)
+# Pendientes, por prioridad (actualizado el 8-nov-2026)
 
 Orden según dependencias reales y fechas, revisado con lo aprendido en los pilotos; el calendario del README es orientativo. Cada tarea se define, se aprueba, se construye y se valida con muestras nuevas, una a la vez. Estado del índice de discrepancia y del flujo de NLP: [nlp/discrepancia.md](nlp/discrepancia.md).
 
@@ -60,7 +60,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 1. ~~**Distancia dentro del semáforo**~~ Hecha el 7-nov: `radar.nlp.semaforo.medir_discrepancia(texto, fecha)` ([nlp/discrepancia.md](nlp/discrepancia.md#distancia-en-el-semáforo-punto-51-definición-aprobada-el-7-nov)). Usa los párrafos vigentes sin `definicion`, umbrales propios para corto (100 palabras o menos) y cuerpo, el verde desde el p95 del negativo y lo lejano en gris, nunca rojo. Si hay afirmaciones evaluables, manda la capa 5. Pasan S1 a S6. Se encontró que el control positivo de E3 tenía citas falsas (punto 2). Antes de usar los umbrales tras el recálculo final, hay que repetir `python -m radar.nlp.semaforo calibrar` y `validar`.
 2. ~~**El único intento con NLI**~~ **Cerrado el 8-nov** sin cargar el modelo: con los pares naturales hay 0 casos que cambian en julio a octubre (mínimo 20), y 6 si la región es opcional. La app se queda con las reglas y la distancia ([nlp/discrepancia.md](nlp/discrepancia.md#resultado-8-nov-el-nli-se-cierra-sin-medir)).
 3. **Comunicado N.° 20 (hacia el 13-nov):** correr `python -m radar.oficial.corpus` sin `--solo` y repetir `python -m radar.nlp.temporalidad validar` y `python -m radar.nlp.discrepancia validar --solo-oficial`.
-4. **Después del recálculo final:** calcular la capa 5 sobre todas las notas sobre El Niño. Falta el paso `calcular` en `radar.nlp.discrepancia`; hoy solo están `muestra` y `validar`.
+4. **Después de T5 y del recálculo final:** `python -m radar.nlp.discrepancia calcular` (escrito el 8-nov; sin correr, porque leería las notas reservadas para T5). Deja `discrepancia-todas.csv` (una fila por dato, sin texto) y `discrepancia-todas-notas.csv` (color por nota); se puede cortar y relanzar.
 5. **T5 (informativo, hasta el 18-nov):** las 242 notas sobre El Niño sin ver, más las que vayan llegando y las nuevas que citan al ENFEN. Con ellas se confirma de forma independiente la temporalidad y la capa 5, y se cuentan las rojas en notas que citan al ENFEN. No se usan para ajustar nada.
 
 **Límites que quedan declarados, sin perseguirlos:**
@@ -77,13 +77,10 @@ Además, en la semana 3:
 
 ## 6. Menores, sin urgencia
 1. **13 notas de RPP con menos de 0,9 del articleBody** (8 del Rotafono, como 1672096 y 1674393). El texto que falta no queda después de la lista de recomendados, así que el rescate no lo cubre. Es un análisis de capa 1 aparte, con muestra nueva.
-2. **Bug de `corpus --solo`:** `validacion.csv` se reescribe solo con la fuente que corrió, y `--solo enfen` borra las filas del Senamhi (`src/radar/oficial/corpus.py`, donde arma `validacion.csv`). Se corrige conservando las filas de la otra fuente, como ya se hace con `parrafos.csv`. Mientras tanto, correr el corpus sin `--solo`.
+2. ~~**Bug de `corpus --solo`**~~ Corregido el 8-nov: `validacion.csv` conserva las filas de la fuente que no corrió (`corpus.validacion_completa`).
 
 ## README
-Hay que actualizar:
-- el índice de discrepancia: capas, cuatro dimensiones (dato, escala, tiempo, certeza), sin NLI (cerrado el 8-nov por falta de pares naturales), sin "párrafo más parecido" ni prueba sintética, y sus límites;
-- las emociones de las notas, que pasan a ser solo polaridad;
-- el producto: la pestaña Consulta ya no muestra el NLI (el semáforo y su descripción en Consulta ya están al día, 8-nov).
+Al día desde el 8-nov: índice por capas sin NLI, polaridad descriptiva en las notas y la app solo con el embedding.
 
 El insumo de ML espera a la prueba de YouTube. Mientras tanto mandan [nlp/discrepancia.md](nlp/discrepancia.md), [nlp/viabilidad-modelos.md](nlp/viabilidad-modelos.md) y este archivo.
 

@@ -61,3 +61,13 @@ def test_reemplazar_magnitud_respeta_muy_fuerte():
     assert d._reemplazar_magnitud(texto, "fuerte", "débil") == (
         "El Niño sería débil en la costa y muy fuerte en el Pacífico central."
     )
+
+
+def test_notas_a_calcular_solo_sobre_el_nino():
+    notas = [{"medio": "a", "id": "1", "sobre_nino": "1"}, {"medio": "a", "id": "2", "sobre_nino": "0"}]
+    assert [n["id"] for n in d.notas_a_calcular(notas)] == ["1"]
+
+
+def test_sin_huerfanas_quita_datos_de_notas_sin_terminar():
+    filas = [{"medio": "a", "id": "1"}, {"medio": "a", "id": "2"}, {"medio": "b", "id": "1"}]
+    assert d.sin_huerfanas(filas, {("a", "1"), ("b", "1")}) == [filas[0], filas[2]]

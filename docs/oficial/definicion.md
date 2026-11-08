@@ -7,7 +7,7 @@ Comunicados del ENFEN y avisos meteorológicos del Senamhi, partidos en párrafo
 pip install -e ".[dev]"          # una sola vez (ver "Cómo montar el proyecto" en el README)
 python -m radar.oficial.corpus
 ```
-- `--solo enfen|senamhi`: una sola fuente; los párrafos de la otra se conservan.
+- `--solo enfen|senamhi`: una sola fuente; los párrafos y las filas de `validacion.csv` de la otra se conservan (arreglo del 8-nov).
 - `--sin-descarga`: vuelve a extraer desde `data/raw/oficial/` sin pedir nada (unos segundos).
 - `--prueba`: hace todo y muestra el reporte, sin escribir `data/oficial/`.
 - Correrlo después del recolector diario cuando este avise "Nuevo documento del ENFEN", y antes del corte (20-nov). La primera vez tarda ~30 min; las siguientes, pocos minutos.

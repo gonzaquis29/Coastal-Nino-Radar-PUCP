@@ -374,6 +374,14 @@ python -m radar.nlp.semaforo validar     # S1 a S6 (pide páginas para los 100 c
 - En la laptop del equipo (i9-13900H) hace falta estar enchufada, con Windows en "Máximo rendimiento" y ASUS en "Rendimiento dinámico" (Fn + F). Si no, todo va de 3 a 8 veces más lento.
 - `torch` no está en `pyproject.toml`: se instala para CPU con `pip install torch --index-url https://download.pytorch.org/whl/cpu`.
 
+## Capa 5 sobre todas las notas (paso `calcular`, 8-nov)
+
+`python -m radar.nlp.discrepancia calcular` aplica la capa 5 a todas las notas sobre El Niño, sin mostrar frases. Deja dos archivos en `data/processed/nlp/`, ninguno con texto de las notas:
+- `discrepancia-todas.csv`: una fila por dato.
+- `discrepancia-todas-notas.csv`: el color de cada nota.
+
+El paso salta las notas ya calculadas y, al relanzar, quita los datos de una nota que quedó a medias. Se corre después de T5, porque leería las notas reservadas, y después del recálculo final.
+
 ## Único intento con NLI (punto 5.2; definición aprobada el 8-nov)
 **Medición previa** (sin red, con los titulares y resúmenes de las notas sobre El Niño y las frases del ENFEN):
 - 2.671 de las 3.050 frases que nombran El Niño no tienen datos (87 %). Solo 187 (7 %) pronostican un impacto sin hablar de medidas, y de ellas 12 se atribuyen al ENFEN. El resto trata de medidas, precios o prevención, donde el NLI solo daría falsas alarmas, como en el piloto del 28-oct.

@@ -446,3 +446,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 23. Sí, define el NLI / sí, apruebo (punto 5.2).
 
 **Resultado:** la IA midió que el 87 % de las frases sobre El Niño no traen datos y que solo el 7 % pronostica un impacto. Propuso aplicar el NLI solo a esas frases y comparar con las de impactos y pronóstico del comunicado vigente. Fijó N1 a N5 y el cierre si N2 tiene menos de 20 casos que cambian en julio a octubre, y escribió `radar.nlp.nli`. Hubo 0 casos, y 6 con la región opcional, así que el NLI se cerró sin cargar el modelo ni pedir páginas.
+24. ¿Con qué seguimos? / Procede a realizar lo que tú puedes hacer ahora mismo.
+
+**Resultado:** la IA corrigió el bug de `corpus --solo`, que borraba la validación de la otra fuente. Escribió el paso `calcular` de la capa 5 y no lo corrió, porque habría leído las notas reservadas para T5. Actualizó el README: índice por capas sin NLI, polaridad descriptiva y la app solo con el embedding.

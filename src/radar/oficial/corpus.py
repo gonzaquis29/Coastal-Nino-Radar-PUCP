@@ -38,6 +38,13 @@ def _parrafos_anteriores(anteriores, fuente):
     return [p for p in anteriores["parrafos.csv"] if p["fuente"] == fuente]
 
 
+def validacion_completa(nuevas, anteriores, corridas):
+    """Las filas de validación de las fuentes que corrieron más las anteriores de las otras: con --solo, la otra
+    fuente no pierde sus criterios ("senamhi" y "senamhi (informativo)" son de senamhi)."""
+    otras = [f for f in anteriores["validacion.csv"] if f["prueba"].split(" ")[0] not in corridas]
+    return nuevas + otras
+
+
 # ---------------------------------------------------------------- ENFEN
 
 
@@ -171,7 +178,7 @@ def main(argv=None):
     if parrafos:  # al menos una fuente se construyó: la otra conserva sus párrafos anteriores
         todos = [p for fuente in FUENTES for p in parrafos.get(fuente, _parrafos_anteriores(anteriores, fuente))]
         salida["parrafos.csv"] = sorted(todos, key=lambda p: (p["fuente"], p["doc_id"], int(p["orden"])))
-        salida["validacion.csv"] = validacion
+        salida["validacion.csv"] = validacion_completa(validacion, anteriores, set(parrafos))
     _reporte(salida, validacion, alertas, inicio, args.prueba)
     if parrafos and not args.prueba:
         for nombre, filas in salida.items():

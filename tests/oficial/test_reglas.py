@@ -3,7 +3,7 @@
 import pytest
 
 from radar.oficial import enfen, enfen_pdf, senamhi
-from radar.oficial.corpus import conservar
+from radar.oficial.corpus import conservar, validacion_completa
 
 
 def test_campos_formato_antiguo_nuevo_y_extraordinario():
@@ -163,3 +163,12 @@ def test_pagina_quita_las_marcas_de_nota_pegadas_y_conserva_el_estado(tmp_path):
         "En la región Niño 1+2, El Niño Costero alcanzaría una magnitud extraordinaria hasta enero.",
         "Se recomienda a los gobiernos y al INDECI seguir los avisos meteorológicos y la gestión del riesgo.",
     ]
+
+
+def test_solo_una_fuente_conserva_la_validacion_de_la_otra():
+    anteriores = {"validacion.csv": [{"prueba": "enfen", "criterio": "viejo"}, {"prueba": "senamhi", "criterio": "a"},
+                                     {"prueba": "senamhi (informativo)", "criterio": "b"}]}  # fmt: skip
+    nuevas = [{"prueba": "enfen", "criterio": "nuevo"}]
+    salida = validacion_completa(nuevas, anteriores, {"enfen"})
+    assert [f["criterio"] for f in salida] == ["nuevo", "a", "b"]
+    assert validacion_completa(nuevas, anteriores, {"enfen", "senamhi"}) == nuevas

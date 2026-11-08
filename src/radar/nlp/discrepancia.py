@@ -7,6 +7,7 @@ o por debajo de la magnitud máxima. No dice si una nota es verdadera o falsa: m
 
 Uso: python -m radar.nlp.discrepancia muestra   # elige las notas nuevas de la validación y las agrega a notas_vistas
      python -m radar.nlp.discrepancia validar   # C1, C2 y C5 sobre lo oficial; con la muestra, pide páginas: C3, C4, C6
+     python -m radar.nlp.discrepancia calcular  # todas las notas sobre El Niño (después de T5 y del recálculo final)
 """
 
 import argparse
@@ -18,7 +19,7 @@ import sys
 import threading
 
 from radar import config
-from radar.comun.archivos import escribir_csv, leer_csv
+from radar.comun.archivos import anexar_csv, escribir_csv, leer_csv
 from radar.comun.candado import exclusivo
 from radar.comun.energia import sin_suspension
 from radar.comun.registro import configurar, describir
@@ -674,7 +675,7 @@ def elegir_muestra(ronda):
     return []
 
 
-def fila_de_nota(nota, campos, historia):
+def fila_de_nota(nota, campos, historia, mostrar=True):
     salida = {"medio": nota["medio"], "id": nota["id"], "fecha": nota["fecha_publicacion"][:10], "error": "",
               "afirmaciones": [], "filas": [], "color": ""}  # fmt: skip
     if not isinstance(campos, dict):
@@ -690,7 +691,10 @@ def fila_de_nota(nota, campos, historia):
                 a["frase"],
                 a["_texto"],
             )
-            if f["categoria"] not in ("respaldada", "otra_fuente"):  # solo a pantalla: el texto no se guarda
+            if mostrar and f["categoria"] not in (
+                "respaldada",
+                "otra_fuente",
+            ):  # solo a pantalla: el texto no se guarda
                 print(f"  [{f['categoria']}{' adelantada' if f['adelantada'] else ''}] {nota['medio']} {nota['id']} "
                       f"{salida['fecha']} {f['dato']}={f['valor']} ({a['atribucion']}) | {a['_texto'][:200]}",
                       )  # fmt: skip
@@ -731,6 +735,46 @@ def _leer_muestra(parar, historia, ronda):
     return filas_notas
 
 
+# ---------------------------------------------------------------- todas las notas (punto 5.4 de los pendientes)
+
+
+def notas_a_calcular(notas):
+    return [n for n in notas if n["sobre_nino"] == "1"]
+
+
+def sin_huerfanas(filas_dato, notas_hechas):
+    """Las filas por dato de las notas que terminaron: un corte entre las dos escrituras deja datos sin su nota, que
+    se vuelven a calcular al relanzar."""
+    return [f for f in filas_dato if (f["medio"], f["id"]) in notas_hechas]
+
+
+@exclusivo("radar.nlp.discrepancia")
+def calcular(parar):
+    """Capa 5 de todas las notas sobre El Niño, sin mostrar frases. Se puede cortar y relanzar: salta las notas ya
+    calculadas en discrepancia-todas-notas.csv."""
+    historia = referencia(Corpus())
+    notas = notas_a_calcular(leer_csv(config.DIR_NOTICIAS / "notas.csv"))
+    ruta_notas, ruta_datos = config.DIR_NLP / "discrepancia-todas-notas.csv", config.DIR_NLP / "discrepancia-todas.csv"
+    hechas = {k for k, f in tfidf.leidos(ruta_notas).items() if not f["error"] or f["error"] == "sin texto"}
+    if ruta_datos.exists():
+        escribir_csv(ruta_datos, esquemas.DISCREPANCIA, sin_huerfanas(leer_csv(ruta_datos), hechas))
+
+    def fila_de(nota, _estrato, campos):
+        fila = fila_de_nota(nota, campos, historia, mostrar=False)
+        anexar_csv(ruta_datos, esquemas.DISCREPANCIA, a_filas_csv(fila))
+        return {k: fila[k] for k in ("medio", "id", "fecha", "error", "color")} | {
+            "afirmaciones": len(fila["afirmaciones"]),
+            "filas": len(fila["filas"]),
+        }
+
+    with sin_suspension():
+        tfidf.leer_cuerpos([(n, "") for n in notas], ruta_notas, esquemas.DISCREPANCIA_NOTAS, fila_de, parar)
+    calculadas = leer_csv(ruta_notas)
+    colores = collections.Counter(f["color"] or f["error"] for f in calculadas)
+    return [criterio("Capa 5: todas las notas", "notas calculadas", f"{len(calculadas)}/{len(notas)}", "", True,
+                     str(dict(colores)))]  # fmt: skip
+
+
 def validar(parar, solo_oficial=False, ronda="b"):
     corpus = Corpus()
     historia = referencia(corpus)
@@ -749,7 +793,7 @@ def validar(parar, solo_oficial=False, ronda="b"):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Capa 5: comparación con lo oficial.")
-    ap.add_argument("paso", choices=("muestra", "validar"))
+    ap.add_argument("paso", choices=("muestra", "validar", "calcular"))
     ap.add_argument("--solo-oficial", action="store_true", help="solo C1, C2 y C5: no pide páginas")
     ap.add_argument("--ronda", choices=tuple(RONDAS), default="b", help="a: primera validación; b: tras los arreglos")
     args = ap.parse_args(argv)
@@ -757,7 +801,12 @@ def main(argv=None):
     inicio, parar = ahora(), threading.Event()
     config.DIR_NLP.mkdir(parents=True, exist_ok=True)
     try:
-        filas = elegir_muestra(args.ronda) if args.paso == "muestra" else validar(parar, args.solo_oficial, args.ronda)
+        if args.paso == "calcular":
+            filas = calcular(parar)
+        elif args.paso == "muestra":
+            filas = elegir_muestra(args.ronda)
+        else:
+            filas = validar(parar, args.solo_oficial, args.ronda)
     except KeyboardInterrupt:
         parar.set()
         return 1
