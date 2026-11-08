@@ -73,7 +73,7 @@ Además, en la semana 3:
 - Semáforo calibrado (punto 1).
 - Estudio de eventos: `radar.analitica.eventos` ([analitica/eventos.md](analitica/eventos.md)). **Cerrado el 8-nov como descriptivo:** ninguna de las tres rondas controla el tamaño y la potencia con 18 eventos (la ronda c da V1 0,087 y V2 0,561, aunque V3 y V4 pasan). Se describe por comunicado: la proporción sobre El Niño sube en 14 de 18, con mediana +63 % frente a la semana anterior. Repetir `validar --ronda c` después del corte, con los N.° 19 y 20.
 - Modelo de engagement o su alternativa.
-- Recomendador híbrido: `radar.analitica.recomendador` ([analitica/recomendador.md](analitica/recomendador.md)). La ronda a (8-nov) pasa la puerta, R2 a R4 y K2, pero no R1: lo más reciente le gana (MRR 0,387 frente a 0,196). Falta aprobar la ronda b, con la frescura como regla.
+- Recomendador híbrido: `radar.analitica.recomendador` ([analitica/recomendador.md](analitica/recomendador.md)). La ronda a (8-nov) pasa la puerta, R2 a R4 y K2, pero no R1: lo más reciente le gana (MRR 0,387 frente a 0,196). Ronda b aprobada: la cascada fresca de 3 días, calibrada con A (MRR 0,425 frente a 0,387), se decide el **18-nov** con la muestra B (`validar --ronda b`, junto con T5). Requiere la recolección diaria hasta entonces.
 
 ## 6. Menores, sin urgencia
 1. **13 notas de RPP con menos de 0,9 del articleBody** (8 del Rotafono, como 1672096 y 1674393). El texto que falta no queda después de la lista de recomendados, así que el rescate no lo cubre. Es un análisis de capa 1 aparte, con muestra nueva.

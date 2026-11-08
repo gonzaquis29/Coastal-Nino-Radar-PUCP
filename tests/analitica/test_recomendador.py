@@ -110,3 +110,24 @@ def test_ordenar_recientes_y_contenido():
     azar = random.Random(0)
     assert rec.ordenar("recientes", cos, v, fechas, [""] * 3, "", azar) == [1, 2, 0]
     assert rec.ordenar("contenido", cos, v, fechas, [""] * 3, "", azar) == [2, 1, 0]
+
+
+def test_fresco_primero_la_ventana_y_luego_por_fecha():
+    cuando = dt.datetime(2026, 3, 10)
+    fechas = [dt.datetime(2026, 3, 9), dt.datetime(2026, 3, 1), dt.datetime(2026, 3, 8), dt.datetime(2026, 2, 1)]
+    cos = np.array([0.1, 0.99, 0.5, 0.98])
+    v = np.eye(4)
+    orden = rec.fresco(cos, v, fechas, [""] * 4, "", cuando, 3)
+    assert orden[:2] == [2, 0] and orden[2:] == [1, 3]  # dentro por contenido; fuera de la más reciente
+    assert rec.fresco(cos, v, fechas, [""] * 4, "", dt.datetime(2026, 5, 1), 3) == [0, 2, 1, 3]
+
+
+def test_elegir_dias_empate_al_menor():
+    filas = [{f"rr_fresco_{d}": (0.5 if d in (7, 14) else 0.1) for d in rec.GRILLA_FRESCURA}]
+    assert rec.elegir_dias(filas)[0] == 7
+
+
+def test_muestra_b_incluye_notas_sobre_el_nino_nuevas():
+    notas = [_nota("a", "1", "2026-11-01"), _nota("a", "2", "2026-11-10"), _nota("a", "3", "2026-11-05", sobre="0")]
+    enlaces = [{"medio": "a", "id": "2", "url": "https://a.pe/1"}, {"medio": "a", "id": "3", "url": "https://a.pe/1"}]
+    assert rec.muestra_b(notas, enlaces, set(), [notas[0]]) == {("a", "2"): {("a", "1")}}

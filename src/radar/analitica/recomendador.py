@@ -5,7 +5,14 @@ notas relacionadas en cascada: filtro de fecha, similitud minilm del titular y e
 diversidad con MMR. Ningún parámetro se ajusta con datos. Se evalúa con los enlaces que cada medio pone entre sus
 notas, desde notas sin ver que mencionan El Niño (no toca la reserva de T5). Sin red: solo notas.csv y data/oficial.
 
-Uso: python -m radar.analitica.recomendador validar
+Ronda b (aprobada el 8-nov): la ronda a mostró que los editores enlazan sobre todo lo último que publicaron, así que
+la frescura entra como regla de la cascada: primero las notas de los últimos DIAS_FRESCOS días ordenadas por el
+híbrido, después el resto por fecha. DIAS_FRESCOS se calibra con la muestra A (ya vista: solo desarrollo) y se decide
+con la muestra B, notas nuevas desde el 9-nov, el 18-nov junto con T5.
+
+Uso: python -m radar.analitica.recomendador validar             # ronda a (muestra A)
+     python -m radar.analitica.recomendador calibrar            # ronda b: elige DIAS_FRESCOS con la muestra A
+     python -m radar.analitica.recomendador validar --ronda b   # ronda b: decide con la muestra B (18-nov)
 """
 
 import argparse
@@ -52,6 +59,12 @@ CONSULTAS = 20
 REMUESTREOS = 2000
 SEMILLA = "recomendador-8nov"
 METODOS = ("azar", "recientes", "contenido", "region", "hibrido")
+# Ronda b
+GRILLA_FRESCURA = (3, 7, 14, 30)  # días; empate: el menor
+DIAS_FRESCOS = 3  # fijado con `calibrar` el 8-nov (muestra A); no se vuelve a ajustar
+MUESTRA_B = "recomendador-b-18nov"
+INICIO_B = "2026-11-09"  # notas nuevas: después de la última recolección usada en la ronda a
+ORIGENES_MINIMOS_B = 30  # con menos, la ronda b es informativa
 
 
 # ---------------------------------------------------------------- reglas (parte oficial)
@@ -126,6 +139,17 @@ def ordenar(metodo, cosenos, vectores, fechas, regiones, region, azar):
     return mmr(puntajes, vectores)
 
 
+def fresco(cosenos, vectores, fechas, regiones, region, cuando, dias):
+    """Cascada de la ronda b: las notas de los últimos `dias` por el híbrido; después el resto, de la más reciente."""
+    desde = cuando - dt.timedelta(dias)
+    dentro = [i for i, f in enumerate(fechas) if f >= desde]
+    resto = sorted((i for i, f in enumerate(fechas) if f < desde), key=lambda i: fechas[i], reverse=True)
+    if not dentro:
+        return resto
+    sub = mmr(puntajes_region(cosenos[dentro], [regiones[i] for i in dentro], region), vectores[dentro])
+    return [dentro[i] for i in sub] + resto
+
+
 def rango_reciproco(orden, relevantes):
     for r, i in enumerate(orden, 1):
         if i in relevantes:
@@ -169,9 +193,9 @@ def _clave_url(url):
     return url.split("?")[0].split("#")[0].rstrip("/")
 
 
-def muestra_a(notas, enlaces, vistas, catalogo):
-    """{origen: {claves enlazadas}}: notas sin ver que mencionan El Niño (sin ser sobre El Niño) y enlazan a una nota
-    anterior del catálogo, del mismo medio y en los DIAS_PREVIOS."""
+def muestra_a(notas, enlaces, vistas, catalogo, desde=INICIO, con_sobre=False):
+    """{origen: {claves enlazadas}}: notas sin ver que mencionan El Niño (sin ser sobre El Niño, salvo con_sobre),
+    publicadas desde `desde`, que enlazan a una nota anterior del catálogo, del mismo medio y en los DIAS_PREVIOS."""
     por_clave = {(n["medio"], n["id"]): n for n in notas}
     en_catalogo = {(n["medio"], n["id"]) for n in catalogo}
     por_url = {_clave_url(n["url"]): (n["medio"], n["id"]) for n in catalogo}
@@ -180,8 +204,9 @@ def muestra_a(notas, enlaces, vistas, catalogo):
         o = (e["medio"], e["id"])
         n = por_clave.get(o)
         d = por_url.get(_clave_url(e["url"]))
-        if (not n or not d or d == o or o in vistas or n["sobre_nino"] == "1" or n["menciona_nino"] != "1"
-                or n["fecha_publicacion"] < INICIO or d not in en_catalogo or d[0] != o[0]):  # fmt: skip
+        if (not n or not d or d == o or o in vistas or (n["sobre_nino"] == "1" and not con_sobre)
+                or n["menciona_nino"] != "1" or n["fecha_publicacion"] < desde or d not in en_catalogo
+                or d[0] != o[0]):  # fmt: skip
             continue
         if 0 < (momento(n) - momento(por_clave[d])).total_seconds() <= DIAS_PREVIOS * 86400:
             salida[o].add(d)
@@ -200,7 +225,7 @@ class Embebedor:
 # ---------------------------------------------------------------- criterios
 
 
-def evaluar(muestra, por_clave, catalogo, vectores, region_de, azar):
+def evaluar(muestra, por_clave, catalogo, vectores, region_de, azar, frescuras=()):
     """Filas por origen con el rango recíproco de cada método y los pares de la puerta."""
     indice = {(n["medio"], n["id"]): i for i, n in enumerate(catalogo)}
     filas, favor, pares, fuera = [], 0.0, 0.0, 0
@@ -222,16 +247,18 @@ def evaluar(muestra, por_clave, catalogo, vectores, region_de, azar):
         favor, pares = favor + f, pares + t
         fila = {"medio": o[0], "id": o[1], "fecha": nota["fecha_publicacion"][:10], "candidatas": len(cand),
                 "enlazadas": len(relevantes)}  # fmt: skip
-        for m in METODOS:
-            orden = ordenar(m, cos, v, fechas, regiones, region, azar)
+        ordenes = {m: ordenar(m, cos, v, fechas, regiones, region, azar) for m in METODOS}
+        ordenes |= {f"fresco_{d}": fresco(cos, v, fechas, regiones, region, momento(nota), d) for d in frescuras}
+        for m, orden in ordenes.items():
             fila[f"rr_{m}"] = round(rango_reciproco(orden, relevantes), 4)
             fila[f"r5_{m}"] = int(bool(set(orden[:NOTAS]) & relevantes))
         filas.append(fila)
     return filas, (favor / pares if pares else None, int(pares)), fuera
 
 
-def diversidad(muestra, por_clave, catalogo, vectores, region_de):
-    """Medios distintos entre las 5 notas del híbrido con candidatas de todos los medios, y cobertura."""
+def diversidad(muestra, por_clave, catalogo, vectores, region_de, dias=None):
+    """Medios distintos entre las 5 notas del híbrido (o de la cascada fresca) con candidatas de todos los medios, y
+    cobertura."""
     medios, vistos = [], collections.Counter()
     for o in sorted(muestra):
         cand = candidatas(catalogo, momento(por_clave[o]))
@@ -239,7 +266,12 @@ def diversidad(muestra, por_clave, catalogo, vectores, region_de):
             continue
         v = vectores["catalogo"][cand]
         regiones = [region_de.get((catalogo[i]["medio"], catalogo[i]["id"]), "") for i in cand]
-        orden = mmr(puntajes_region(v @ vectores["consulta"][o], regiones, region_de.get(o, "")), v)[:NOTAS]
+        cos = v @ vectores["consulta"][o]
+        if dias:
+            fechas = [momento(catalogo[i]) for i in cand]
+            orden = fresco(cos, v, fechas, regiones, region_de.get(o, ""), momento(por_clave[o]), dias)[:NOTAS]
+        else:
+            orden = mmr(puntajes_region(cos, regiones, region_de.get(o, "")), v)[:NOTAS]
         medios.append(len({catalogo[cand[i]]["medio"] for i in orden}))
         vistos.update(cand[i] for i in orden)
     return statistics.mean(medios), len(vistos)
@@ -337,14 +369,106 @@ def validar():
     return criterios(filas, puerta, fuera, medios, cobertura, len(catalogo), consulta, criterio_k2(corpus, fin), azar)
 
 
+# ---------------------------------------------------------------- ronda b
+
+
+def elegir_dias(filas):
+    """El N de la grilla con el mayor MRR de la cascada fresca; empate: el menor."""
+    mrr = {d: statistics.mean(f[f"rr_fresco_{d}"] for f in filas) for d in GRILLA_FRESCURA}
+    mejor = max(mrr.values())
+    return min(d for d, v in mrr.items() if v == mejor), mrr
+
+
+def muestra_b(notas, enlaces, vistas, catalogo):
+    """Orígenes nuevos desde INICIO_B que mencionan El Niño (sobre El Niño o no) y enlazan una nota anterior."""
+    return muestra_a(notas, enlaces, vistas, catalogo, desde=INICIO_B, con_sobre=True)
+
+
+def _preparar(muestra, por_clave, catalogo):
+    embebedor = Embebedor()
+    origenes = sorted(muestra)
+    vectores = {"catalogo": embebedor(reranker.texto_corto(n) for n in catalogo)}
+    vectores["consulta"] = dict(zip(origenes, embebedor(reranker.texto_corto(por_clave[o]) for o in origenes),
+                                    strict=True))  # fmt: skip
+    return vectores
+
+
+def calibrar():
+    """Ronda b: DIAS_FRESCOS con la muestra A (ya vista)."""
+    notas = leer_csv(config.DIR_NOTICIAS / "notas.csv")
+    vistas_a = {(f["medio"], f["id"]) for f in leer_csv(config.ARCHIVO_NOTAS_VISTAS) if f["muestra"] == MUESTRA}
+    vistas = notas_vistas() - vistas_a
+    catalogo = catalogo_de(notas, reserva_t5(notas, notas_vistas()))
+    muestra = {o: d for o, d in muestra_a(notas, leer_csv(config.DIR_NOTICIAS / "enlaces.csv"), vistas,
+                                          catalogo).items() if o in vistas_a}  # fmt: skip
+    por_clave = {(n["medio"], n["id"]): n for n in notas}
+    region_de = _regiones()
+    vectores = _preparar(muestra, por_clave, catalogo)
+    filas, _, _ = evaluar(muestra, por_clave, catalogo, vectores, region_de, random.Random(SEMILLA), GRILLA_FRESCURA)
+    dias, mrr = elegir_dias(filas)
+    salida = [criterio(INFO, f"Calibración con A ({len(filas)} orígenes): MRR de la cascada fresca", dias, "", True,
+                       " · ".join(f"{d} días {v:.3f}" for d, v in mrr.items())
+                       + f" · lo más reciente {statistics.mean(f['rr_recientes'] for f in filas):.3f}")]  # fmt: skip
+    for mitad in ("ene-jun", "jul-oct"):
+        metodos = ("recientes", "contenido", f"fresco_{dias}")
+        detalle = " · ".join(f"{m} {_mrr(filas, m, mitad) or 0:.3f}" for m in metodos)
+        salida.append(criterio(INFO, f"Calibración con A, {mitad}", "", "", True, detalle))
+    return salida
+
+
+def validar_b():
+    """Ronda b: decide con la muestra B (notas nuevas desde INICIO_B, primera vez que se usan)."""
+    if DIAS_FRESCOS is None:
+        raise SystemExit("Falta fijar DIAS_FRESCOS con `calibrar`.")
+    notas = leer_csv(config.DIR_NOTICIAS / "notas.csv")
+    vistas = notas_vistas()
+    catalogo = [n for n in notas if n["sobre_nino"] == "1" and n["fecha_publicacion"] >= INICIO]  # B va con T5
+    muestra = muestra_b(notas, leer_csv(config.DIR_NOTICIAS / "enlaces.csv"), vistas, catalogo)
+    por_clave = {(n["medio"], n["id"]): n for n in notas}
+    log.info(f"Muestra B: {len(muestra)} orígenes desde {INICIO_B}")
+    if not muestra:
+        raise SystemExit("La muestra B está vacía: falta la recolección desde el 9-nov.")
+    if not any(f["muestra"] == MUESTRA_B for f in leer_csv(config.ARCHIVO_NOTAS_VISTAS)):
+        marcar_vistas([por_clave[o] for o in sorted(muestra)], MUESTRA_B)
+    region_de = _regiones()
+    vectores = _preparar(muestra, por_clave, catalogo)
+    azar = random.Random(SEMILLA + "-b")
+    filas, puerta, fuera = evaluar(muestra, por_clave, catalogo, vectores, region_de, azar, (DIAS_FRESCOS,))
+    m = f"fresco_{DIAS_FRESCOS}"
+    suficientes = len(filas) >= ORIGENES_MINIMOS_B
+    prueba = PRUEBA + " (ronda b)" if suficientes else INFO + " (ronda b, pocos orígenes)"
+    d, bajo, alto = diferencia_bootstrap([f[f"rr_{m}"] for f in filas], [f["rr_recientes"] for f in filas], azar)
+    h, c = _mrr(filas, m), _mrr(filas, "contenido")
+    medios, _ = diversidad(muestra, por_clave, catalogo, vectores, region_de, DIAS_FRESCOS)
+    auc, pares = puerta
+    return [
+        criterio(prueba, "Orígenes de la muestra B", len(filas), f"≥ {ORIGENES_MINIMOS_B}", suficientes,
+                 f"{fuera} sin enlazada en la ventana; puerta AUC {auc if auc is None else round(auc, 3)} ({pares})"),
+        criterio(prueba, f"R1. MRR de la cascada fresca ({DIAS_FRESCOS} días) menos el de lo más reciente", round(d, 3),
+                 f"≥ {MEJORA_MINIMA} e IC > 0", d >= MEJORA_MINIMA and bajo > 0, f"IC 95 % {bajo:.3f} a {alto:.3f}"),
+        criterio(prueba, "R2. MRR de la cascada fresca frente al contenido solo", f"{h:.3f} frente a {c:.3f}",
+                 f"≥ contenido − {TOLERANCIA_CONTENIDO}", h >= c - TOLERANCIA_CONTENIDO),
+        criterio(prueba, "R3. Medios distintos entre las 5 notas", round(medios, 2), f"≥ {MEDIOS_MINIMOS}",
+                 medios >= MEDIOS_MINIMOS),
+    ]  # fmt: skip
+
+
+def _regiones():
+    return {(f["medio"], f["id"]): f["macroregion_principal"] for f in leer_csv(config.DIR_NOTICIAS / "regiones.csv")}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Recomendador híbrido: validación offline.")
-    ap.add_argument("paso", choices=("validar",))
-    ap.parse_args(argv)
-    registro = configurar("analitica-recomendador")
+    ap.add_argument("paso", choices=("validar", "calibrar"))
+    ap.add_argument("--ronda", choices=("a", "b"), default="a")
+    args = ap.parse_args(argv)
+    registro = configurar(f"analitica-recomendador-{args.paso}-{args.ronda}")
     inicio = ahora()
     config.DIR_ANALITICA.mkdir(parents=True, exist_ok=True)
-    filas = validar()
+    if args.paso == "calibrar":
+        filas = calibrar()
+    else:
+        filas = validar_b() if args.ronda == "b" else validar()
     guardar(filas, config.DIR_ANALITICA / "validacion.csv")
     reporte(filas, [], inicio)
     log.info(f"Registro: {registro.relative_to(config.RAIZ)}")

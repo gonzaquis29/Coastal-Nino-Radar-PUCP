@@ -461,3 +461,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 28. ¿Con qué seguimos? / Analiza críticamente / ¿Es la única forma? / ¿Cuál es la más adecuada? / Procedemos (recomendador).
 
 **Resultado:** la IA midió las etiquetas débiles: solo sirven los enlaces que cada medio pone entre sus notas, y casi todos tienen el origen ya visto. Encontró una muestra nueva (notas sin ver que mencionan El Niño) fuera de la reserva de T5. Propuso reglas para lo oficial y una cascada sin parámetros ajustados para las notas, con una puerta y R1 a R4 fijados antes, y escribió `radar.analitica.recomendador`. Pasan la puerta (AUC 0,745), R2 a R4 y K2. R1 no pasa: los editores enlazan sobre todo lo más reciente.
+29. Sí, apruebo (recomendador, ronda b).
+
+**Resultado:** la IA agregó la frescura como regla de la cascada y calibró la ventana con la muestra A: 3 días, con MRR 0,425 frente a 0,387 de lo más reciente, por debajo del +0,05 de R1. Dejó lista la decisión con la muestra B para el 18-nov y avisó que R1 puede no pasar.

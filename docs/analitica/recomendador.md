@@ -94,3 +94,24 @@ La muestra A tiene 276 orígenes, con 1.058 pares para la puerta, y quedó agreg
 - **La cobertura es amplia:** 663 de 2.282 notas aparecen alguna vez entre las 5.
 
 Hay que decidir en una ronda b si la frescura entra como regla del híbrido. Para el producto también tiene sentido: mostrar lo último que está alineado.
+
+## Ronda b (aprobada el 8-nov): frescura como regla
+
+- **Cascada:** primero las notas de los últimos N días, ordenadas por el híbrido (contenido, región y MMR); después el resto, de la más reciente a la más antigua.
+- **Calibración de N:** con la muestra A, que ya está vista y solo sirve como desarrollo, en la grilla 3, 7, 14 y 30. En caso de empate gana el menor.
+- **Decisión:** con la muestra B, que son las notas nuevas desde el 9-nov que mencionan El Niño (sobre El Niño o no) y enlazan una nota anterior del mismo medio. Se usa el 18-nov junto con T5, como primer uso. Para B, el catálogo incluye las notas nuevas, porque sin ellas no habría frescura.
+- **Criterios:** R1 a R3 iguales que en la ronda a, sobre la cascada fresca. Con menos de 30 orígenes en B, la ronda es informativa.
+
+**Calibración (8-nov, 276 orígenes de A): N = 3 días.**
+
+| | 3 días | 7 días | 14 días | 30 días | Lo más reciente |
+|---|---|---|---|---|---|
+| MRR | **0,425** | 0,370 | 0,314 | 0,249 | 0,387 |
+
+Por mitades, lo más reciente frente a la cascada de 3 días da 0,599 frente a 0,543 en enero a junio, y 0,339 frente a 0,399 en julio a octubre.
+
+**Aviso antes de B:** en la calibración, la mejora sobre lo más reciente (+0,038) no llega al +0,05 de R1. En julio a octubre, el período más parecido a B por volumen, sí llega (+0,06). El MRR crece al acortar la ventana, y 3 es el borde de la grilla; no se agregan valores menores para no ajustar después de mirar. Si R1 no pasa en B, el producto usa la cascada de 3 días de todas formas (no empeora frente al contenido solo y da frescura), pero se declara que no le gana a "lo más reciente".
+
+```bash
+python -m radar.analitica.recomendador validar --ronda b   # 18-nov, después de la recolección de ese día
+```
