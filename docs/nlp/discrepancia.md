@@ -267,10 +267,30 @@ Con estos cambios, los controles oficiales no cambian (T1 a T4, plazos, estado o
 - **Semáforo:** 173 notas sin afirmaciones, 24 verdes, 3 amarillas, 0 rojas.
 - **C3 pasa con muy pocos casos (4).** El intervalo de confianza no excluye un acierto bajo, así que la evidencia de C3 es débil. Las tres rondas juntas (a, b y c) suman unos 50 casos.
 - **Casos reales que el índice muestra bien:**
-  - El BCR, el 3-ago, usa el plazo del N.° 12 ("hasta el verano de 2027"). El vigente, el N.° 13, ya decía "hasta abril": el índice lo marca *desactualizado*.
+  - El BCR, el 3-ago, da para "fuerte" el plazo del N.° 12 ("hasta el verano de 2027"). Con la regla de lo último dicho, ese plazo sigue vigente, porque el N.° 13 no dio otro para "fuerte": queda *respaldado*.
   - Una funcionaria del Senamhi, el 27-ago, dice "muy fuerte".
-- **Límite que queda: el silencio del vigente.** El N.° 14 no da magnitud para el Pacífico central. Por eso "muy fuerte" sale *desactualizada* frente al N.° 13, cuando el ENFEN no la cambió: solo dejó de mencionarla. Se declara; no se corrige ahora.
+- **Silencio del vigente: resuelto después** (ver abajo).
 - **No hubo ninguna roja** en las 3 rondas (598 notas), salvo una de un tercero en la ronda b. Con lo oficial, las notas casi siempre coinciden o no afirman datos. Lo que más aparece es *desactualizada* y *más certeza*.
+
+**Lo último dicho de cada escala (aprobado el 7-nov).**
+- **Pacífico central:** si un comunicado no da su magnitud, vale la del último que la dio. El N.° 14 hereda "muy fuerte" del N.° 13.
+- **Plazo de cada magnitud costera:** si el comunicado no lo repite y la sigue mencionando, vale el último plazo dado para ella. Cuando una magnitud se deja de mencionar, su plazo se va.
+- **El evento no se hereda.** Su fin viene en cada comunicado, y su inicio ya ocurrido lo cubre la regla de los hechos pasados.
+- **Casos sintéticos:** 3 nuevos en C1, que queda en 33/33. C2 y C5 no cambian.
+
+**Ajuste de la regla de "vigilancia" (7-nov).** Al repetir las rondas, la regla nueva también descartaba "la vigilancia de Niño Costero que mantiene vigente el Perú", que sí es el estado. Ahora "la vigilancia" es actividad solo si sigue "del fenómeno", "permanente", "del mar" o algo parecido. El estado oficial sigue en 33/33.
+
+**Diagnóstico con el código final** (las rondas a y b sirvieron para corregir, así que no son independientes):
+
+| Ronda | C3 (ENFEN y sin atribución) | C3 terceros (informativo) | C4 | Semáforo |
+|---|---|---|---|---|
+| a | 15/15 | 6/6 | 40/40 | 168 sin afirmaciones · 29 🟢 · 2 🟡 |
+| b | 4/4 | 13/17 | 28/28 | 177 · 19 🟢 · 2 🟡 · 1 🔴 |
+| c | 4/4 | 7/7 | 38/38 | 173 · 24 🟢 · 3 🟡 |
+
+- Juntas, las tres rondas dan **C3 = 23/23** y **26/30 en terceros**. No son 23 casos independientes: la evidencia de C3 sigue siendo débil, y se declara así.
+- Con la herencia, el único cambio en la ronda c es el "muy fuerte" del Senamhi del 27-ago, que pasa a *respaldada*. Su fecha ("muy fuerte en enero de 2027") sigue *sin respaldo*, porque las fechas del Pacífico central no se comparan.
+- Las 242 notas sobre El Niño que quedan sin ver se reservan para T5. No hay una ronda d.
 
 ## Configuración del NLI (si se usa)
 - Modelo `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` (MIT; 83,2 % en XNLI en español).

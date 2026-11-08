@@ -194,3 +194,8 @@ def test_la_vigilancia_del_fenomeno_es_una_actividad():
 
 def test_anios_futuros_son_del_evento_actual():
     assert a.momento("El Niño podría extenderse hasta 2028.", "2026-10-01") == "actual"
+
+
+def test_la_vigilancia_de_nino_costero_es_el_estado():
+    assert a.estado("En línea con la vigilancia de Niño Costero que mantiene vigente el Perú.") == "vigilancia"
+    assert a.estado("Los ministerios actúan ante la vigilancia de El Niño.") == "vigilancia"

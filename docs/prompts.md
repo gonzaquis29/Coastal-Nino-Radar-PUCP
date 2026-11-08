@@ -434,3 +434,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 19. Procedemos a corregir los 3 / sí, sigue / sí, apruebo (capa 5, rondas b y c).
 
 **Resultado:** la IA corrigió en la capa 3 el año de los rangos, las fechas económicas y las agencias internacionales, y en la capa 5 los hechos pasados y el diseño de C4. La ronda b no pasó (C3 17/22, C4 27/29): 4 de los 5 fallos de C3 eran discrepancias reales de terceros. Con 4 cambios más (estado como actividad, años futuros, C4 con años explícitos y C3 sin terceros), la ronda c pasa, aunque C3 solo tiene 4 casos.
+20. Entonces, ¿cómo debemos resolverlo? / sí (silencio del vigente y C3).
+
+**Resultado:** la IA hizo que cada escala tome lo último que dijo el ENFEN (Pacífico central y plazo de cada magnitud) y repitió las tres rondas con el código final. Así encontró y corrigió un falso negativo de su propia regla de "vigilancia". Pasan C3 (23/23 juntas, sin independencia) y C4 en las tres rondas; las notas que quedan se reservan para T5.

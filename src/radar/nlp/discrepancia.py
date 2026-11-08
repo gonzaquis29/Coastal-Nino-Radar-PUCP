@@ -86,18 +86,43 @@ def referencia(corpus):
             for frase in enfen.FRASE.split(p["texto"]):
                 central[p["doc_id"]] |= _central_de_frase(frase, p["region_enso"])
     segmentos = temporalidad.oficial(corpus)
-    return [
-        {
-            "id": c["id"],
-            "desde": c["fecha_emision"],
-            "estado": af.ESTADO_DE_ENCABEZADO.get(c["estado"], ""),
-            COSTA: set(filter(None, c["magnitudes_mencionadas"].split("|"))),
-            "maxima": c["magnitud_max_prevista"],
-            CENTRAL: central[c["id"]],
-            "segmentos": segmentos[c["id"]],
-        }
-        for c in corpus.comunicados
-    ]
+    return heredar(
+        [
+            {
+                "id": c["id"],
+                "desde": c["fecha_emision"],
+                "estado": af.ESTADO_DE_ENCABEZADO.get(c["estado"], ""),
+                COSTA: set(filter(None, c["magnitudes_mencionadas"].split("|"))),
+                "maxima": c["magnitud_max_prevista"],
+                CENTRAL: central[c["id"]],
+                "segmentos": segmentos[c["id"]],
+            }
+            for c in corpus.comunicados
+        ]
+    )
+
+
+def heredar(historia):
+    """Lo último dicho de cada escala sigue vigente mientras otro comunicado no lo cambie (ajuste del 7-nov): si un
+    comunicado no da magnitud del Pacífico central, vale la del último que la dio; si no repite el plazo de una
+    magnitud costera que sigue mencionando, vale el último plazo dado para ella. El evento no se hereda: su fin viene
+    en cada comunicado y su inicio ya pasado lo cubre la regla de los hechos pasados."""
+    salida, central, plazos = [], set(), {}
+    for r in historia:
+        r = {**r, "segmentos": list(r["segmentos"])}
+        if r[CENTRAL]:
+            central = set(r[CENTRAL])
+        else:
+            r[CENTRAL] = set(central)
+        presentes = {s["sujeto"] for s in r["segmentos"]}
+        for sujeto, segs in plazos.items():
+            if sujeto not in presentes and sujeto in r[COSTA]:
+                r["segmentos"] += segs
+        for sujeto in presentes - {temporalidad.EVENTO}:
+            plazos[sujeto] = [s for s in r["segmentos"] if s["sujeto"] == sujeto]
+        plazos = {k: v for k, v in plazos.items() if k in r[COSTA]}  # una magnitud que se deja de mencionar se va
+        salida.append(r)
+    return salida
 
 
 def indice_vigente(historia, fecha):
@@ -261,15 +286,19 @@ def _par(texto):
 
 # Historia sintética: el estado pasa a alerta en c1; la magnitud sube de débil a fuerte; c2 da Pacífico central; el
 # inicio del evento (enero) solo lo dice c0
-HISTORIA_SINTETICA = [
+HISTORIA_SINTETICA = heredar([
     _ref(0, "2026-01-01", "vigilancia", ["débil"],
          segmentos=[_seg("evento", fin=_par("2026-10")), _seg("evento", inicio=_par("2026-01"))]),
     _ref(1, "2026-02-01", "alerta", ["débil", "moderada"], segmentos=[_seg("evento", fin=_par("2026-11"))]),
     _ref(2, "2026-03-01", "alerta", ["moderada", "fuerte"], ["muy fuerte"],
          segmentos=[_seg("evento", fin=_par("2027-01"))]),
     _ref(3, "2026-03-20", "alerta", ["fuerte", "extraordinaria"], ["muy fuerte"],
+         segmentos=[_seg("evento", fin=_par("2027-01")), _seg("fuerte", fin=_par("2026-12"))]),
+    # c4 no habla del Pacífico central ni del plazo de "fuerte"; c5 ya no menciona "fuerte"
+    _ref(4, "2026-04-25", "alerta", ["fuerte", "extraordinaria"], segmentos=[_seg("evento", fin=_par("2027-01"))]),
+    _ref(5, "2026-05-30", "alerta", ["extraordinaria"], ["muy fuerte"],
          segmentos=[_seg("evento", fin=_par("2027-01"))]),
-]  # fmt: skip
+])  # fmt: skip
 
 
 def _afirmacion(texto="", region="ambigua", magnitudes=(), posibles=(), estado="", segmentos=(), atribucion="sin",
@@ -323,6 +352,13 @@ CASOS = (
                                                          modalidad="afirma"), "2026-03-10",
      [("magnitud", "respaldada", False)]),
     ("antes del primer comunicado no se compara", _afirmacion(magnitudes=["fuerte"]), "2025-12-01", []),
+    ("silencio del vigente en el Pacífico central", _afirmacion(region="central", magnitudes=["muy fuerte"]),
+     "2026-04-28", [("magnitud", "respaldada", False)]),
+    ("silencio del vigente sobre el plazo de una magnitud",
+     _afirmacion(segmentos=[_seg("fuerte", fin=_par("2026-12"))]),
+     "2026-04-28", [("fecha", "respaldada", False)]),
+    ("plazo de una magnitud que ya no se menciona", _afirmacion(segmentos=[_seg("fuerte", fin=_par("2026-12"))]),
+     "2026-06-02", [("fecha", "desactualizada", False)]),
 )  # fmt: skip
 
 COLORES = (  # (categorías, color esperado)

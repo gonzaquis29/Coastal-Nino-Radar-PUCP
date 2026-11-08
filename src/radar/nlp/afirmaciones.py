@@ -83,8 +83,15 @@ VALOR_DEL_SISTEMA = re.compile(rf"\bSISTEMA\b[^.;]{{0,50}}?\b(?:de|en|a|como)\s+
 
 
 def _es_actividad(texto, inicio, valor):
-    """ "dedicada a la vigilancia del fenómeno": el monitoreo, no el estado del sistema (arreglo del 7-nov)."""
-    return valor == "vigilancia" and re.search(r"\bla\s+$", texto[:inicio], re.I) is not None
+    """ "dedicada a la vigilancia del fenómeno": el monitoreo, no el estado del sistema (arreglo del 7-nov). "La
+    vigilancia de Niño Costero que mantiene vigente el Perú" sí es el estado: lleva su nombre."""
+    return (valor.lower() == "vigilancia" and re.search(r"\bla\s+$", texto[:inicio], re.I) is not None
+            and ACTIVIDAD.search(texto[inicio + len(valor) :]) is not None)  # fmt: skip
+
+
+# Lo que sigue a "la vigilancia" cuando es el monitoreo: "del fenómeno", "permanente", "del mar"
+ACTIVIDAD = re.compile(r"^\s+(?:del\s+fen[óo]meno|permanente|constante|continua|de\s+(?:los|las)\b"
+                       r"|del\s+(?:mar|oc[ée]ano|clima))", re.I)  # fmt: skip
 
 
 def _valores(regex, texto):
