@@ -1,0 +1,39 @@
+id,herramienta,aceptables,interes,texto
+bE01,estado_vigente,,,¿En qué nivel de alerta estamos según el ENFEN?
+bE02,estado_vigente,,,¿Sigue activo algún aviso del Senamhi en {region}?
+bE03,estado_vigente,,,¿Cuál era el estado del sistema de alerta el {dia}?
+bE04,estado_vigente,,,¿El ENFEN ya declaró alerta de El Niño costero?
+bE05,estado_vigente,,,¿Qué avisos meteorológicos están vigentes hoy en {region}?
+bE06,estado_vigente,,,Dime el estado de alerta vigente del ENFEN.
+bB01,buscar_oficial,,,¿Qué dice el Senamhi sobre las lluvias del {dia}?
+bB02,buscar_oficial,,,¿Cómo afectaría El Niño costero a la agricultura del norte?
+bB03,buscar_oficial,,,Explícame qué pronostica el ENFEN para los próximos meses en la costa.
+bB04,buscar_oficial,,,¿Qué anomalías de temperatura del mar reporta el último comunicado?
+bB05,buscar_oficial,,,¿Se esperan lluvias fuertes en {region} durante el verano?
+bB06,buscar_oficial,,,¿Qué recomienda el ENFEN a la población?
+bB07,buscar_oficial,,,Resume lo que dice el comunicado del ENFEN sobre la pesca.
+bB08,buscar_oficial,,,¿Cuánto podría subir la temperatura del aire en la costa?
+bR01,recomendar,,pesca,"Soy pescador artesanal en {region}, ¿qué me conviene revisar?"
+bR02,recomendar,,lluvias,Me inquietan los huaicos en {region}. ¿Qué fuentes oficiales debo consultar?
+bR03,recomendar,,calor,Sugiéreme lecturas sobre el calor para alguien que vive en {region}.
+bR04,recomendar,,prevencion,¿Dónde me informo para prepararme ante una emergencia por El Niño?
+bR05,recomendar,,pesca,Tengo una embarcación en {region}. ¿Qué debería leer esta semana sobre el mar?
+bR06,recomendar,,lluvias,Recomiéndame notas confiables sobre las lluvias.
+bR07,recomendar,,prevencion,Necesito información para preparar a mi familia ante El Niño en {region}.
+bR08,recomendar,,calor,¿Qué comunicados y notas me sirven si trabajo al aire libre con calor?
+bR09,recomendar,,pesca,¿Qué me sugieres leer sobre la anchoveta y El Niño?
+bR10,recomendar,,lluvias,Vivo cerca de un río en {region}. ¿A qué fuentes debería prestar atención?
+bR11,recomendar,,prevencion,"Soy docente en {region}, ¿qué debería revisar para prevenir daños por El Niño?"
+bR12,recomendar,,calor,Quiero seguir el tema del calor en {region}: ¿qué me recomiendas?
+bD01,medir_discrepancia,,,¿Es real que El Niño costero será fuerte este verano?
+bD02,medir_discrepancia,,,"Según un noticiero, el mar frente a Piura estará 5 grados más caliente en diciembre"
+bD03,medir_discrepancia,,,"¿Qué tan cierto es ""se declaró emergencia por El Niño en todo el país""?"
+bD04,medir_discrepancia,,,Vi en redes que el ENFEN suspendió la alerta. ¿Es así?
+bD05,medir_discrepancia,,,El Senamhi anunció lluvias extremas para toda la costa la próxima semana
+bD06,medir_discrepancia,,,¿Puedes verificar si las lluvias de marzo fueron por El Niño costero?
+bF01,fuera_de_alcance,,,¿Quién ganó el partido de anoche?
+bF02,fuera_de_alcance,,,Recomiéndame una película para el fin de semana.
+bF03,fuera_de_alcance,,,¿Cuánto cuesta el pasaje a Cusco?
+bF04,fuera_de_alcance,,,Dime los resultados de las elecciones regionales.
+bF05,fuera_de_alcance,,,¿Qué restaurantes recomiendas en Lima?
+bF06,fuera_de_alcance,,,¿Cómo configuro mi correo electrónico?

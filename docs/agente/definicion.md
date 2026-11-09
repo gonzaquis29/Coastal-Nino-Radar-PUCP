@@ -73,3 +73,13 @@ El enrutador no usa como ejemplos ninguna de estas redacciones: solo la descripc
 Informativo: 13 de 100 titulares sin ver que mencionan El Niño van a contrastar (85 se quedan fuera del dominio: el titular no trae las palabras que `rasgos` encuentra en el cuerpo); 100/100 de otros temas quedan fuera de alcance.
 
 **Diagnóstico.** Casi todo el fallo está en `recomendar` (R02, R03, R04, R06 y R08 en 0; R07 en 0,5) y en dos búsquedas que caen en estado (B01, B03). La descripción de `recomendar` compite mal por embeddings con las de contenido: "me preocupan las lluvias" se parece más a buscar. R03, una orden sin "?", la toma la regla de afirmación sin pregunta. Cualquier regla escrita ahora para esto se ajustaría a las redacciones congeladas, así que la ronda a queda como resultado y un cambio necesita una ronda b con redacciones nuevas congeladas antes.
+
+## Ronda b (aprobada el 9-nov; congelada antes de cambiar el enrutador)
+
+**Cambio previsto** (genérico, no copiado de las redacciones):
+- Una regla de pedido de recomendación ("recomiéndame", "qué me sugieres", "qué debería leer o revisar", "qué fuentes", "dónde me informo") va a `recomendar`, salvo que el sujeto sea una fuente oficial ("qué recomienda el ENFEN" es búsqueda).
+- La regla de afirmación sin "?" no toma las órdenes (frases que empiezan con un imperativo como "dime", "explícame" o "resume").
+
+**Evaluación:** 38 redacciones nuevas en `config/agente_preguntas_b.csv` (6 de estado, 8 de búsqueda, 12 de recomendación, 6 de contraste y 6 fuera de alcance), con los mismos valores de `{region}` y `{dia}`. Incluyen trampas a propósito: "¿Qué recomienda el ENFEN…?" (búsqueda), "Recomiéndame una película" (fuera de alcance), "¿Es real que…?" (contraste sin las palabras de la regla) y pedidos sin "?".
+
+**Criterios:** los mismos A1 a A5 y umbrales, sobre las redacciones b y las preguntas del recuperador. Las redacciones de la ronda a se reportan solo como informativas, porque el cambio se decidió mirándolas. No se usan titulares: el cambio no los toca y no gasta notas sin ver.
