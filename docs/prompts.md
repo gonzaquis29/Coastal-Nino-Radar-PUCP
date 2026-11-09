@@ -467,3 +467,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 30. ¿Con qué podemos continuar, que solo dependa de nosotros? / Procede (agente) / Reglas + embeddings.
 
 **Resultado:** la IA escribió el agente sin LLM (`radar.agente`): cuatro herramientas con respuestas por plantilla y citas literales, y un enrutador con reglas genéricas y similitud de minilm con la descripción de cada herramienta. Congeló 46 redacciones nuevas y los criterios A1 a A5 antes de escribirlo. Pasan A2 a A5, pero A1 no (0,83): las preguntas de recomendación se confunden con búsqueda. Propuso una ronda b con redacciones nuevas en lugar de ajustar las reglas a las congeladas.
+31. Sí, apruebo (agente, ronda b).
+
+**Resultado:** la IA congeló 38 redacciones nuevas y los criterios antes de tocar el enrutador. Agregó una regla de pedidos de recomendación (salvo cuando recomienda una fuente oficial) y otra para que las órdenes no cuenten como afirmaciones. A1 sube a 0,874, pero no llega a 0,90. Fallan los contrastes sin palabras clave ("¿Es real que…?") y dos pedidos de recomendación sin palabras de la regla.

@@ -50,10 +50,18 @@ class EnrutadorSinModelo(ag.Enrutador):
         ("¿Cuál es el precio del dólar?", ag.FUERA),
         ("¿Es cierto que El Niño será extraordinario?", "medir_discrepancia"),
         ("El Niño costero traerá lluvias intensas a toda la costa norte desde enero", "medir_discrepancia"),
+        ("¿Qué me recomiendan leer sobre el oleaje?", "recomendar"),
+        ("Sugiéranme algo sobre los avisos de lluvia", "recomendar"),
+        ("Muéstrame el último aviso del Senamhi para la costa sur del país", None),  # orden: no es afirmación
+        ("¿Qué aconseja el Senamhi ante el calor?", None),  # fuente oficial que recomienda: no es recomendar
     ],
 )
 def test_reglas(consulta, esperada):
-    assert EnrutadorSinModelo().elegir(consulta)[0] == esperada
+    if esperada is None:  # ninguna regla decide: pasa a los embeddings
+        with pytest.raises(AttributeError):
+            EnrutadorSinModelo().elegir(consulta)
+    else:
+        assert EnrutadorSinModelo().elegir(consulta)[0] == esperada
 
 
 def test_cita_es_literal_y_corta_en_oracion():

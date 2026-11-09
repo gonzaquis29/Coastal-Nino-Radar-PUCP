@@ -83,3 +83,14 @@ Informativo: 13 de 100 titulares sin ver que mencionan El Niño van a contrastar
 **Evaluación:** 38 redacciones nuevas en `config/agente_preguntas_b.csv` (6 de estado, 8 de búsqueda, 12 de recomendación, 6 de contraste y 6 fuera de alcance), con los mismos valores de `{region}` y `{dia}`. Incluyen trampas a propósito: "¿Qué recomienda el ENFEN…?" (búsqueda), "Recomiéndame una película" (fuera de alcance), "¿Es real que…?" (contraste sin las palabras de la regla) y pedidos sin "?".
 
 **Criterios:** los mismos A1 a A5 y umbrales, sobre las redacciones b y las preguntas del recuperador. Las redacciones de la ronda a se reportan solo como informativas, porque el cambio se decidió mirándolas. No se usan titulares: el cambio no los toca y no gasta notas sin ver.
+
+### Resultado de la ronda b (9-nov)
+
+**No pasa A1: 0,874** (umbral 0,90; 41 redacciones). A2 (2.265/2.269), A3 (4.006/4.006), A4 (6/6 y 0 abstenciones) y A5 (mediana 0,12 s) pasan. Detalle: `data/processed/agente/agente-b.csv`.
+
+- **Recomendación:** pasa de casi 0 a 10 de 12 redacciones. Fallan "Necesito información para…" (sin "?" y sin imperativo: la toma la regla de afirmación) y "¿Qué comunicados y notas me sirven…?" (no trae ninguna palabra de la regla).
+- **Contraste sin las palabras de la regla:** "¿Es real que…?" y "Vi en redes que… ¿Es así?" caen en estado. Las trampas que sí resolvió: "¿Qué recomienda el ENFEN…?" va a búsqueda y "Recomiéndame una película" queda fuera de alcance.
+- **Búsqueda:** "¿Cómo afectaría El Niño a la agricultura del norte?" cae en estado.
+- El recuperador no cambia (recuperador-A0 sigue en 0,84). Las redacciones de la ronda a, ya vistas, suben de 0,83 a 0,94.
+
+Ajustar ahora las reglas a estos 5 casos sería repetir el ajuste a lo visto. Cada ronda con reglas cubre las frases que se previeron y falla en las que no: es el límite del enfoque sin LLM.

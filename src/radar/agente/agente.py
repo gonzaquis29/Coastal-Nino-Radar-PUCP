@@ -60,6 +60,14 @@ DOMINIO = re.compile(
 CONTRASTE = re.compile(r"es cierto|es verdad|es correcto|verific|le[ií] que|dicen que|coincide con lo oficial|"
                        r"confiable es esto|[\"“”«»]", re.I)  # fmt: skip
 CITA_ENTRE_COMILLAS = re.compile(r"[\"“«]([^\"”»]{8,})[\"”»]")
+# Ronda b: pedidos de recomendación (sin tildes), salvo que quien recomienda sea una fuente oficial
+RECOMENDACION = re.compile(r"recomiend|sugier|\b(?:debo|deberia) (?:leer|revisar|seguir|consultar)|\bfuentes\b|"
+                           r"donde (?:me )?informo", re.I)  # fmt: skip
+RECOMIENDA_OFICIAL = re.compile(r"(?:recomiend|sugier|aconsej)\w*\s+(?:el|la|los|las)\s+(?:enfen|senamhi|comunicado|"
+                                r"aviso|autoridad|gobierno|indeci)", re.I)  # fmt: skip
+# Ronda b: una orden ("dime…", "explícame…") no es una afirmación para contrastar
+IMPERATIVO = re.compile(r"^[¿¡\s]*(?:di|da|explica|cuenta|muestra|indica|resume|busca|recomienda|sugiere|lista|compara)"
+                        r"(?:me|nos)?\b", re.I)  # fmt: skip
 PREFIJO_CONTRASTE = re.compile(
     r"^\s*(?:¿\s*)?(?:es cierto que|es verdad que|le[ií] que|dicen que|un video dice que)\s*", re.I
 )
@@ -157,7 +165,10 @@ class Enrutador:
             return FUERA, "regla: fuera del dominio"
         if CONTRASTE.search(consulta):
             return "medir_discrepancia", "regla: texto para contrastar"
-        if "?" not in consulta and len(consulta.split()) >= PALABRAS_AFIRMACION:
+        llano = sin_tildes(consulta)
+        if RECOMENDACION.search(llano) and not RECOMIENDA_OFICIAL.search(llano):
+            return "recomendar", "regla: pedido de recomendación"
+        if "?" not in consulta and len(consulta.split()) >= PALABRAS_AFIRMACION and not IMPERATIVO.search(llano):
             return "medir_discrepancia", "regla: afirmación sin pregunta"
         sim = self.vectores @ self.oficial.embeber([consulta])[0]
         return self.etiquetas[int(np.argmax(sim))], "embeddings"
@@ -279,7 +290,7 @@ def por_redaccion(filas):
     return {r: statistics.mean(v) for r, v in grupos.items()}
 
 
-def criterios(filas, informativas):
+def criterios(filas, informativas, prueba=PRUEBA, info=INFO):
     validas = [f for f in filas if FUERA not in f["esperada"]]
     fuera = [f for f in filas if f["esperada"] == FUERA]
     acierto = por_redaccion(validas)
@@ -291,29 +302,47 @@ def criterios(filas, informativas):
     abst = statistics.mean(f["herramienta"] == FUERA for f in validas)
     mediana = statistics.median(f["segundos"] for f in filas)
     salida = [
-        criterio(PRUEBA, "A1. Herramienta correcta, promedio por redacción", round(a1, 3), f"≥ {ACIERTO_MINIMO}",
+        criterio(prueba, "A1. Herramienta correcta, promedio por redacción", round(a1, 3), f"≥ {ACIERTO_MINIMO}",
                  a1 >= ACIERTO_MINIMO, f"{len(acierto)} redacciones; peores: "
                  + ", ".join(f"{r} {v:.2f}" for v, r in malas)),
-        criterio(PRUEBA, "A2. Parámetros extraídos bien", f"{p_bien}/{p_total}", f"≥ {PARAMETROS_MINIMO}",
+        criterio(prueba, "A2. Parámetros extraídos bien", f"{p_bien}/{p_total}", f"≥ {PARAMETROS_MINIMO}",
                  p_total and p_bien / p_total >= PARAMETROS_MINIMO),
-        criterio(PRUEBA, "A3. Citas literales", f"{c_bien}/{c_total}", "100 %", c_bien == c_total),
-        criterio(PRUEBA, "A4. Fuera de alcance sin herramienta", round(a4, 3), f"≥ {FUERA_MINIMO}", a4 >= FUERA_MINIMO,
+        criterio(prueba, "A3. Citas literales", f"{c_bien}/{c_total}", "100 %", c_bien == c_total),
+        criterio(prueba, "A4. Fuera de alcance sin herramienta", round(a4, 3), f"≥ {FUERA_MINIMO}", a4 >= FUERA_MINIMO,
                  f"{len(fuera)} casos"),
-        criterio(PRUEBA, "A4. Abstenciones en preguntas válidas", round(abst, 3), f"≤ {ABSTENCION_MAXIMA}",
+        criterio(prueba, "A4. Abstenciones en preguntas válidas", round(abst, 3), f"≤ {ABSTENCION_MAXIMA}",
                  abst <= ABSTENCION_MAXIMA, f"{len(validas)} casos"),
-        criterio(PRUEBA, "A5. Tiempo por consulta (mediana)", round(mediana, 3), f"≤ {CONSULTA_MAXIMA_S} s",
+        criterio(prueba, "A5. Tiempo por consulta (mediana)", round(mediana, 3), f"≤ {CONSULTA_MAXIMA_S} s",
                  mediana <= CONSULTA_MAXIMA_S, f"máximo {max(f['segundos'] for f in filas):.2f} s"),
     ]  # fmt: skip
     origenes = collections.Counter(f["origen"] for f in filas)
-    salida.append(criterio(INFO, "Origen de las decisiones", "", "", True, str(dict(origenes))))
+    salida.append(criterio(info, "Origen de las decisiones", "", "", True, str(dict(origenes))))
     for nombre, g in informativas.items():
         aciertos = statistics.mean(f["acierto"] for f in g) if g else 0
-        salida.append(criterio(INFO, f"Titulares sin ver: {nombre}", f"{aciertos:.3f}", "", True,
+        salida.append(criterio(info, f"Titulares sin ver: {nombre}", f"{aciertos:.3f}", "", True,
                                str(dict(collections.Counter(f["herramienta"] for f in g)))))  # fmt: skip
     return salida
 
 
-def validar():
+def validar_b():
+    """Ronda b: A1 a A5 sobre las redacciones b y el recuperador; las de la ronda a, solo informativas."""
+    nuevas = casos_congelados(leer_csv(config.DIR_CONFIG / "agente_preguntas_b.csv"))
+    del_recuperador = casos_recuperador(leer_csv(config.DIR_NLP / "recuperador-preguntas.csv"))
+    filas = evaluar(nuevas + del_recuperador)
+    vistas_a = evaluar(casos_congelados(leer_csv(config.DIR_CONFIG / "agente_preguntas.csv")))
+    escribir_csv(config.DIR_AGENTE / "agente-b.csv", tuple(filas[0]), filas + vistas_a)
+    salida = criterios(filas, {}, f"{PRUEBA} (ronda b)", f"{INFO} (ronda b)")
+    acierto_a = por_redaccion([f for f in vistas_a if FUERA not in f["esperada"]])
+    malas = sorted(((v, r) for r, v in acierto_a.items() if v < 1))[:8]
+    a1_vistas = round(statistics.mean(acierto_a.values()), 3)
+    salida.append(criterio(f"{INFO} (ronda b)", "Redacciones de la ronda a (ya vistas)", a1_vistas, "", True,
+                           ", ".join(f"{r} {v:.2f}" for v, r in malas)))  # fmt: skip
+    return salida
+
+
+def validar(ronda="b"):
+    if ronda == "b":
+        return validar_b()
     congelados = casos_congelados(leer_csv(config.DIR_CONFIG / "agente_preguntas.csv"))
     del_recuperador = casos_recuperador(leer_csv(config.DIR_NLP / "recuperador-preguntas.csv"))
     filas = evaluar(congelados + del_recuperador)
@@ -340,6 +369,7 @@ def main(argv=None):
     ap.add_argument("paso", choices=("validar", "preguntar"))
     ap.add_argument("consulta", nargs="?")
     ap.add_argument("--hoy", default=None)
+    ap.add_argument("--ronda", choices=("a", "b"), default="b")
     args = ap.parse_args(argv)
     if args.paso == "preguntar":
         r = responder(args.consulta or "", args.hoy)
@@ -351,7 +381,7 @@ def main(argv=None):
     inicio = ahora()
     config.DIR_AGENTE.mkdir(parents=True, exist_ok=True)
     random.seed(0)
-    filas = validar()
+    filas = validar(args.ronda)
     guardar(filas, config.DIR_AGENTE / "validacion.csv")
     reporte(filas, [], inicio)
     log.info(f"Registro: {registro.relative_to(config.RAIZ)}")
