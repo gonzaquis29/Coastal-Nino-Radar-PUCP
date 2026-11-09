@@ -470,3 +470,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 31. Sí, apruebo (agente, ronda b).
 
 **Resultado:** la IA congeló 38 redacciones nuevas y los criterios antes de tocar el enrutador. Agregó una regla de pedidos de recomendación (salvo cuando recomienda una fuente oficial) y otra para que las órdenes no cuenten como afirmaciones. A1 sube a 0,874, pero no llega a 0,90. Fallan los contrastes sin palabras clave ("¿Es real que…?") y dos pedidos de recomendación sin palabras de la regla.
+32. ¿Cómo podemos llegar a 0,90? Evaluemos mejor / Sí, apruebo (agente, ronda c).
+
+**Resultado:** la IA mostró que con 41 redacciones el IC 95 % de A1 iba de 0,77 a 0,97 y que cada ronda había gastado su prueba. Escribió y congeló primero una prueba de 150 redacciones por tipos y después un conjunto de desarrollo de 120. En desarrollo comparó descripciones, kNN y un clasificador de intención. Eligió regresión logística sobre TF-IDF y e5 (0,91 en validación cruzada) y la congeló antes de la prueba. La prueba pasa: A1 0,944 (IC 0,904 a 0,984) y A2 a A6 pasan. Declaró que la IA escribió todos los conjuntos.

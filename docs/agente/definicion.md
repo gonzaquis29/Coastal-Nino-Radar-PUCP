@@ -112,3 +112,35 @@ Ajustar ahora las reglas a estos 5 casos sería repetir el ajuste a lo visto. Ca
 | A6 | Preguntas del recuperador (ya vistas): sin retroceso | ≥ 0,95 por redacción |
 
 Informativo: A1 por tipo, y las redacciones de las rondas a y b. **Límite declarado:** la IA escribe los dos conjuntos, así que no son del todo independientes. Para mitigarlo, la prueba se escribió primero y por tipos fijados de antemano.
+
+### Desarrollo (9-nov)
+
+Se midió con validación cruzada dejando fuera cada redacción del conjunto de desarrollo (120 redacciones), solo el enrutamiento:
+
+| Enrutador | A1 en desarrollo |
+|---|---|
+| Ronda b (reglas + descripciones con minilm) | 0,662 |
+| Reglas + kNN sobre los ejemplos (e5, k = 5) | 0,750 |
+| **Reglas + regresión logística sobre TF-IDF de palabras y caracteres + e5 (peso 3, C = 100)** | **0,910** |
+
+- Los embeddings solos captan el tema y no la intención: "¿Hay aviso en la costa norte?" se acercaba a los pedidos de recomendación que nombran una región. Por eso las regiones y fechas se reemplazan por `LUGAR` y `FECHA` antes de clasificar.
+- La regla de afirmación sin "?" se quitó, porque tomaba pedidos como "Necesito…" o "Quiero…". El filtro de dominio se amplió (vigilancia, cálidas, Pacífico, inundará, etc.).
+- Varias configuraciones quedan entre 0,89 y 0,91, así que elegir la mejor tiene algo de optimismo. El enrutador quedó en el commit 30a4996 antes de correr la prueba.
+
+### Resultado de la ronda c (9-nov, una sola corrida)
+
+**Pasa.** Detalle: `data/processed/agente/agente-c.csv`.
+
+| | Resultado | Umbral |
+|---|---|---|
+| A1 | **0,944** (125 redacciones válidas); IC 95 % de 0,904 a 0,984 | ≥ 0,90 |
+| A2 | 260/269 (0,967) | ≥ 0,95 |
+| A3 | 375/375 | 100 % |
+| A4 | F: 0,96 (24 de 25); válidas: 0,004 | ≥ 0,90 y ≤ 0,05 |
+| A5 | mediana 0,04 s | ≤ 2 s |
+| A6 | recuperador 1,00 | ≥ 0,95 |
+
+- Por tipo: coloquial 1,00, pregunta directa 0,96, sin "?" 0,91, orden 0,90 y trampa 0,86.
+- Fallan 7 redacciones, entre ellas "Cuéntame qué pronostica…", "¿Qué recomienda el Senamhi…?" y "Pronostican lluvias torrenciales…".
+- A2 pierde 9 casos de interés: "pesquero", "Pesco" y "río" con tilde no los reconoce la regla. No se corrige, porque se vio en la prueba.
+- Informativo: las redacciones de las rondas a y b dan 1,00. Confirma el límite declarado: todos los conjuntos los escribió la IA, con un estilo parecido. En el uso real, con redacciones de otras personas, el acierto puede ser menor. El agente queda validado frente a estas redacciones, no frente a usuarios reales.
