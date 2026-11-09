@@ -1,0 +1,121 @@
+id,herramienta,aceptables,interes,tipo,texto
+dE01,estado_vigente,,,P,¿Qué estado de alerta comunicó el ENFEN esta semana?
+dE02,estado_vigente,,,P,¿Está activa la alerta por El Niño costero?
+dE03,estado_vigente,,,P,¿Cuál es el nivel de alerta en {region}?
+dE04,estado_vigente,,,P,¿Qué avisos del Senamhi aplicaban en {region} el {dia}?
+dE05,estado_vigente,,,O,Dime qué avisos rigen hoy en {region}.
+dE06,estado_vigente,,,C,alerta enfen vigente
+dE07,estado_vigente,,,C,hay alerta del nino ahorita?
+dE08,estado_vigente,,,S,Necesito el estado actual del sistema de alerta
+dE09,estado_vigente,buscar_oficial,,P,¿Qué magnitud se espera para El Niño costero?
+dE10,estado_vigente,,,P,¿Seguimos en vigilancia?
+dE11,estado_vigente,,,P,¿Hay aviso de lluvias intensas para {region}?
+dE12,estado_vigente,,,P,¿Qué estado tenía el ENFEN el {dia}?
+dE13,estado_vigente,,,O,Muéstrame los avisos de temperatura vigentes.
+dE14,estado_vigente,,,T,¿Ya no hay alerta del ENFEN?
+dE15,estado_vigente,,,P,¿Cuántos avisos del Senamhi están vigentes en {region}?
+dE16,estado_vigente,,,P,¿El ENFEN mantiene el estado de alerta?
+dE17,estado_vigente,,,P,¿Qué nivel tiene el aviso de oleaje?
+dE18,estado_vigente,,,S,Estado vigente del ENFEN para {region}
+dE19,estado_vigente,,,P,¿Cuál es la situación oficial de El Niño costero hoy?
+dE20,estado_vigente,,,O,Indica si hay alerta de El Niño el {dia}.
+dE21,estado_vigente,,,P,¿Hay algún aviso rojo vigente?
+dE22,estado_vigente,,,C,sigue la alerta o ya la quitaron?
+dE23,estado_vigente,,,P,¿En qué nivel está el sistema de alerta del ENFEN?
+dE24,estado_vigente,,,P,¿Hay avisos por calor en la costa hoy?
+dB01,buscar_oficial,,,P,¿Qué señala el ENFEN sobre la temperatura superficial del mar?
+dB02,buscar_oficial,,,P,¿Qué efectos tendría El Niño en la pesca?
+dB03,buscar_oficial,,,P,¿Cuándo terminarían las condiciones cálidas?
+dB04,buscar_oficial,,,P,¿Qué lluvias se esperan en {region} el {dia}?
+dB05,buscar_oficial,,,O,Explica qué prevé el ENFEN para el verano.
+dB06,buscar_oficial,,,P,¿Cómo estarán los ríos de la costa norte en febrero?
+dB07,buscar_oficial,,,T,¿Qué recomendaciones da el Senamhi ante el calor?
+dB08,buscar_oficial,,,T,¿Qué pide el ENFEN a las autoridades?
+dB09,buscar_oficial,,,C,que dice el enfen de las lluvias
+dB10,buscar_oficial,,,P,¿Por qué hay más calor en Lima?
+dB11,buscar_oficial,,,P,¿Qué impactos tendría El Niño en la costa?
+dB12,buscar_oficial,,,P,¿Qué se pronostica para el Pacífico central?
+dB13,buscar_oficial,,,P,¿Cómo afectaría el evento a la agricultura?
+dB14,buscar_oficial,,,O,Resume el último comunicado del ENFEN.
+dB15,buscar_oficial,,,P,¿Qué temperatura del aire se espera en {region}?
+dB16,buscar_oficial,,,P,¿Qué explica el Senamhi sobre las lluvias del {dia}?
+dB17,buscar_oficial,,,P,¿Qué dice el comunicado sobre la anchoveta?
+dB18,buscar_oficial,,,T,¿Cómo les irá a los pescadores con El Niño?
+dB19,buscar_oficial,,,P,¿Qué anomalías hay en el mar frente a Tumbes?
+dB20,buscar_oficial,,,P,¿Qué riesgo de inundaciones menciona el comunicado?
+dB21,buscar_oficial,,,C,pronostico de lluvias para el norte
+dB22,buscar_oficial,,,P,¿Qué dicen los textos oficiales sobre el oleaje?
+dB23,buscar_oficial,,,O,Cuéntame qué dice el ENFEN sobre las lluvias en la sierra.
+dB24,buscar_oficial,,,P,¿Se espera que llueva más de lo normal en {region}?
+dB25,buscar_oficial,,,P,¿Qué pasará con la temperatura del mar en diciembre?
+dB26,buscar_oficial,,,P,¿Qué daños podría provocar El Niño en la salud?
+dB27,buscar_oficial,,,T,¿Cuáles son las medidas de prevención que recomienda el ENFEN?
+dB28,buscar_oficial,,,P,¿Qué se espera para los caudales en enero?
+dR01,recomendar,,pesca,P,Soy pescador. ¿Qué me conviene revisar sobre El Niño?
+dR02,recomendar,,lluvias,P,Me preocupan las inundaciones en {region}. ¿Qué leo?
+dR03,recomendar,,calor,O,Recomiéndame lecturas sobre el calor.
+dR04,recomendar,,prevencion,S,"Quiero prepararme ante El Niño en {region}, qué reviso"
+dR05,recomendar,,pesca,P,¿Qué información oficial sirve a los pescadores de {region}?
+dR06,recomendar,,lluvias,P,¿Qué fuentes sigo para informarme de las lluvias?
+dR07,recomendar,,calor,P,¿Qué me sugieres leer sobre el calor en {region}?
+dR08,recomendar,,prevencion,P,Soy vecino de {region}. ¿Qué debería leer para prevenir?
+dR09,recomendar,,pesca,C,trabajo en el mar que me recomiendas
+dR10,recomendar,,lluvias,O,Dame notas sobre lluvias para alguien que vive en {region}.
+dR11,recomendar,,calor,P,¿Qué textos oficiales me convienen si trabajo bajo el sol?
+dR12,recomendar,,prevencion,P,¿Por dónde me informo para la prevención en {region}?
+dR13,recomendar,,pesca,P,¿Qué comunicados me tocan si pesco en {region}?
+dR14,recomendar,,lluvias,P,Vivo cerca de una quebrada. ¿Qué me aconsejas leer?
+dR15,recomendar,,calor,S,Necesito información sobre el calor para mi colegio
+dR16,recomendar,,prevencion,O,Ayúdame a saber qué leer para prepararme ante emergencias.
+dR17,recomendar,,pesca,P,¿Qué notas sobre la pesca me propones?
+dR18,recomendar,,lluvias,P,¿A qué fuentes debo prestar atención por las lluvias en {region}?
+dR19,recomendar,,calor,O,Sugiéreme qué revisar sobre temperaturas altas en {region}.
+dR20,recomendar,,prevencion,P,Soy docente. ¿Qué información oficial uso para la prevención?
+dR21,recomendar,,pesca,O,Selecciona lo más útil sobre la anchoveta para mí.
+dR22,recomendar,,lluvias,C,que sigo para estar al tanto de los huaicos en {region}
+dR23,recomendar,,calor,P,¿Qué me recomiendas sobre las olas de calor?
+dR24,recomendar,,prevencion,P,¿Qué leo para preparar a mi familia ante El Niño?
+dD01,medir_discrepancia,,,P,¿Es verdad que vendrá un Niño fuerte?
+dD02,medir_discrepancia,,,P,¿Es real que se declaró alerta roja por lluvias?
+dD03,medir_discrepancia,,,S,Un diario dice que el mar estará 5 grados más caliente en enero
+dD04,medir_discrepancia,,,C,"dicen que el nino ya se fue, es cierto?"
+dD05,medir_discrepancia,,,O,Verifica: El Senamhi pronostica lluvias extremas en Tumbes.
+dD06,medir_discrepancia,,,P,Vi en TikTok que El Niño será catastrófico. ¿Es así?
+dD07,medir_discrepancia,,,S,El ENFEN anunció que El Niño costero será fuerte este verano
+dD08,medir_discrepancia,,,P,¿Es correcto decir que la anchoveta desapareció?
+dD09,medir_discrepancia,,,C,Mi tío dice que no habrá lluvias este año. ¿Tiene razón?
+dD10,medir_discrepancia,,,O,Contrasta este titular: Piura bajo el agua por El Niño
+dD11,medir_discrepancia,,,P,"¿Esto es cierto? ""El mar frente a Paita llegó a 30 grados"""
+dD12,medir_discrepancia,,,S,"Según un video, el calor durará hasta mayo"
+dD13,medir_discrepancia,,,T,Un canal dice que el ENFEN suspendió la alerta. ¿Qué dice lo oficial?
+dD14,medir_discrepancia,,,P,¿Es falso que habrá sequía en el norte?
+dD15,medir_discrepancia,,,S,Lluvias intensas afectarán a Lima la próxima semana
+dD16,medir_discrepancia,,,P,¿Puedo creerle a quien dice que viene un Niño como el de 1998?
+dD17,medir_discrepancia,,,O,Comprueba si el Senamhi anunció huaicos en Lambayeque.
+dD18,medir_discrepancia,,,C,lei que van a suspender clases por el nino es oficial?
+dD19,medir_discrepancia,,,S,La temperatura del mar en Tumbes subió a 29 grados ayer
+dD20,medir_discrepancia,,,P,¿Tiene respaldo oficial decir que El Niño será moderado?
+dD21,medir_discrepancia,,,P,"¿Qué tan exacto es este titular: ""Alerta máxima en toda la costa""?"
+dD22,medir_discrepancia,,,S,Los pescadores dicen que el mar ya está caliente en Paita
+dD23,medir_discrepancia,,,P,¿Exagera la nota que dice que el norte se inundará?
+dD24,medir_discrepancia,,,O,Confirma si el ENFEN dijo que El Niño terminará en marzo.
+dF01,fuera_de_alcance,,,P,¿Cuánto está el dólar?
+dF02,fuera_de_alcance,,,T,Recomiéndame una serie.
+dF03,fuera_de_alcance,,,P,¿Quién ganó el último mundial?
+dF04,fuera_de_alcance,,,O,Escribe un poema.
+dF05,fuera_de_alcance,,,P,¿Cómo se hace un pisco sour?
+dF06,fuera_de_alcance,,,T,¿Qué fuentes recomiendas para aprender a programar?
+dF07,fuera_de_alcance,,,P,¿A qué hora cierra el supermercado?
+dF08,fuera_de_alcance,,,T,¿Es cierto que bajó el precio de la gasolina?
+dF09,fuera_de_alcance,,,P,¿Cuánto cuesta un vuelo a Arequipa?
+dF10,fuera_de_alcance,,,O,Explícame cómo funciona la bolsa de valores.
+dF11,fuera_de_alcance,,,P,¿Qué hora es en Madrid?
+dF12,fuera_de_alcance,,,C,que me recomiendas ver hoy en la tele
+dF13,fuera_de_alcance,,,P,¿Cómo renuevo mi pasaporte?
+dF14,fuera_de_alcance,,,T,Sugiéreme un nombre para mi perro.
+dF15,fuera_de_alcance,,,P,¿Qué hoteles hay en Máncora?
+dF16,fuera_de_alcance,,,T,¿Qué playas de la costa norte me recomiendas para vacaciones?
+dF17,fuera_de_alcance,,,P,¿Cuál es el río más largo del mundo?
+dF18,fuera_de_alcance,,,O,Dame una receta de lomo saltado.
+dF19,fuera_de_alcance,,,P,¿Cómo configuro el wifi?
+dF20,fuera_de_alcance,,,T,¿Es verdad que el sol es una estrella?

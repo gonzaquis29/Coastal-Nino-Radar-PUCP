@@ -49,19 +49,23 @@ class EnrutadorSinModelo(ag.Enrutador):
     [
         ("¿Cuál es el precio del dólar?", ag.FUERA),
         ("¿Es cierto que El Niño será extraordinario?", "medir_discrepancia"),
-        ("El Niño costero traerá lluvias intensas a toda la costa norte desde enero", "medir_discrepancia"),
+        ("El Niño costero traerá lluvias intensas a toda la costa norte desde enero", None),  # clasificador
         ("¿Qué me recomiendan leer sobre el oleaje?", "recomendar"),
         ("Sugiéranme algo sobre los avisos de lluvia", "recomendar"),
-        ("Muéstrame el último aviso del Senamhi para la costa sur del país", None),  # orden: no es afirmación
+        ("¿Seguimos en vigilancia?", None),  # dentro del dominio (ampliado en la ronda c)
         ("¿Qué aconseja el Senamhi ante el calor?", None),  # fuente oficial que recomienda: no es recomendar
     ],
 )
 def test_reglas(consulta, esperada):
-    if esperada is None:  # ninguna regla decide: pasa a los embeddings
+    if esperada is None:  # ninguna regla decide: pasa al clasificador
         with pytest.raises(AttributeError):
             EnrutadorSinModelo().elegir(consulta)
     else:
         assert EnrutadorSinModelo().elegir(consulta)[0] == esperada
+
+
+def test_normal_neutraliza_lugar_y_fecha():
+    assert ag.normal("¿Hay aviso en Piura el 15 de marzo?") == "¿hay aviso en  LUGAR  el  FECHA ?"
 
 
 def test_cita_es_literal_y_corta_en_oracion():

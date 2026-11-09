@@ -1,10 +1,9 @@
-"""Agente con herramientas sin LLM: reglas para lo genérico y embeddings para elegir la herramienta (definición
-aprobada el 9-nov, docs/agente/definicion.md).
+"""Agente con herramientas sin LLM (docs/agente/definicion.md).
 
-Las reglas solo cubren lo que no depende de la redacción: si la consulta no trata del dominio (fuera de alcance) y si
-trae un texto para contrastar (comillas, "¿es cierto…?", una afirmación larga sin pregunta). El resto lo decide la
-similitud minilm entre la consulta y las descripciones de cada herramienta, escritas sin mirar las preguntas de
-evaluación como ejemplos. La fecha, la macro-región y el interés se extraen con reglas.
+Enrutador de la ronda c: reglas para lo inequívoco (fuera del dominio, texto para contrastar, pedido de recomendación)
+y, para el resto, un clasificador de intención (regresión logística sobre TF-IDF de palabras y caracteres más e5)
+entrenado con el conjunto de desarrollo `config/agente_preguntas_dev.csv`, con regiones y fechas neutralizadas. La
+fecha, la macro-región y el interés se extraen con reglas.
 
 Uso: python -m radar.agente.agente validar
      python -m radar.agente.agente preguntar "¿Seguimos en alerta por El Niño?"
@@ -22,6 +21,9 @@ import sys
 import time
 
 import numpy as np
+from scipy.sparse import csr_matrix, hstack
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
 
 from radar import config
 from radar.agente import herramientas as h
@@ -29,7 +31,7 @@ from radar.comun.archivos import escribir_csv, leer_csv
 from radar.comun.regiones import COSTA_CENTRO, COSTA_NORTE, LIMA_Y_CALLAO, regiones_mencionadas
 from radar.comun.registro import configurar
 from radar.comun.texto import ahora, sin_tildes
-from radar.nlp import recuperador, semaforo
+from radar.nlp import embeddings, recuperador, semaforo
 from radar.noticias.validar_texto import marcar_vistas, notas_vistas
 from radar.noticias.viabilidad import _muestra, criterio, guardar, reporte
 
@@ -43,7 +45,13 @@ ACIERTO_MINIMO = 0.90  # A1
 PARAMETROS_MINIMO = 0.95  # A2
 FUERA_MINIMO, ABSTENCION_MAXIMA = 0.90, 0.05  # A4
 CONSULTA_MAXIMA_S = 2.0  # A5
-PALABRAS_AFIRMACION = 8  # una afirmación sin "?" con al menos estas palabras es un texto para contrastar
+MODELO_INTENCION = "e5"  # ronda c, elegido en desarrollo frente a minilm
+PESO_EMBEDDING = 3  # peso de e5 frente a los TF-IDF en el clasificador
+C_INTENCION = 100  # regularización de la regresión logística
+ARCHIVO_DESARROLLO = config.DIR_CONFIG / "agente_preguntas_dev.csv"
+ARCHIVO_PRUEBA_C = config.DIR_CONFIG / "agente_preguntas_c.csv"
+RECUPERADOR_MINIMO = 0.95  # A6
+REMUESTREOS = 5000  # IC 95 % de A1 por bootstrap de redacciones
 DIAS_ATRAS, DIAS_ADELANTE = 300, 60  # año de una fecha sin año
 HOY_EVALUACION = "2026-11-09"
 MUESTRA = "agente-9nov"
@@ -54,7 +62,9 @@ PERFIL = {"macroregion": COSTA_NORTE, "interes": "prevencion"}
 DOMINIO = re.compile(
     r"\bni[nñ][oa]\b|enfen|senamhi|clima|lluvi|precipitac|calor|temperatura|\bmar\b|pesca|pescador|anchoveta|aviso|"
     r"alerta|huaico|inundac|oleaje|friaje|sequ[ií]a|caudal|\brios?\b|desborde|verano|meteorol|comunicado|emergencia|"
-    r"prevenci|tsm|fenomeno|costa",
+    r"prevenci|tsm|fenomeno|costa|"
+    r"vigilancia|calid|pacifico|agricul|llov|llue|inunda|preven|quebrada|oceanic|anomal|nino\b|evento|olas? de|"
+    r"pronostic|huayco|desembarc|embarcac",  # ronda c, ampliado en desarrollo
     re.I,
 )
 CONTRASTE = re.compile(r"es cierto|es verdad|es correcto|verific|le[ií] que|dicen que|coincide con lo oficial|"
@@ -65,14 +75,16 @@ RECOMENDACION = re.compile(r"recomiend|sugier|\b(?:debo|deberia) (?:leer|revisar
                            r"donde (?:me )?informo", re.I)  # fmt: skip
 RECOMIENDA_OFICIAL = re.compile(r"(?:recomiend|sugier|aconsej)\w*\s+(?:el|la|los|las)\s+(?:enfen|senamhi|comunicado|"
                                 r"aviso|autoridad|gobierno|indeci)", re.I)  # fmt: skip
-# Ronda b: una orden ("dime…", "explícame…") no es una afirmación para contrastar
-IMPERATIVO = re.compile(r"^[¿¡\s]*(?:di|da|explica|cuenta|muestra|indica|resume|busca|recomienda|sugiere|lista|compara)"
-                        r"(?:me|nos)?\b", re.I)  # fmt: skip
 PREFIJO_CONTRASTE = re.compile(
     r"^\s*(?:¿\s*)?(?:es cierto que|es verdad que|le[ií] que|dicen que|un video dice que)\s*", re.I
 )
 
-# Descripciones de cada herramienta (no son preguntas de la evaluación)
+# Neutralización para el clasificador: la región y la fecha no dicen qué herramienta se pide
+LUGARES = re.compile(r"\b(?:la costa norte|la costa centro|la costa|lima|piura|tumbes|paita|lambayeque|arequipa|norte|"
+                     r"sur)\b", re.I)  # fmt: skip
+FECHAS = re.compile(r"\b\d{1,2} de \w+|\bhoy\b|\bmanana\b|\bayer\b", re.I)
+
+# Descripciones de cada herramienta (rondas a y b; la c usa el clasificador)
 DESCRIPCIONES = {
     "estado_vigente": (
         "estado vigente del sistema de alerta ante El Niño costero",
@@ -150,28 +162,38 @@ def texto_a_contrastar(consulta):
 # ---------------------------------------------------------------- enrutador
 
 
+def normal(texto):
+    t = sin_tildes(texto).lower()
+    return FECHAS.sub(" FECHA ", LUGARES.sub(" LUGAR ", t))
+
+
 class Enrutador:
-    def __init__(self):
-        self.oficial = h.oficial()
-        self.etiquetas, frases = [], []
-        for herramienta, descripciones in DESCRIPCIONES.items():
-            self.etiquetas += [herramienta] * len(descripciones)
-            frases += descripciones
-        self.vectores = self.oficial.embeber(frases)
+    """Reglas y, para el resto, el clasificador de intención entrenado con el conjunto de desarrollo."""
+
+    def __init__(self, ejemplos=None):
+        self.e5 = embeddings.Modelo(MODELO_INTENCION)
+        casos = [c for c in casos_congelados(ejemplos or leer_csv(ARCHIVO_DESARROLLO)) if c["herramienta"] != FUERA]
+        textos = [normal(c["pregunta"]) for c in casos]
+        self.palabras = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True).fit(textos)
+        self.caracteres = TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 5), sublinear_tf=True).fit(textos)
+        self.clasificador = LogisticRegression(C=C_INTENCION, max_iter=2000).fit(
+            self.rasgos(textos), [c["herramienta"] for c in casos]
+        )
+
+    def rasgos(self, textos):
+        emb = csr_matrix(np.asarray(self.e5.embeber(list(textos))) * PESO_EMBEDDING)
+        return hstack([self.palabras.transform(textos), self.caracteres.transform(textos), emb]).tocsr()
 
     def elegir(self, consulta):
         """(herramienta, origen de la decisión)."""
-        if not DOMINIO.search(sin_tildes(consulta)):
+        llano = sin_tildes(consulta)
+        if not DOMINIO.search(llano):
             return FUERA, "regla: fuera del dominio"
         if CONTRASTE.search(consulta):
             return "medir_discrepancia", "regla: texto para contrastar"
-        llano = sin_tildes(consulta)
         if RECOMENDACION.search(llano) and not RECOMIENDA_OFICIAL.search(llano):
             return "recomendar", "regla: pedido de recomendación"
-        if "?" not in consulta and len(consulta.split()) >= PALABRAS_AFIRMACION and not IMPERATIVO.search(llano):
-            return "medir_discrepancia", "regla: afirmación sin pregunta"
-        sim = self.vectores @ self.oficial.embeber([consulta])[0]
-        return self.etiquetas[int(np.argmax(sim))], "embeddings"
+        return str(self.clasificador.predict(self.rasgos([normal(consulta)]))[0]), "clasificador"
 
 
 @functools.cache
@@ -222,6 +244,7 @@ def casos_congelados(filas):
                 hoy = "hoy" if re.search(r"\bhoy\b", pregunta) else None
                 esperado = {"macroregion": macro, "fecha": fecha or hoy, "interes": f["interes"] or None}
                 salida.append({"redaccion": f["id"], "pregunta": pregunta, "hoy": HOY_EVALUACION,
+                               "herramienta": f["herramienta"], "tipo": f.get("tipo", ""),
                                "aceptables": {f["herramienta"], *filter(None, f["aceptables"].split("|"))},
                                "esperado": esperado})  # fmt: skip
     return salida
@@ -340,7 +363,48 @@ def validar_b():
     return salida
 
 
-def validar(ronda="b"):
+def intervalo(valores, semilla=0):
+    """IC 95 % del promedio por bootstrap."""
+    azar = random.Random(semilla)
+    medias = sorted(statistics.mean(azar.choices(valores, k=len(valores))) for _ in range(REMUESTREOS))
+    return medias[int(0.025 * REMUESTREOS)], medias[int(0.975 * REMUESTREOS) - 1]
+
+
+def validar_c():
+    """Ronda c: A1 a A5 sobre la prueba c (una sola corrida), A6 sobre el recuperador; lo ya visto, informativo."""
+    prueba = casos_congelados(leer_csv(ARCHIVO_PRUEBA_C))
+    filas = evaluar(prueba)
+    del_recuperador = evaluar(casos_recuperador(leer_csv(config.DIR_NLP / "recuperador-preguntas.csv")))
+    vistas = evaluar(casos_congelados(leer_csv(config.DIR_CONFIG / "agente_preguntas.csv"))
+                     + casos_congelados(leer_csv(config.DIR_CONFIG / "agente_preguntas_b.csv")))  # fmt: skip
+    escribir_csv(config.DIR_AGENTE / "agente-c.csv", tuple(filas[0]), filas + del_recuperador + vistas)
+    nombre, info = f"{PRUEBA} (ronda c)", f"{INFO} (ronda c)"
+    salida = criterios(filas, {}, nombre, info)
+    acierto = por_redaccion([f for f in filas if FUERA not in f["esperada"]])
+    bajo, alto = intervalo(list(acierto.values()))
+    salida.insert(1, criterio(info, "A1. IC 95 % (bootstrap de redacciones)", f"{bajo:.3f} a {alto:.3f}", "", True))
+    a6 = por_redaccion(del_recuperador)
+    salida.insert(6, criterio(nombre, "A6. Recuperador (ya visto), promedio por redacción",
+                              round(statistics.mean(a6.values()), 3), f"≥ {RECUPERADOR_MINIMO}",
+                              statistics.mean(a6.values()) >= RECUPERADOR_MINIMO,
+                              ", ".join(f"{r} {v:.2f}" for r, v in sorted(a6.items()) if v < 1)))  # fmt: skip
+    tipo_de = {c["redaccion"]: c["tipo"] for c in prueba}
+    por_tipo = collections.defaultdict(list)
+    for r, v in acierto.items():
+        por_tipo[tipo_de[r]].append(v)
+    salida.append(criterio(info, "A1 por tipo", "", "", True, ", ".join(
+        f"{t} {statistics.mean(v):.2f} ({len(v)})" for t, v in sorted(por_tipo.items()))))  # fmt: skip
+    for ronda in ("", "b"):
+        g = [f for f in vistas if f["redaccion"][: len(ronda) + 1].startswith(ronda) and FUERA not in f["esperada"]
+             and (ronda or not f["redaccion"].startswith("b"))]  # fmt: skip
+        salida.append(criterio(info, f"Redacciones de la ronda {ronda or 'a'} (ya vistas)",
+                               round(statistics.mean(por_redaccion(g).values()), 3), "", True))  # fmt: skip
+    return salida
+
+
+def validar(ronda="c"):
+    if ronda == "c":
+        return validar_c()
     if ronda == "b":
         return validar_b()
     congelados = casos_congelados(leer_csv(config.DIR_CONFIG / "agente_preguntas.csv"))
@@ -369,7 +433,7 @@ def main(argv=None):
     ap.add_argument("paso", choices=("validar", "preguntar"))
     ap.add_argument("consulta", nargs="?")
     ap.add_argument("--hoy", default=None)
-    ap.add_argument("--ronda", choices=("a", "b"), default="b")
+    ap.add_argument("--ronda", choices=("a", "b", "c"), default="c")
     args = ap.parse_args(argv)
     if args.paso == "preguntar":
         r = responder(args.consulta or "", args.hoy)
