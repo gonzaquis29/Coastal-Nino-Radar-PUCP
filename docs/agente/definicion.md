@@ -38,7 +38,7 @@ Módulo: `python -m radar.agente.agente validar` (`src/radar/agente/`). El agent
 1. **Redacciones nuevas** (`config/agente_preguntas.csv`): 10 de estado, 10 de búsqueda, 8 de recomendación, 8 de contraste y 10 fuera de alcance.
    - `{region}` toma 4 valores: "la costa norte", "la costa centro", "Lima" y "Piura".
    - `{dia}` toma 2: "15 de marzo" y "2 de octubre", con la consulta el 9-nov-2026.
-2. **Preguntas del recuperador:**
+2. **Preguntas del recuperador** (cada una se hace en su propia fecha: con la consulta el 9-nov, "1 de enero" sería el próximo año; ajuste del 9-nov, antes de medir):
    - El grupo A (contenido del ENFEN) y el C (pronóstico del Senamhi por día) van a `buscar_oficial`.
    - El grupo B se reparte por redacción. "¿Qué aviso hay…?" y "¿Hay alerta…?" van a `estado_vigente`, y también se acepta `buscar_oficial`. "¿Qué advierte…?" va a `buscar_oficial`, y también se acepta `estado_vigente`.
 3. **Titulares de notas (informativo):**
@@ -57,3 +57,19 @@ El enrutador no usa como ejemplos ninguna de estas redacciones: solo la descripc
 | A3 | Citas de la respuesta que existen literalmente en el párrafo fuente | 100 % |
 | A4 | Fuera de alcance: las redacciones F terminan sin herramienta, y las válidas casi nunca | ≥ 90 % y ≤ 5 % |
 | A5 | Tiempo por consulta (mediana) | ≤ 2 s |
+
+## Resultado (ronda a, 9-nov)
+
+**No pasa.** Duración: 5,2 min (`data/processed/agente/validacion.csv`).
+
+| | Resultado | ¿Pasa? |
+|---|---|---|
+| A1 | 0,83 por redacción (45) | No |
+| A2 | 2.279/2.279 | Sí |
+| A3 | 3.979/3.979 | Sí |
+| A4 | F: 10/10 sin herramienta; válidas: 0/1.905 abstenciones | Sí |
+| A5 | mediana 0,10 s (máximo 132 s: la primera consulta carga los modelos) | Sí |
+
+Informativo: 13 de 100 titulares sin ver que mencionan El Niño van a contrastar (85 se quedan fuera del dominio: el titular no trae las palabras que `rasgos` encuentra en el cuerpo); 100/100 de otros temas quedan fuera de alcance.
+
+**Diagnóstico.** Casi todo el fallo está en `recomendar` (R02, R03, R04, R06 y R08 en 0; R07 en 0,5) y en dos búsquedas que caen en estado (B01, B03). La descripción de `recomendar` compite mal por embeddings con las de contenido: "me preocupan las lluvias" se parece más a buscar. R03, una orden sin "?", la toma la regla de afirmación sin pregunta. Cualquier regla escrita ahora para esto se ajustaría a las redacciones congeladas, así que la ronda a queda como resultado y un cambio necesita una ronda b con redacciones nuevas congeladas antes.

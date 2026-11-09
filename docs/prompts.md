@@ -464,3 +464,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 29. Sí, apruebo (recomendador, ronda b).
 
 **Resultado:** la IA agregó la frescura como regla de la cascada y calibró la ventana con la muestra A: 3 días, con MRR 0,425 frente a 0,387 de lo más reciente, por debajo del +0,05 de R1. Dejó lista la decisión con la muestra B para el 18-nov y avisó que R1 puede no pasar.
+30. ¿Con qué podemos continuar, que solo dependa de nosotros? / Procede (agente) / Reglas + embeddings.
+
+**Resultado:** la IA escribió el agente sin LLM (`radar.agente`): cuatro herramientas con respuestas por plantilla y citas literales, y un enrutador con reglas genéricas y similitud de minilm con la descripción de cada herramienta. Congeló 46 redacciones nuevas y los criterios A1 a A5 antes de escribirlo. Pasan A2 a A5, pero A1 no (0,83): las preguntas de recomendación se confunden con búsqueda. Propuso una ronda b con redacciones nuevas en lugar de ajustar las reglas a las congeladas.
