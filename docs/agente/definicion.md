@@ -94,3 +94,21 @@ Informativo: 13 de 100 titulares sin ver que mencionan El Niño van a contrastar
 - El recuperador no cambia (recuperador-A0 sigue en 0,84). Las redacciones de la ronda a, ya vistas, suben de 0,83 a 0,94.
 
 Ajustar ahora las reglas a estos 5 casos sería repetir el ajuste a lo visto. Cada ronda con reglas cubre las frases que se previeron y falla en las que no: es el límite del enfoque sin LLM.
+
+## Ronda c (aprobada el 9-nov): desarrollo y prueba separados
+
+**Por qué:** con 41 redacciones, el intervalo de confianza del 95 % de A1 en la ronda b va de 0,77 a 0,97, y cada redacción mueve 2,4 puntos. Además, cada ronda gastó su conjunto de prueba al mirar los fallos. El error más frecuente es búsqueda → estado (16 casos).
+
+**Conjunto de prueba** (`config/agente_preguntas_c.csv`, congelado antes de escribir el de desarrollo y de afinar nada): 150 redacciones (30 de estado, 35 de búsqueda, 30 de recomendación, 30 de contraste y 25 fuera de alcance). La columna `tipo` las reparte en P (pregunta directa), S (sin "?"), O (orden), C (coloquial o sin tildes) y T (trampa con palabras de otra herramienta). Se corre **una sola vez**, con el enrutador ya elegido.
+
+**Conjunto de desarrollo** (`config/agente_preguntas_dev.csv`): redacciones distintas, sobre las que se puede afinar libremente: ejemplos por herramienta en vez de descripciones, minilm frente a e5, una regla de margen entre estado y búsqueda, y reglas.
+
+**Criterios en la prueba c:**
+
+| | Prueba | Umbral |
+|---|---|---|
+| A1 | Herramienta correcta, promedio por redacción, con IC 95 % por bootstrap de redacciones | ≥ 0,90 (valor puntual; el límite inferior se declara) |
+| A2 a A5 | Igual que en la ronda a | Iguales |
+| A6 | Preguntas del recuperador (ya vistas): sin retroceso | ≥ 0,95 por redacción |
+
+Informativo: A1 por tipo, y las redacciones de las rondas a y b. **Límite declarado:** la IA escribe los dos conjuntos, así que no son del todo independientes. Para mitigarlo, la prueba se escribió primero y por tipos fijados de antemano.
