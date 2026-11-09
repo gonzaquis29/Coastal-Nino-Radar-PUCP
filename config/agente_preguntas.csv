@@ -1,0 +1,47 @@
+id,herramienta,aceptables,interes,texto
+E01,estado_vigente,,,¿Cuál es el estado del sistema de alerta ante El Niño costero?
+E02,estado_vigente,,,¿Seguimos en alerta por El Niño costero?
+E03,estado_vigente,,,¿El ENFEN mantiene la alerta de El Niño?
+E04,estado_vigente,,,¿Qué nivel de alerta hay en {region}?
+E05,estado_vigente,,,¿Está activa la alerta de El Niño costero en {region} el {dia}?
+E06,estado_vigente,,,¿Qué magnitud tiene El Niño costero según el último comunicado?
+E07,estado_vigente,,,¿Hay algún aviso del Senamhi vigente en {region} el {dia}?
+E08,estado_vigente,,,¿Qué avisos rigen hoy en {region}?
+E09,estado_vigente,,,¿En qué estado está El Niño costero ahora?
+E10,estado_vigente,,,¿Ya terminó la alerta por El Niño?
+B01,buscar_oficial,,,¿Qué dice el último comunicado del ENFEN sobre las lluvias?
+B02,buscar_oficial,,,¿Hasta cuándo durarían las condiciones cálidas según el ENFEN?
+B03,buscar_oficial,,,¿Qué impactos tendría El Niño costero en {region}?
+B04,buscar_oficial,,,¿Qué explica el Senamhi sobre el calor del {dia}?
+B05,buscar_oficial,,,¿Cómo está la temperatura del mar frente a la costa?
+B06,buscar_oficial,,,¿Qué pasará con la anchoveta en los próximos meses?
+B07,buscar_oficial,,,¿Qué medidas pide el ENFEN a las autoridades regionales?
+B08,buscar_oficial,,,¿Qué se pronostica para el verano en {region}?
+B09,buscar_oficial,,,¿Por qué subió la temperatura del aire en la costa?
+B10,buscar_oficial,,,¿Qué caudales se esperan en los ríos del norte?
+R01,recomendar,,pesca,Soy pescador en {region}. ¿Qué información oficial me corresponde?
+R02,recomendar,,lluvias,Vivo en {region} y me preocupan las lluvias. ¿Qué debería revisar?
+R03,recomendar,,calor,Recomiéndame información confiable sobre el calor en {region}.
+R04,recomendar,,prevencion,¿Qué fuentes debo seguir para prepararme ante El Niño en {region}?
+R05,recomendar,,pesca,Trabajo en el mar. ¿Qué me recomiendas leer sobre El Niño?
+R06,recomendar,,lluvias,¿Qué notas y comunicados me sugieres sobre lluvias e inundaciones?
+R07,recomendar,,prevencion,Quiero estar informado sobre la prevención en {region}. ¿Qué me recomiendas?
+R08,recomendar,,calor,¿Qué debería leer si me preocupan las olas de calor?
+D01,medir_discrepancia,,,¿Es cierto que El Niño costero será extraordinario?
+D02,medir_discrepancia,,,Leí que el ENFEN declaró emergencia por El Niño hasta 2028. ¿Es verdad?
+D03,medir_discrepancia,,,"Verifica este titular: ""El Niño fuerte traerá lluvias torrenciales desde mañana en todo el Perú"""
+D04,medir_discrepancia,,,Dicen que El Niño ya terminó. ¿Es correcto?
+D05,medir_discrepancia,,,"¿Qué tan confiable es esto?: ""El Niño costero se mantendrá moderado hasta marzo de 2027"""
+D06,medir_discrepancia,,,Un video dice que viene un Niño peor que el de 1998. ¿Coincide con lo oficial?
+D07,medir_discrepancia,,,El Niño costero alcanzaría magnitud fuerte este verano y las lluvias superarían lo normal en la costa norte
+D08,medir_discrepancia,,,¿Es verdad que el Senamhi alertó por un huaico gigante en Lima?
+F01,fuera_de_alcance,,,¿Quién ganó el clásico del fin de semana?
+F02,fuera_de_alcance,,,¿A cuánto está el dólar hoy?
+F03,fuera_de_alcance,,,¿Cómo está el tráfico en la Vía Expresa?
+F04,fuera_de_alcance,,,Recomiéndame una receta de ceviche.
+F05,fuera_de_alcance,,,¿Cuándo son las próximas elecciones?
+F06,fuera_de_alcance,,,¿Qué es la inteligencia artificial?
+F07,fuera_de_alcance,,,¿Cuál es el mejor celular de este año?
+F08,fuera_de_alcance,,,Escribe un poema sobre el amor.
+F09,fuera_de_alcance,,,¿Qué películas se estrenan esta semana?
+F10,fuera_de_alcance,,,¿Cómo saco mi DNI electrónico?
