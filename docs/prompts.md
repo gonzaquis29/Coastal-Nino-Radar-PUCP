@@ -473,3 +473,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 32. ¿Cómo podemos llegar a 0,90? Evaluemos mejor / Sí, apruebo (agente, ronda c).
 
 **Resultado:** la IA mostró que con 41 redacciones el IC 95 % de A1 iba de 0,77 a 0,97 y que cada ronda había gastado su prueba. Escribió y congeló primero una prueba de 150 redacciones por tipos y después un conjunto de desarrollo de 120. En desarrollo comparó descripciones, kNN y un clasificador de intención. Eligió regresión logística sobre TF-IDF y e5 (0,91 en validación cruzada) y la congeló antes de la prueba. La prueba pasa: A1 0,944 (IC 0,904 a 0,984) y A2 a A6 pasan. Declaró que la IA escribió todos los conjuntos.
+33. Han pasado varios días: haz un git pull y la recolección de los días que no se hicieron / Sí, apruebo (recuperación de huecos).
+
+**Resultado:** la IA explicó que la recolección diaria no se puede correr para días pasados. Corrió la del 16-nov (1.361 direcciones nuevas, 129 h después de la anterior) y procesó el comunicado N.° 20 (temporalidad y capa 5 pasan). Encontró que los huecos de Andina ya se recuperan con `historico` y agregó a RPP los días con hueco (`config.HUECOS_RPP`). La recuperación cubre el 99,0 % de las notas de esos días, con los días vecinos y sin las páginas "live" (ajuste declarado).

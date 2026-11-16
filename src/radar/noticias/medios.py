@@ -237,8 +237,13 @@ class Rpp(Medio):
             pagina = datos.get("nextPage") if nuevas else None
         return filas
 
+    @staticmethod
+    def dias_archivo():
+        """Los días del histórico más los huecos de la recolección diaria, sin repetir y en orden."""
+        return sorted({*_dias(config.INICIO, config.FIN_HISTORICO), *config.HUECOS_RPP})
+
     def descubrir(self, estado):
-        for dia in _dias(config.INICIO, config.FIN_HISTORICO):
+        for dia in self.dias_archivo():
             if self.parar.is_set():
                 return
             clave = f"dia:{dia.isoformat()}"

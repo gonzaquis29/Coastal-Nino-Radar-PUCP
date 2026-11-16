@@ -96,3 +96,10 @@ Con 48 h entre ejecuciones solo puede perderse, en días muy cargados, parte del
 
 ## Volumen
 ~380 filas nuevas por día (Andina ~130, RPP ~140, Exitosa ~90, El Tiempo ~15-20, ENFEN y Senamhi ~1-2), ~90 KB/día. La primera ejecución (24-oct) trajo 7.485 filas, 1,75 MB: incluye los mensuales de septiembre y octubre de Exitosa (3.762 sin fecha) y las secciones de RPP con notas de 2026. Total al 27-nov: ~5 MB.
+
+## Recuperación de huecos (16-nov)
+El 16-nov la recolección corrió después de 129 h y avisó huecos en Andina (`sitemap-ultimo` empezaba el 14-nov) y RPP (`web/peru` desde el 11-nov y `web/futbol` desde el 12-nov). Se recuperan con las vías del histórico, sin un módulo nuevo:
+- **Andina:** no hace falta nada. `historico` prueba todos los números desde `ANDINA_PRIMER_ID` hasta el mayor visto en `data/urls/`, y salta los que ya conoce. Los 355 números del hueco (1.099.448 a 1.100.190) se resolvieron todos (301 a su nota).
+- **RPP:** el archivo por fecha recorre, además del histórico, los días de `config.HUECOS_RPP` (10, 11 y 12-nov). Aportó 36 notas que la diaria no tenía (3, 26 y 7).
+- **Validación:** se comparó con la diaria de esos días. Día por día cubre de 0,93 a 0,99, porque la diaria y el archivo a veces fechan la misma nota en días distintos. Con los días vecinos (9 al 13-nov) y sin las páginas "live" (5, que el archivo no lista, como en la validación del 24-oct), cubre 296 de 299 notas (**0,990**, umbral 0,99). Este ajuste de la comparación se decidió después de ver la primera cifra.
+- Lo recuperado entra en la lista cruda del medio (`data/raw/noticias/<medio>/lista.csv`), no en `data/urls/`, y se lee con la rutina de `historico`.

@@ -79,6 +79,13 @@ def test_procesar_escribe_una_vez_y_recuerda_lo_que_no_existe(datos, monkeypatch
     assert "cuerpo" not in nota
 
 
+def test_rpp_recorre_tambien_los_huecos_de_la_diaria(monkeypatch):
+    monkeypatch.setattr(medios.config, "INICIO", dt.date(2026, 1, 1))
+    monkeypatch.setattr(medios.config, "FIN_HISTORICO", dt.date(2026, 1, 3))
+    monkeypatch.setattr(medios.config, "HUECOS_RPP", (dt.date(2026, 1, 2), dt.date(2026, 2, 5)))
+    assert medios.Rpp.dias_archivo() == [dt.date(2026, 1, d) for d in (1, 2, 3)] + [dt.date(2026, 2, 5)]
+
+
 def test_archivo_de_rpp_lee_todas_las_paginas(datos):
     item = '<h2 class="news__title"><a href="https://rpp.pe/peru/actualidad/{0}-noticia-{1}">T&iacute;tulo {1}</a>'
     item += '</h2><time data-x="2026-02-01T10:0{1}:00-05:00">'
