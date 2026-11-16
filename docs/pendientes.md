@@ -2,11 +2,23 @@
 
 Orden según dependencias reales y fechas, revisado con lo aprendido en los pilotos; el calendario del README es orientativo. Cada tarea se define, se aprueba, se construye y se valida con muestras nuevas, una a la vez. Estado del índice de discrepancia y del flujo de NLP: [nlp/discrepancia.md](nlp/discrepancia.md).
 
-## Estado al 1-nov
-- **Noticias:** 76.961 notas de los 4 medios (1-ene a hoy), con el texto limpio, y 2.388 notas sobre El Niño. Enlaces limpios: 117.516, de los que 7.616 apuntan a fuentes oficiales. La macro-región está asignada y validada (`region.notas` pasa).
-- **Corpus oficial:** ENFEN hasta el comunicado N.° 19 (30-oct) y avisos del Senamhi; 865 párrafos.
-- **Viabilidad cerrada:** histórico, filtro, volumen, calidad, control positivo (con el respaldo), macro-región, precisión de "sobre El Niño", pysentimiento (no pasa: solo polaridad en las notas) y memoria para la app (el NLI queda offline; el embedding cabe). Detalle: [nlp/viabilidad-modelos.md](nlp/viabilidad-modelos.md) y [noticias/definicion.md](noticias/definicion.md#diagnóstico-de-falsos-positivos-31-oct-2026).
-- **NLP:** TF-IDF (no pasa T4) y embeddings (pasan con e5-small) hechos el 1-nov. Tópicos y polaridad cerrados el 7-nov (BERTopic k=12; la polaridad queda descriptiva, [nlp/topicos.md](nlp/topicos.md)). Capa 3 (afirmaciones y temporalidad) y capa 5 (comparación con lo oficial) hechas y validadas el 7-nov ([nlp/discrepancia.md](nlp/discrepancia.md)). El semáforo (`radar.nlp.semaforo.medir_discrepancia`) quedó hecho y validado el 7-nov. El único intento con NLI se cerró el 8-nov sin medir: solo hay 0 pares naturales que cambian en julio a octubre (mínimo 20). El agente pasó su validación el 9-nov (ronda c). **Sin empezar:** YouTube y Trends, y la app.
+## Por dónde seguir (decidido el 16-nov)
+Faltan 4 días para el corte (vie 20-nov 23:59) y 11 para el congelamiento (27-nov). Orden:
+1. **YouTube y Trends (punto 1), lo primero.** No hay código todavía (no existe `src/radar/youtube/`). Pasos:
+   - El usuario crea la clave de YouTube Data API v3 y la guarda en una variable de entorno. Nunca va en el chat ni en el repo.
+   - Se define el módulo antes de escribirlo: términos, tramos de tiempo, campos, cupo, seudonimización y borrado a los 30 días (README, filas 1, 7 y 11, y "Reglas por sitio").
+   - Se mide la prueba de viabilidad (≥ 300 videos del período; ≥ 100 con ≥ 30 comentarios). La descarga del corte se hace el 20-nov.
+   - Trends: el usuario exporta un CSV por departamento (Tumbes, Piura, Lambayeque, La Libertad) desde la web y se carga.
+2. **Miércoles 18-nov:** recolección diaria (vence hacia las 09:00), `python -m radar.analitica.recomendador validar --ronda b` y T5 (punto 5.5).
+3. **Preparar el recálculo final (punto 2):** ensayo corto, decisión sobre las 13 notas de RPP (punto 6.1) y revisión de `*.anterior.csv`. La corrida completa va después del corte.
+4. **App de Streamlit:** la pestaña Consulta tiene todo listo (semáforo, `estado_vigente`, recomendador y agente). Del Panorama entran por ahora tópicos, estudio de eventos y volumen. Se define antes de construirla.
+5. **Modelo de engagement:** cuando haya datos de YouTube, o su alternativa con Trends.
+
+## Estado al 16-nov
+- **Noticias:** 80.341 notas de los 4 medios (1-ene a 16-nov) y 2.669 sobre El Niño. Los huecos de la diaria del 10 al 14-nov se recuperaron y leyeron el 16-nov ([recoleccion/diaria.md](recoleccion/diaria.md#recuperación-de-huecos-16-nov)). La macro-región está asignada (`region.notas` pasa).
+- **Corpus oficial:** ENFEN hasta el comunicado N.° 20 (21 documentos) y avisos del Senamhi; 938 párrafos.
+- **Hecho y validado:** histórico y viabilidad, TF-IDF (no pasa T4) y embeddings, tópicos (polaridad descriptiva), capas 3 y 5 del índice, semáforo, estudio de eventos (descriptivo), recomendador (ronda a; la b se decide el 18-nov) y agente (ronda c pasa, 9-nov). El NLI se cerró sin medir.
+- **Sin empezar:** YouTube, Trends, modelo de engagement, red social, app y registro de uso.
 
 ## Siempre (rutina hasta el corte del 20-nov)
 - Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. La última fue el 16-nov a las 09:00, después de 129 h sin correr: dejó **huecos** en Andina (`sitemap-ultimo` empieza el 14-nov) y RPP (`web/peru` desde el 11-nov y `web/futbol` desde el 12-nov), recuperados el 16-nov ([recoleccion/diaria.md](recoleccion/diaria.md#recuperación-de-huecos-16-nov); RPP cubre 0,990). Leídos el mismo día con `historico` (1.861 notas, sin errores; 80.341 en el consolidado) y `region.notas` (pasa). La próxima vence el **18-nov a las 09:00**. Un solo proceso a la vez pide páginas (`data/red.lock`): si un proceso largo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo.
