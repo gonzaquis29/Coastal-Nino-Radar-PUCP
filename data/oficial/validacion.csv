@@ -1,27 +1,27 @@
 prueba,criterio,valor,umbral,pasa,detalle
-enfen,comunicados descargados y extraídos del PDF,20/20,100 %,1,
-enfen,número y año del PDF = slug,20/20,100 %,1,
-enfen,fecha de emisión a ±1 día de la fecha de la página,20/20,100 %,1,
-enfen,emisión real a ±1 día de la anunciada en el comunicado anterior,19/19,≥ 90 %,1,
-enfen,estado = estado de la página de descarga,20/20,100 %,1,
-enfen,magnitud extraída (vigilancia o alerta),19/19,100 %,1,
-enfen,magnitudes del resumen HTML ⊆ magnitudes del PDF,17/17,100 %,1,
+enfen,comunicados descargados y extraídos del PDF,21/21,100 %,1,
+enfen,número y año del PDF = slug,21/21,100 %,1,
+enfen,fecha de emisión a ±1 día de la fecha de la página,21/21,100 %,1,
+enfen,emisión real a ±1 día de la anunciada en el comunicado anterior,20/20,≥ 90 %,1,
+enfen,estado = estado de la página de descarga,17/21,100 %,0,"enfen-2026-17: Alerta de El Niño Costero / Alerta de El Niño Costero El Niño Costero se mantendría con una magnitud extraordinaria, respecto al calentamiento del mar, hasta enero, enfen-2026-18: Alerta de El Niño Costero / Alerta de El Niño Costero La Temperatura Superficial del Mar del Pacifico con"
+enfen,magnitud extraída (vigilancia o alerta),20/20,100 %,1,
+enfen,magnitudes del resumen HTML ⊆ magnitudes del PDF,21/21,100 %,1,
 enfen,categoría más probable de la tabla ∈ magnitudes mencionadas,4/4,100 %,1,
-enfen,"acuerdo PyMuPDF / pypdf ≥ 0,98 por documento",19/20,100 %,0,enfen-2026-19=0.974
-enfen,"frases del resumen HTML presentes en los párrafos (similitud ≥ 0,9)",270/270,≥ 95 %,1,
-enfen,resumen HTML sin llamadas de nota pegadas a las palabras,20/20,100 %,1,
-enfen,"párrafos sin URL, encabezado, leyenda ni marca de nota",250/250,100 %,1,
-enfen (informativo),temas por palabras clave = tema de la frase de apertura,84/84,referencia,1,
+enfen,"acuerdo PyMuPDF / pypdf ≥ 0,98 por documento",20/21,100 %,0,enfen-2026-19=0.974
+enfen,"frases del resumen HTML presentes en los párrafos (similitud ≥ 0,9)",377/383,≥ 95 %,1,"Por otro lado, El Niño se mantendría con una magnitud muy fuerte hasta enero de ; Frente a la costa peruana es más probable que calentamiento del mar (El Niño cos; El Niño costero, mantendría una magnitud extraordinaria hasta febrero de 2027;; Por su parte, en el Pacífico central es más probable que"
+enfen,resumen HTML sin llamadas de nota pegadas a las palabras,21/21,100 %,1,
+enfen,"párrafos sin URL, encabezado, leyenda ni marca de nota",265/265,100 %,1,
+enfen (informativo),temas por palabras clave = tema de la frase de apertura,87/87,referencia,1,
 enfen,tipo de párrafo = posición en el resumen,102/102,≥ 95%,1,
 enfen,"región del océano = posición en el resumen (1.ª costa, 2.ª Pacífico central)",34/34,≥ 95%,1,
 enfen,el cuerpo que repite al resumen tiene el mismo tipo y región,30/30,≥ 95%,1,
-enfen,párrafos que no son encabezado de tabla,264/264,100 %,1,
-enfen (informativo),tipos en comunicados sin resumen (N.° 17 y 18),38/38,referencia,1,impactos 16; pronostico 7; pesca 6; recomendacion 6; otro 3
-senamhi,avisos candidatos con panel de detalle,136/136,100 %,1,
-senamhi,"número, nivel, título, emisión, inicio y fin del detalle = tabla",136/136,100 %,1,
-senamhi,nivel máximo de los mapas diarios = nivel de la tabla,136/136,100 %,1,
-senamhi,costa_norte: polígono oficial y regla de título/departamentos coinciden,338/357,≥ 95 %,0,"senamhi-2026-447/3:polígono, senamhi-2026-443/3:polígono, senamhi-2026-421/3:polígono, senamhi-2026-403/1:regla, senamhi-2026-383/1:regla, senamhi-2026-376/2:regla, senamhi-2026-312/1:regla, senamhi-2026-233/1:regla, senamhi-2026-217/1:polígono, senamhi-2026-190/2:polígono, senamhi-2026-190/3:polígo"
-senamhi,costa_centro: polígono oficial y regla de título/departamentos coinciden,335/357,≥ 95 %,0,"senamhi-2026-456/1:regla, senamhi-2026-456/2:regla, senamhi-2026-447/3:polígono, senamhi-2026-443/3:polígono, senamhi-2026-368/1:polígono, senamhi-2026-368/2:polígono, senamhi-2026-312/1:regla, senamhi-2026-217/1:polígono, senamhi-2026-190/2:polígono, senamhi-2026-190/3:polígono, senamhi-2026-168/1:"
+enfen,párrafos que no son encabezado de tabla,279/279,100 %,1,
+enfen (informativo),tipos en comunicados sin resumen (N.° 17 y 18),53/53,referencia,1,impactos 22; pronostico 9; recomendacion 9; pesca 8; otro 5
+senamhi,avisos candidatos con panel de detalle,142/142,100 %,1,
+senamhi,"número, nivel, título, emisión, inicio y fin del detalle = tabla",142/142,100 %,1,
+senamhi,nivel máximo de los mapas diarios = nivel de la tabla,142/142,100 %,1,
+senamhi,costa_norte: polígono oficial y regla de título/departamentos coinciden,359/378,≥ 95 %,0,"senamhi-2026-447/3:polígono, senamhi-2026-443/3:polígono, senamhi-2026-421/3:polígono, senamhi-2026-403/1:regla, senamhi-2026-383/1:regla, senamhi-2026-376/2:regla, senamhi-2026-312/1:regla, senamhi-2026-233/1:regla, senamhi-2026-217/1:polígono, senamhi-2026-190/2:polígono, senamhi-2026-190/3:polígo"
+senamhi,costa_centro: polígono oficial y regla de título/departamentos coinciden,353/378,≥ 95 %,0,"senamhi-2026-464/1:regla, senamhi-2026-464/2:regla, senamhi-2026-464/3:regla, senamhi-2026-456/1:regla, senamhi-2026-456/2:regla, senamhi-2026-447/3:polígono, senamhi-2026-443/3:polígono, senamhi-2026-368/1:polígono, senamhi-2026-368/2:polígono, senamhi-2026-312/1:regla, senamhi-2026-217/1:polígono,"
 senamhi,avisos sin costa en el título cuyo polígono no toca estaciones de costa norte o centro,159/159,100 %,1,
 senamhi,días de avisos cancelados cubiertos por otro aviso del mismo tipo,2/2,100 %,1,
-senamhi (informativo),avisos con macro-región por polígono (el resto usa la regla de respaldo),134/134,referencia,1,
+senamhi (informativo),avisos con macro-región por polígono (el resto usa la regla de respaldo),140/140,referencia,1,
