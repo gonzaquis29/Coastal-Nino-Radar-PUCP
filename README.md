@@ -35,7 +35,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 - **Se versiona:** el código (`src/radar/`), la configuración (`src/radar/config.py` y `config/*.csv`), `data/urls/`, `data/oficial/` y `docs/`.
 - **Se genera al ejecutar (no se versiona):** `data/raw/` (descargas y listas de notas, nunca su cuerpo), `data/processed/` (notas leídas: titular, resumen y rasgos) y `data/registros/` (registro detallado de cada ejecución, con los errores).
 - **Para cambiar** fechas del proyecto, user-agent, ritmo de peticiones, reintentos, rutas o qué notas se descargan: `src/radar/config.py`. Regiones, lugares, estaciones, términos del filtro, secciones excluidas o actores: `config/*.csv`. No hace falta tocar otro código.
-- Dependencias en `pyproject.toml` (fuente única). La app de Streamlit tendrá su propio `requirements.txt` en su carpeta, que Community Cloud lee primero.
+- Dependencias de Python en `pyproject.toml` (fuente única). La interfaz de la app (React con Vite) tiene su propio `package.json` en `web/`.
 
 ## Preguntas que responde
 1. ¿Qué tan alineadas están las noticias y los videos con la información oficial vigente en su fecha y macro-región?
@@ -48,10 +48,12 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 8. ¿Puede un agente responder solo con texto oficial?
 
 ## Producto
-**Usuario principal:** el ciudadano de la costa que quiere entender las alertas. **Usuario secundario:** el analista o periodista que quiere ver el panorama. El dashboard tiene dos pestañas:
+**Usuario principal:** el ciudadano de la costa que recibe un titular o mensaje en el celular y quiere saber si coincide con lo oficial. **Usuario secundario:** el periodista o analista que quiere el panorama. Definición completa, aprobada el 19-nov: [docs/app/definicion.md](docs/app/definicion.md).
 
-- **Consulta (ciudadano):** se pega un titular o el título y descripción de un video (o se elige un video ya recolectado) y se elige macro-región e interés. Muestra el **semáforo de alineación** (producto estrella): el color y de dónde sale, los datos que afirma el texto frente al comunicado vigente, la distancia semántica con el párrafo oficial más cercano, el estado vigente del ENFEN y el aviso del Senamhi en esa fecha, más las fuentes oficiales y notas alineadas recomendadas. Incluye el agente.
-- **Panorama (analista):** tópicos, emociones, redes, KPIs de engagement e interés, y estudio de eventos.
+- **Verificar (ciudadano):** se pega un texto y se recibe la respuesta en palabras simples. **Con datos comparables** (el 6 % de los titulares reales), hay un veredicto por dato: coincide, usa un dato anterior, el ENFEN no dice eso, o no coincide. **Sin datos** (el 94 %), no hay semáforo: se muestra la *cercanía* con lo que dice hoy el ENFEN (alta, media o baja), aclarando que no mide si es cierto. Muestra además el estado vigente en la zona, el párrafo oficial más cercano, qué hacer según el interés y un botón para compartir.
+- **Preguntar:** el agente, con citas literales.
+- **Panorama (analista):** los hallazgos de 2026 y gráficos de lo oficial frente a lo que circuló, el desfase de magnitud, la reacción a cada comunicado, los temas y quién cita a lo oficial. Se agrega YouTube después del corte.
+- **Metodología:** cómo se validó cada parte y el uso de la app.
 
 **Semáforo** (`radar.nlp.semaforo.medir_discrepancia`; detalle en [docs/nlp/discrepancia.md](docs/nlp/discrepancia.md)):
 - **Si el texto afirma datos sobre El Niño** (magnitud, estado, fechas), manda la comparación con el comunicado vigente: 🔴 rojo si alguno lo contradice; 🟡 amarillo si alguno está desactualizado, no tiene respaldo, usa otra escala o afirma con más certeza que lo oficial; 🟢 verde si todos están respaldados.
@@ -75,7 +77,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 | Sentimiento y minería de opinión | 7 | Polaridad de las notas (descriptiva); polaridad y emociones de videos y comentarios |
 | Modelamiento de tópicos | 8 | LDA y BERTopic |
 | Web analytics: conceptos, etapas, métricas | 10-11 | KPIs de engagement, interés en Trends, indicadores de los medios, registro de uso de la app |
-| Herramientas y dashboards | 12 | Dashboard en Streamlit |
+| Herramientas y dashboards | 12 | Dashboard propio: API en FastAPI e interfaz en React |
 | CRISP-ML(Q) | 13 | Estructura del informe |
 | Datos minados como insumo de ML | 14 | Modelo de engagement (o su alternativa con Trends) |
 | Sistemas de recomendación | — | Recomendador híbrido |
@@ -99,7 +101,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 | 11 | Modelo de engagement | Modelo propio entrenado con los datos minados: predice la tasa de engagement de un video ((likes + comentarios) / vistas) a partir del índice de discrepancia, emociones, tópicos y rasgos del título (mayúsculas, exclamaciones, emojis), con los suscriptores del canal y los días desde la publicación como controles (las métricas se descargan en una sola fecha, así que los videos antiguos acumularon más tiempo). Se excluyen los videos con menos de 14 días al momento de la descarga, porque su tasa todavía es inestable. Regresión lineal y gradient boosting contra una línea base; importancia de variables. Muestra con varios términos de búsqueda, orden por fecha y tramos de tiempo para reducir el sesgo del ranking de YouTube; likes ocultos como dato faltante. |
 | 12 | Recomendador híbrido | **Basado en conocimiento:** reglas con macro-región, aviso vigente del Senamhi y estado del ENFEN filtran qué información corresponde. **Basado en contenido:** similitud de embeddings ordena comunicados, avisos y notas alineadas. Entrada: un contenido (nota o video) y un perfil (macro-región, categoría de interés). |
 | 13 | Agente con herramientas | Decide qué herramienta usar según la consulta: `buscar_oficial` (párrafos de comunicados y avisos con ChromaDB `PersistentClient`, filtrando por fecha vigente), `estado_vigente(fecha, región)`, `medir_discrepancia(texto)` y `recomendar(perfil)`. Sin LLM (decisión del 9-nov): reglas y un clasificador de intención (TF-IDF y e5) eligen la herramienta, y los parámetros se extraen con reglas. La respuesta se arma con plantillas y citas textuales, y un control verifica que cada cita exista literalmente en la fuente. Validado el 9-nov ([docs/agente/definicion.md](docs/agente/definicion.md)). |
-| 14 | Dashboard | Streamlit con las pestañas Consulta y Panorama (ver "Producto" y "Despliegue"). |
+| 14 | Dashboard | API en FastAPI (`radar.app`) que expone el semáforo, el estado vigente, el recomendador, el agente y los resultados precalculados, más una interfaz en React con Vite (`web/`) con las pantallas Verificar, Preguntar y Panorama (Metodología al pie) y el registro de uso desde el navegador (ver "Producto" y "Despliegue"). Decisión del 19-nov, que reemplaza a Streamlit. |
 
 **Opcional (primero en recortarse):** transcripciones de YouTube (la API oficial no las entrega para videos ajenos).
 
@@ -206,11 +208,12 @@ Verificado el 23-oct-2026: Senamhi, Indeci, ENFEN, IGP, RPP, Andina, La Repúbli
 **Limitaciones declaradas:** no hay métrica de exactitud para "detectar alarmismo"; el producto mide cercanía a lo oficial. El recomendador se evalúa solo offline (sin usuarios reales). El modelo de engagement muestra asociación, no causalidad. Google Trends da interés relativo (0-100, normalizado en cada consulta) con ruido de muestreo y puede no tener datos en departamentos pequeños. Las macro-regiones son una agrupación supuesta. El índice de discrepancia solo compara frases con datos (magnitud, estado, fechas); las frases sin datos quedan fuera, porque el NLI no se pudo validar.
 
 ## Despliegue
-- **Decisión del 2-nov:** el sílabo no exige publicar la app, solo presentar el proyecto (semana 16). La app principal **corre en local** (laptop de 16 GB, sin GPU) y es la que se muestra en la presentación. Una versión pública es opcional y se hace solo si hay una opción gratuita adecuada. Hugging Face Spaces (16 GB) ya no es gratis para apps con cómputo en cuentas personales: requiere PRO. La única gratuita es **Streamlit Community Cloud** (de 690 MB a 2,7 GB, sin garantía), que obliga a una versión liviana. App sin datos personales.
+- **Decisión del 2-nov:** el sílabo no exige publicar la app, solo presentar el proyecto (semana 16). La app principal **corre en local** (laptop de 16 GB, sin GPU) y es la que se muestra en la presentación. Una versión pública es opcional y se hace solo si hay una opción gratuita adecuada. Hugging Face Spaces (16 GB) ya no es gratis para apps con cómputo en cuentas personales: requiere PRO. App sin datos personales.
+- **Decisión del 19-nov: API en FastAPI e interfaz en React, en lugar de Streamlit.** El usuario principal es un ciudadano, probablemente desde el celular. El semáforo necesita una explicación a medida: la frase, el dato frente al comunicado y de dónde sale el color. El registro de uso debe capturar eventos reales del navegador (páginas, clics, tiempo), que es minería de uso web. Además, cada consulta debe tener un enlace que se pueda compartir. Streamlit es una herramienta de prototipos de datos: vuelve a ejecutar la página en cada interacción, se controla poco su diseño y solo ve lo que pasa en el servidor. Separar la API de la interfaz también permite probarla sola. Para una versión pública, la interfaz se publica como sitio estático y la API necesita un servidor de Python con 1 a 2 GB. En local se arranca con `python -m radar.app` (`http://localhost:8000`); la definición y los resultados están en [docs/app/definicion.md](docs/app/definicion.md).
 - Offline: BERTopic, LDA, emociones, modelo de engagement, redes y el procesamiento de todo el corpus. La app carga esos resultados precalculados.
-- En la app, solo lo necesario para textos nuevos (semáforo y agente): el modelo de embeddings, más el índice de ChromaDB de los textos oficiales, que se reconstruye al iniciar. Los modelos se eligen por calidad, con un límite de memoria de la máquina local; la versión pública, si se hace, usa el embedding liviano (e5-small cuantizado, 0,78 GB).
-- En la versión pública, el registro de uso va a un almacenamiento externo, porque el sistema de archivos de Community Cloud se borra en cada reinicio.
-- La app no usa la clave de YouTube: un video nuevo se analiza pegando su título y descripción. La clave del LLM va en los *secrets* de la plataforma, con un límite diario de consultas.
+- En la app, solo lo necesario para textos nuevos (semáforo y agente): el modelo de embeddings, más el índice de los textos oficiales en memoria, que se arma al iniciar (ChromaDB no hizo falta con menos de mil párrafos). Los modelos se eligen por calidad, con un límite de memoria de la máquina local; la versión pública, si se hace, usa el embedding liviano (e5-small cuantizado, 0,78 GB).
+- En la versión pública, el registro de uso va a un almacenamiento externo si el servidor de la API borra sus archivos al reiniciar.
+- La app no usa la clave de YouTube: un video nuevo se analiza pegando su título y descripción. El agente no usa LLM (decisión del 9-nov).
 - **Derecho de autor:** de las notas solo se muestra titular, medio, fecha, enlace y nuestras métricas; ningún fragmento del cuerpo (ver "Alcance de datos"). Los comunicados y avisos son textos oficiales (D. Leg. 822, art. 9.b, verificado en el texto consolidado de WIPO Lex) y se pueden mostrar completos, sin alterarlos y citando la fuente.
 - Ritmo bajo de peticiones a los medios, para no caer en el "consumo masivo de recursos" que prohíben sus términos.
 - **Comentarios de YouTube:** la app nunca muestra comentarios individuales, solo agregados (emociones, redes).
@@ -321,7 +324,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 - Estado al 24-oct-2026: "Alerta de El Niño Costero", comunicado N.° 18-2026 (16-oct), con magnitud extraordinaria prevista para la costa hasta enero de 2027. Confirmar en la fuente antes de citar.
 - YouTube Data API v3 (página oficial de cuotas, 23-oct-2026): 10 000 unidades/día; `commentThreads.list`, `videos.list` y `channels.list` cuestan 1 unidad; `search.list` tiene un límite propio de 100 llamadas/día (hasta 50 resultados cada una).
 - Google Trends: `pytrends` está archivado (confirmado en GitHub) y el API oficial está en alfa cerrado; se usa la exportación CSV de la web. Cada consulta se normaliza a 0-100 por separado, por eso cada departamento se descarga en una sola consulta que cubra todo el período (datos semanales).
-- **No verificado aún:** volumen de comentarios de YouTube, datos de Trends por departamento, memoria real en Streamlit Community Cloud, solo para la versión pública opcional (la documentación da de 690 MB a 2,7 GB), y norma de NIC.pe sobre `.gob.pe`. Cada punto tiene su prueba en "Pruebas de viabilidad".
+- **No verificado aún:** volumen de comentarios de YouTube, datos de Trends por departamento, memoria del servidor de la API, solo para la versión pública opcional, y norma de NIC.pe sobre `.gob.pe`. Cada punto tiene su prueba en "Pruebas de viabilidad".
 
 ## Reglas por sitio (revisado del 22 al 24-oct-2026)
 | Sitio | Regla |

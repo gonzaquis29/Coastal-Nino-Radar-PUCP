@@ -115,3 +115,13 @@ Por mitades, lo más reciente frente a la cascada de 3 días da 0,599 frente a 0
 ```bash
 python -m radar.analitica.recomendador validar --ronda b   # 18-nov, después de la recolección de ese día
 ```
+
+**Resultado de la ronda b (19-nov, un día después de lo previsto, tras la recolección): R1 no pasa.** La muestra B tiene 64 orígenes, todos con su nota enlazada en la ventana, y la puerta da un AUC de 0,789.
+
+| Criterio | Resultado | |
+|---|---|---|
+| R1. Cascada de 3 días menos lo más reciente | +0,017 (IC −0,073 a 0,111) | No pasa |
+| R2. Cascada frente al contenido solo | 0,350 frente a 0,160 | Pasa |
+| R3. Medios distintos entre las 5 | 2,69 | Pasa |
+
+Como se fijó antes de B, el producto usa la cascada de 3 días: duplica el MRR del contenido solo y da frescura. Se declara que no le gana a "lo más reciente".

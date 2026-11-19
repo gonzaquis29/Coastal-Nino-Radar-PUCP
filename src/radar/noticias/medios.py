@@ -29,6 +29,7 @@ LOTE_LISTA = 50  # filas descubiertas que se escriben juntas
 LOTE_API = 100  # entradas por petición a la API de WordPress (máximo que permite)
 MAX_INTENTOS = 3  # ejecuciones con error antes de dar por perdida una nota
 ERRORES_RED = (requests.RequestException,)
+EN_INGLES = "en inglés"  # motivo de NoExiste para las notas de Andina en inglés (recalculo.sin_releer lo usa)
 DETENER = (Bloqueado, HostSuspendido)  # no se eluden bloqueos: ese medio se detiene en esta ejecución
 
 
@@ -195,7 +196,7 @@ class Andina(Medio):
             raise NoExiste(f"no publicada ({r.url})")
         campos = leer_html(self.nombre, r.content, r.url, r.headers.get("Content-Type", ""))
         if filtro.es_ingles_texto(campos["titular"], campos["resumen"]):
-            raise NoExiste("en inglés")
+            raise NoExiste(EN_INGLES)
         return campos
 
 

@@ -36,7 +36,14 @@ log = logging.getLogger(__name__)
 
 PRUEBA = "Capa 5: comparación"
 SEMILLA = "capa5-validacion-7nov"
-RONDAS = {"a": SEMILLA, "b": "capa5-validacion-7nov-b", "c": "capa5-validacion-7nov-c"}  # b: arreglos A-D; c: 4 más
+RONDAS = {
+    "a": SEMILLA,
+    "b": "capa5-validacion-7nov-b",
+    "c": "capa5-validacion-7nov-c",  # b: arreglos A-D; c: 4 más
+    "t5": "capa5-t5-19nov",
+}  # T5 (informativo): todas las notas sobre El Niño sin ver; nada se ajusta con ella
+# La ronda b del recomendador usa notas nuevas por primera vez, pero no en la capa 5: no las quita de T5
+VISTAS_QUE_NO_QUITAN_T5 = ("recomendador-b-18nov",)
 TAMANO_MUESTRA = 200
 RESPALDO_PROPIO_MINIMO = 0.98  # C2
 ESPERADA_MINIMA = 0.95  # C2
@@ -664,12 +671,22 @@ def muestra(notas, vistas, semilla=SEMILLA):
             for x in _muestra(lista, round(TAMANO_MUESTRA * len(lista) / max(1, len(pool))), semilla, m)]  # fmt: skip
 
 
+def muestra_t5(notas, filas_vistas):
+    """Todas las notas sobre El Niño que nadie ha visto en la capa 5 (sin sorteo)."""
+    vistas = {(f["medio"], f["id"]) for f in filas_vistas if f["muestra"] not in VISTAS_QUE_NO_QUITAN_T5}
+    return [n for n in notas if n["sobre_nino"] == "1" and (n["medio"], n["id"]) not in vistas]
+
+
 def elegir_muestra(ronda):
     semilla = RONDAS[ronda]
     if viabilidad.registrada(semilla):
         log.info(f"La muestra {semilla} ya está en notas_vistas.csv; no se elige otra.")
         return []
-    elegidas = muestra(leer_csv(config.DIR_NOTICIAS / "notas.csv"), notas_vistas(), semilla)
+    notas = leer_csv(config.DIR_NOTICIAS / "notas.csv")
+    if ronda == "t5":
+        elegidas = muestra_t5(notas, leer_csv(config.ARCHIVO_NOTAS_VISTAS))
+    else:
+        elegidas = muestra(notas, notas_vistas(), semilla)
     marcar_vistas(elegidas, semilla)
     log.info(f"Muestra: {len(elegidas)} · {collections.Counter(n['medio'] for n in elegidas)}")
     return []
@@ -785,17 +802,34 @@ def validar(parar, solo_oficial=False, ronda="b"):
     filas_notas = _leer_muestra(parar, historia, ronda)
     validas = [n for n in filas_notas if not n["error"] and indice_vigente(historia, n["fecha"]) is not None]
     terceros = ("oficial", "tercero")
-    return filas + [criterio_desplazamiento(validas, historia),
-                    criterio_desplazamiento(validas, historia, terceros, "C3 de otras entidades y terceros"),
-                    criterio_perturbaciones(validas, historia),
-                    *criterio_dinamica(validas, historia), *descriptivos(filas_notas)]  # fmt: skip
+    filas += [criterio_desplazamiento(validas, historia),
+              criterio_desplazamiento(validas, historia, terceros, "C3 de otras entidades y terceros"),
+              criterio_perturbaciones(validas, historia),
+              *criterio_dinamica(validas, historia), *descriptivos(filas_notas)]  # fmt: skip
+    if ronda == "t5":
+        citan = citan_al_enfen(leer_csv(config.DIR_NOTICIAS / "notas.csv"))
+        filas.append(rojas_que_citan(filas_notas, citan))
+    return filas
+
+
+def citan_al_enfen(notas):
+    return {(n["medio"], n["id"]) for n in notas if "enfen" in n["comunicados"]}
+
+
+def rojas_que_citan(filas_notas, citan):
+    """T5 (informativo): cuántas notas que citan un comunicado del ENFEN salen en rojo."""
+    suyas = [n for n in filas_notas if not n["error"] and (n["medio"], n["id"]) in citan]
+    colores = collections.Counter(n["color"] for n in suyas)
+    return criterio(PRUEBA, "T5: rojas en notas que citan al ENFEN (informativo)",
+                    f"{colores['rojo']}/{len(suyas)}", "", True, str(dict(colores)))  # fmt: skip
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Capa 5: comparación con lo oficial.")
     ap.add_argument("paso", choices=("muestra", "validar", "calcular"))
     ap.add_argument("--solo-oficial", action="store_true", help="solo C1, C2 y C5: no pide páginas")
-    ap.add_argument("--ronda", choices=tuple(RONDAS), default="b", help="a: primera validación; b: tras los arreglos")
+    ap.add_argument("--ronda", choices=tuple(RONDAS), default="b",
+                    help="a: primera validación; b: tras los arreglos; t5: notas sin ver (informativo)")  # fmt: skip
     args = ap.parse_args(argv)
     registro = configurar(f"nlp-discrepancia-{args.paso}-{args.ronda}")
     inicio, parar = ahora(), threading.Event()

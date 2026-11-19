@@ -279,3 +279,12 @@ def test_cuarta_pasada_la_fecha_de_andina_no_es_una_edicion(tmp_path):
     assert cambio["sobre_texto_nuevo"] == (vieja["sobre_nino"] == "1") and cambio["causa_sobre"] == ""
     assert cambio["magnitudes_texto_nuevo"] == vieja["magnitudes"] and cambio["causa_magnitudes"] == ""
     assert recalculo.generacion("2026-11-02T08:00:00-05:00", "andina") == "fecha"
+
+
+def test_m4_cuenta_aparte_las_notas_en_ingles():
+    cambios = [{"estado": "releida", "motivo": ""}] * 97 + [
+        {"estado": "sin_releer", "motivo": "en inglés"},
+        {"estado": "sin_releer", "motivo": "en inglés"},
+        {"estado": "sin_releer", "motivo": "no publicada (https://andina.pe/agencia/inicio)"},
+    ]
+    assert recalculo.conteo_sin_releer(cambios) == (1, 98, 2)

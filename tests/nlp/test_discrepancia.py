@@ -71,3 +71,19 @@ def test_notas_a_calcular_solo_sobre_el_nino():
 def test_sin_huerfanas_quita_datos_de_notas_sin_terminar():
     filas = [{"medio": "a", "id": "1"}, {"medio": "a", "id": "2"}, {"medio": "b", "id": "1"}]
     assert d.sin_huerfanas(filas, {("a", "1"), ("b", "1")}) == [filas[0], filas[2]]
+
+
+def test_t5_toma_todas_las_sin_ver_salvo_las_vistas_en_la_capa_5():
+    notas = [{"medio": "rpp", "id": str(i), "sobre_nino": s} for i, s in enumerate(("1", "1", "1", "0"))]
+    vistas = [{"medio": "rpp", "id": "0", "muestra": "capa5-validacion-7nov"},
+              {"medio": "rpp", "id": "1", "muestra": "recomendador-b-18nov"}]  # fmt: skip
+    assert [n["id"] for n in d.muestra_t5(notas, vistas)] == ["1", "2"]
+
+
+def test_t5_cuenta_rojas_solo_en_las_que_citan_al_enfen():
+    notas = [{"medio": "rpp", "id": "1", "comunicados": "enfen-2026-19:numero"},
+             {"medio": "rpp", "id": "2", "comunicados": ""}]  # fmt: skip
+    citan = d.citan_al_enfen(notas)
+    filas = [{"medio": "rpp", "id": "1", "error": "", "color": "rojo"},
+             {"medio": "rpp", "id": "2", "error": "", "color": "rojo"}]  # fmt: skip
+    assert d.rojas_que_citan(filas, citan)["valor"] == "1/1"

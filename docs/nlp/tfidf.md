@@ -53,6 +53,8 @@ La lectura tomó 23 min: 3.177 notas con texto y 1 sin texto. Hay 4.042 document
 
 Informativos: AUC con todo el vocabulario 0,822; frente a las notas "cercanas", 0,651 sin los términos del fenómeno y 0,665 con ellos.
 
+**Repetido tras el recálculo final (19-nov):** primero se leyeron las 552 notas nuevas desde el 1-nov (`tfidf leer`, 5,5 min). T1 da 0,999 y su sha1 0,999; T2 da 1,0; T5 da 0. T4 sigue sin pasar (0,803), igual que antes.
+
 **Diagnóstico de T4** (sobre el mismo corpus, sin muestras nuevas; el criterio no se cambia):
 - **No es el instrumento:** T1 y T2 pasan, y el AUC es parecido en los 4 medios (0,78-0,85).
 - **Depende de cuánto habla la nota de El Niño:** 0,73 con 1-2 menciones, 0,80 con 3-5 y 0,93 con 6 o más. Muchas notas "sobre El Niño" tratan de medidas del Gobierno: emergencia, prevención, ministros, presupuesto. Léxicamente no se parecen a los párrafos técnicos del ENFEN, aunque sean del tema. La similitud mediana es baja en los dos grupos: 0,086 en las notas sobre El Niño frente a 0,053 en las de otros temas.

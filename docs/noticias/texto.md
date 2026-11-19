@@ -159,6 +159,7 @@ Los umbrales no se movieron. La regla no se corrigió; el instrumento de C3, dos
 - RPP publica a veces en el `articleBody` párrafos que no están en la página; se valida contra la página visible.
 - Las uniones que el medio ya escribió pegadas ("contenido.En", "2.Sección") siguen en el texto; las resuelve el partidor de frases de la capa siguiente.
 - Los selectores dependen de la plantilla de cada sitio (revisada el 28-oct-2026); si cambia, la validación lo detecta.
+- **RPP con menos de 0,9 del `articleBody` (declarado el 17-nov, sin corregir).** Son 17 notas: 8 del Rotafono, 3 de otras secciones y 6 transmisiones en vivo (`live-…`), cuyo `articleBody` no es el texto de la página. En las del Rotafono, el texto que falta no queda después de la lista de recomendados, así que el rescate no lo cubre. **Ninguna es sobre El Niño ni lo menciona**, así que no tocan el índice, el semáforo ni el recomendador. Corregirlas pediría otro análisis de capa 1 con muestra nueva para el 0,09 % de RPP.
 
 ## Pendiente
 `notas.csv` y `enlaces.csv` se recalcularon con el texto limpio el 31-oct ([recalculo.md](recalculo.md)), antes de la regla de recomendados sin cerrar. Las notas de RPP se vuelven a recalcular con ella ([pendientes.md](../pendientes.md)).

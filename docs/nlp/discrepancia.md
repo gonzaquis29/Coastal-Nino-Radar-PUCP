@@ -292,6 +292,36 @@ Con estos cambios, los controles oficiales no cambian (T1 a T4, plazos, estado o
 - Con la herencia, el único cambio en la ronda c es el "muy fuerte" del Senamhi del 27-ago, que pasa a *respaldada*. Su fecha ("muy fuerte en enero de 2027") sigue *sin respaldo*, porque las fechas del Pacífico central no se comparan.
 - Las 242 notas sobre El Niño que quedan sin ver se reservan para T5. No hay una ronda d.
 
+## T5: confirmación con las notas sin ver (19-nov, informativo)
+**Definición, aprobada el 19-nov antes de correr:**
+- La muestra son todas las notas sobre El Niño que nadie había visto en la capa 5: las 242 reservadas, más las que llegaron después.
+- Se registran con la semilla `capa5-t5-19nov`.
+- Las 64 de la ronda b del recomendador no se quitan, porque ahí no se usó la capa 5.
+- Se corre la capa 5 como en la ronda c y se cuentan las rojas entre las notas que citan al ENFEN.
+- Nada se ajusta con estos resultados.
+
+Se corrió con `python -m radar.nlp.discrepancia validar --ronda t5`: 445 notas, 444 leídas, en 5,3 min.
+
+| Criterio | Resultado | |
+|---|---|---|
+| C1 · C2 · C5 | 33/33 · 143/143 y 1.360/1.360 · 0/42 | Pasan |
+| C3. Desplazamiento (ENFEN y sin atribución) | **57/68 (0,838; IC 0,73–0,91)** | Pasa |
+| C3. Otras entidades y terceros (informativo) | 10/16 | |
+| C4. Perturbaciones | 117/118 | No pasa por 1 |
+| C6 | 16 desactualizadas y 0 adelantadas: informativo | |
+| Semáforo | 53 verdes, 13 amarillas, 2 rojas y 376 sin afirmaciones | |
+| Rojas en notas que citan al ENFEN | 0 de 2 | |
+
+**Lecturas críticas:**
+- **C3 por fin tiene casos:** son 68, frente a 4 de la ronda c, y el intervalo ya excluye un acierto bajo. Es la confirmación independiente más fuerte del índice.
+- **Las 2 rojas son errores de la capa 3, no discrepancias reales.** Se revisaron en pantalla y el texto no se guardó.
+  - Andina 1083528 toma "desde el mes de mayo", que es la fecha de los pronósticos, como si fuera la fecha del evento.
+  - Andina 1097281 toma un hecho pasado, "la alerta … se dio en febrero del 2026", como si fuera un pronóstico.
+  - En T5 no hubo ninguna roja real. Las rojas del producto deben mostrarse con la frase, para que se vea de dónde salen.
+- **C4 falla en 1 de 118.** Al cambiar el estado en una frase larga de Andina (la visita presidencial a Tumbes), el extractor ya no encuentra el estado. Es un límite con frases largas, que se declara.
+- **C6 sale al revés de lo esperado:** 0,104 de desactualizadas en los 7 días después de un comunicado, frente a 0,130 en el resto. Con 16 casos es solo informativo.
+- **Solo 2 notas citan al ENFEN,** así que ese conteo no dice casi nada.
+
 ## Distancia en el semáforo (punto 5.1; definición aprobada el 7-nov)
 **Qué hace:** una función única, `radar.nlp.semaforo.medir_discrepancia(texto, fecha)`, para la app, el agente y los videos. Une la capa 5 con la distancia de minilm a los párrafos oficiales. Entre el 84 y el 89 % de las notas no tiene afirmaciones evaluables, así que su color lo da la distancia.
 
@@ -353,6 +383,8 @@ python -m radar.nlp.semaforo validar     # S1 a S6 (pide páginas para los 100 c
 
 **Umbrales:** corto cercano ≥ 0,411 y lejano ≤ 0,302; cuerpo cercano ≥ 0,545 y lejano ≤ 0,448.
 
+**Repetido tras el recálculo final (17-nov): pasa, con los mismos umbrales.** El control positivo limpio queda en 31 notas en corto y 32 en cuerpo (antes 30). S2 da 0,993 en corto (p25 0,563) y 1,000 en cuerpo (p25 0,813); S3, S4 y S6 no cambian; S5 da 31/31. En la capa 5, el positivo da 24 verdes, 5 amarillas, 2 rojas y 1 sin afirmaciones.
+
 **Lecturas críticas:**
 - **S2 en cuerpo (1,000) y S4 son fáciles.** Las notas de Andina que citan un comunicado lo resumen casi al pie de la letra, y cada comunicado repite mucho del anterior. Solo descartan un fallo grueso. El lado positivo no tiene una muestra nueva independiente: el control limpio son 30 notas ya vistas.
 - **S5 se apoya solo en los positivos de la calibración.** Ninguno de los 100 negativos nuevos tenía afirmaciones evaluables. Es un control de integración: el color de la capa 5 llega intacto.
@@ -381,6 +413,8 @@ python -m radar.nlp.semaforo validar     # S1 a S6 (pide páginas para los 100 c
 - `discrepancia-todas-notas.csv`: el color de cada nota.
 
 El paso salta las notas ya calculadas y, al relanzar, quita los datos de una nota que quedó a medias. Se corre después de T5, porque leería las notas reservadas, y después del recálculo final.
+
+**Corrida sobre todas las notas (19-nov, después de T5 y del recálculo final):** se calcularon 2.727 de 2.727 notas en 23 min. Hay 3 sin texto y 1 que ya no está publicada. Colores: 526 verdes, 139 amarillas, 43 rojas (1,6 %) y 2.015 sin afirmaciones. Por dato: 2.047 respaldadas, 131 desactualizadas, 102 de otra fuente, 64 con más certeza, 63 que contradicen, 29 sin respaldo y 4 de otra escala. Las 2 rojas de T5 fueron errores de la capa 3, así que una roja no se presenta sola: va con su frase y su dato.
 
 ## Único intento con NLI (punto 5.2; definición aprobada el 8-nov)
 **Medición previa** (sin red, con los titulares y resúmenes de las notas sobre El Niño y las frases del ENFEN):

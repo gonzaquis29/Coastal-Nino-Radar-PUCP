@@ -43,6 +43,9 @@ R1 se midió sobre los mismos enlaces con los que se ajustaron los patrones de `
 
 **Revisión cualitativa** (10 notas nuevas, semilla `red-revision-1nov`): todas las aristas eran correctas, y cada mención correspondía a una frase sobre el actor ("Senamhi recalca…", "INDECI recomienda…"). **Límite:** 5 de 10 notas no tienen ninguna arista a un actor, aunque citan a otras entidades del Estado (OECE, EsSalud, la Municipalidad de Lima, Sedapal). La red mide la cita a los actores del ENFEN y de la gestión del riesgo, no a cualquier fuente oficial. Las demás entidades solo aparecen cuando la nota las enlaza.
 
+## Repetida tras el recálculo final (17-nov-2026)
+Con 80.810 notas, R1 pasa (0,961; 345 de 359) y R2 sigue sin pasar para INDECI (0,776) y PCM (0,602), por los mismos enlaces de SEO de Exitosa (15 y 25 notas sin mención). Cenepred sube a 18 de 20 (0,90) y pasa justo en el umbral. ENFEN 36 de 37, Senamhi 0,958, DHN 21 de 21, IGP 0,951 y ANA 13 de 14. PageRank: Senamhi y ENFEN 0,043, INDECI 0,031, ANA 0,021, PCM 0,016 y Cenepred 0,010.
+
 ## Primeros resultados (informativos)
 - 1.135 de las 2.378 notas sobre El Niño enlazan o mencionan algún actor o entidad oficial.
 - **Enlazan o mencionan al ENFEN:** 16 % en total. Por medio: Andina 12 %, El Tiempo 21 %, Exitosa 21 % y RPP 20 %. Casi todo es por mención: solo 34 notas lo enlazan.

@@ -201,3 +201,51 @@ El cuerpo de Andina ya no lleva la línea `Publicado: dd/mm/aaaa` ([texto.md](te
 - Para las generaciones anteriores, `cuerpo_con_ajenos` y `cuerpo_sin_rescate` también conservan la línea. Su paso de cuerpo sigue llamándose "ajenos" o "rescate", porque la fecha no puede cambiar ni menciones ni magnitudes.
 - Prueba sintética: una fila de Andina guardada con la línea no cuenta como edición, y el control reproduce "sobre El Niño" y las magnitudes (`test_cuarta_pasada_la_fecha_de_andina_no_es_una_edicion`).
 
+## Ensayo del recálculo final: fase 1 (17-nov-2026)
+`historico --recalcular`, sin `--todo`, se detiene en el punto de control y no aplica nada. Son 9.080 notas: las que mencionan El Niño, más todo El Tiempo. Tardó 40 min, a 1 nota por segundo en cada medio. Se le agregó avance con tiempo restante por medio (`radar.comun.avance`), y retomó lo hecho tras detenerse una vez.
+
+| Criterio | Resultado | |
+|---|---|---|
+| M1b | 0,999 (8.975 de 8.983) | Pasa |
+| M2 | 0 cambios sin causa | Pasa |
+| M3 | neto −1 de 2.669 (0,0004) | Pasa |
+| M4 | RPP, Exitosa y El Tiempo 0; **Andina 28 de 2.486 (0,0113)** | **No pasa en Andina** (ver abajo) |
+| M5 | parcial, como corresponde al punto de control | Se mide al final |
+| V1 | 9 de 9 son lugares o nombres propios: la laguna La Niña de Sechura, el sector La Niña de Pataz y el "Código del Niño" | Pasa |
+| V2 | 8 de 8 son el fenómeno ("ante el FEN", "Fenómeno el Niño (FEN)") | Pasa |
+
+V1 y V2 se revisaron leyendo en memoria el cuerpo de las 17 notas, sin guardarlo, y comparando la frase de cada mención con la regla anterior y con la nueva.
+
+**M4 en Andina:** de las 28 notas sin releer, 26 están en inglés y 2 ya no están publicadas. Las notas en inglés se excluyen a propósito desde el 1-nov ([definicion.md](definicion.md)); `pendientes.md` ya anticipaba que el recálculo las dejaría sin releer. M4 las cuenta como fallas. Sin ellas, Andina queda en 2 de 2.460 (0,0008). **Ajuste aprobado el 17-nov, antes de la fase 2 y con el umbral sin cambios:** M4 cuenta aparte las notas rechazadas como "en inglés" (`medios.EN_INGLES`, `recalculo.conteo_sin_releer`), como exclusión declarada, fuera del numerador y del denominador. Sin el ajuste, la fase 2 habría terminado con un M4 de Andina sobre el 1 % y no se habría podido aplicar. Andina tiene 318 notas fuera del consolidado, la mayoría en inglés. Con el ajuste, la fase 1 da 2 de 2.610 (0,0008).
+
+**Comunicados citados:** cambian en 11 notas.
+- **9 pierden una cita "por número"** de un comunicado del ENFEN, por el arreglo del 8-nov (citas solo del ENFEN). No cambia "sobre El Niño" en ninguna.
+- **2 ganan una cita al N.° 19:** Andina 1097990 y Exitosa n187237. Se publicaron el 30-oct y se leyeron el 31-oct a las 00:34, cuando el N.° 19 todavía no estaba en el corpus. El cambio viene de que el corpus creció, no del texto.
+
+**Verificaciones antes de la fase 2 (17-nov):**
+- Muestra real de la fase 2 (`--todo --limite 150`): 450 notas releídas sin fallas; M1b, M2 y M3 siguen pasando. Empieza por las filas de control, que son recientes, así que no mide cuántas notas antiguas se borraron.
+- 336 GB libres en disco. El proceso impide la suspensión, guarda nota por nota y retoma tras un corte.
+- Las notas que la recolección diaria agregue durante la corrida no entran en ella. Antes de `--aplicar` se corre otro `--recalcular --todo`, corto, para incluirlas; si no, M5 no pasa.
+
+**Fase 2 lanzada el 17-nov a las 10:25** (`--recalcular --todo --horas 12`): unas 36.000 notas de Andina, a 1 por segundo. Va antes del corte para tener margen si algo falla. Las notas que entren hasta el corte ya se leen con el código nuevo.
+
+## Recálculo final: fase 2 y aplicación (17-nov-2026)
+La fase 2 terminó a las 22:37, en 613 min y sin fallas. Durante la corrida no entraron notas nuevas, así que no hizo falta otro `--todo` corto.
+
+| Criterio | Resultado | |
+|---|---|---|
+| M1b | 1,0 (79.995 de 80.003) | Pasa |
+| M2 | 0 cambios sin causa | Pasa |
+| M3 | neto +1 de 2.669 (0,0004) | Pasa |
+| M4 | Andina 3 de 38.293 (0,0001), aparte 315 en inglés; RPP, Exitosa y El Tiempo 0 | Pasa |
+| M5 | los 4 medios completos: cada nota una vez, ningún enlace sin nota | Pasa |
+| V1 | 9 de 9, sin casos nuevos en la fase 2 | Pasa |
+| V2 | 10 de 10: las 2 nuevas (Andina 1091213 y 1095183) dicen "fenómeno el Niño" | Pasa |
+
+- **V3 (informativo):** 8 notas cambian solo las magnitudes por la regla de menciones. La nueva de la fase 2, Andina 1089917, cita "Fenómeno el Niño (FEN)" y "FEN fuerte o extraordinario".
+- **Comunicados citados:** en la fase 2, 25 notas pierden una cita "por número" (11 de Andina y 14 de Exitosa) y ninguna gana. Es el mismo arreglo del 8-nov.
+
+**Aplicado el 17-nov a las 22:45, con aprobación.** Los archivos vigentes quedaron en `*.anterior.csv`. El consolidado tiene 80.341 notas; Andina queda en 38.290; las 318 que quedan fuera son, en su mayoría, notas en inglés.
+
+**`viabilidad resultados` después de aplicar (19-nov):** el volumen, la calidad y el filtro por título siguen pasando. El control positivo con el respaldo del README (`numero`) baja de 31 a **19 notas de Andina** (umbral 20; 12 comunicados). Es el efecto esperado del arreglo del 8-nov, que quitó las citas de otras entidades. Solo pasa con las extensiones aprobadas: `proximo` 28 (17 comunicados) e `informe` 29. Se declara así; el umbral no cambia. El control positivo limpio del semáforo (31 y 32 notas) se define aparte y pasa.
+

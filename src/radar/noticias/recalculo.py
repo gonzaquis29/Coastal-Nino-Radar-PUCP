@@ -30,11 +30,12 @@ from radar.comun.archivos import (
     leer_json,
     reparar_csv,
 )
+from radar.comun.avance import Avance
 from radar.comun.http import Bloqueado, Cliente, HostSuspendido, Rechazado
 from radar.comun.registro import describir
 from radar.comun.texto import ahora, sha1_corto
 from radar.noticias import esquemas, rasgos
-from radar.noticias.medios import MEDIOS, NoExiste, filas_de_nota
+from radar.noticias.medios import EN_INGLES, MEDIOS, NoExiste, filas_de_nota
 from radar.noticias.nota import NotaInvalida
 from radar.noticias.viabilidad import _si, criterio
 from radar.oficial import enfen
@@ -43,6 +44,7 @@ log = logging.getLogger(__name__)
 
 FASE_NINO, FASE_RESTO = "nino", "resto"
 # Código con que se calculó cada fila guardada, según su "recolectado" (commits del 28-oct-2026, hora de Lima)
+AVANCE_CADA = 60  # segundos entre líneas de avance por medio
 GENERACIONES = (
     ("anterior", ""),  # extracción, resumen y regla de magnitud anteriores
     ("capa1", "2026-10-28T12:45"),  # cuerpo limpio (91c1aa0); resumen y regla anteriores
@@ -309,6 +311,7 @@ class Recalculo:
         for e in leer_csv(config.DIR_RAW_NOTICIAS / self.nombre / "enlaces.csv"):
             enlaces_viejos[e["id"]].append(e)
         self.resumen.update(pendientes=len(pendientes), ya_hechas=len(hechas))
+        self.avance = Avance(f"Recálculo {self.nombre}", len(pendientes), previos=len(hechas), cada=AVANCE_CADA)
         with EstadoDescargas(self.archivos.estado, cada=GUARDAR_ESTADO_CADA) as estado:
             reanudaciones = 0
             while pendientes and not self.parar.is_set():
@@ -349,6 +352,7 @@ class Recalculo:
                 resultados = [(f, e) for f in filas]
             for fila, resultado in resultados:
                 self._una(por_id[fila["id"]], fila, resultado, enlaces_viejos, estado)
+            self.avance.paso(len(lote))
 
     def _una(self, vieja, fila, resultado, enlaces_viejos, estado):
         momento = ahora().isoformat()
@@ -390,6 +394,14 @@ class Recalculo:
 PRUEBA = "Recálculo de las notas"
 
 
+def conteo_sin_releer(cambios):
+    """M4: (sin releer, total, en inglés). Las notas de Andina en inglés se excluyen a propósito desde el 1-nov
+    (`medios.EN_INGLES`): se cuentan aparte, fuera del numerador y del denominador (ajuste aprobado el 17-nov)."""
+    ingles = sum(c["estado"] == "sin_releer" and c["motivo"] == EN_INGLES for c in cambios)
+    sin = sum(c["estado"] == "sin_releer" for c in cambios) - ingles
+    return sin, len(cambios) - ingles, ingles
+
+
 def informe(medios=None):
     """Criterios M1b a M5 sobre lo ya releído (docs/noticias/recalculo.md). Devuelve (filas, completo)."""
     filas, completo, integridad, sin_releer_por_medio = [], True, [], {}
@@ -408,8 +420,7 @@ def informe(medios=None):
                           f"{repetidos} repetidas, {enlaces_huerfanos} enlaces sin nota")  # fmt: skip
         if repetidos or enlaces_huerfanos:
             completo = False
-        sin = sum(c["estado"] == "sin_releer" for c in cambios)
-        sin_releer_por_medio[nombre] = (sin, len(cambios))
+        sin_releer_por_medio[nombre] = conteo_sin_releer(cambios)
     releidas = [c for c in todos if c["estado"] == "releida"]
     # control del instrumento: filas guardadas ya con el cuerpo limpio y sin edición; con el resumen y la regla de
     # antes sobre el texto nuevo deben dar lo guardado
@@ -438,10 +449,11 @@ def informe(medios=None):
                  f"neto {neto:+d} de {base}; resumen de El Tiempo: {len(por_resumen_eltiempo)}; "
                  + ", ".join(f"{k} {v}" for k, v in causas.most_common())),
     ]  # fmt: skip
-    for nombre, (sin, total) in sin_releer_por_medio.items():
+    for nombre, (sin, total, excluidas) in sin_releer_por_medio.items():
         parte_sin = round(sin / total, 4) if total else 0.0
+        detalle = f"{sin}/{total}" + (f"; aparte, {excluidas} en inglés (exclusión declarada)" if excluidas else "")
         filas.append(criterio(PRUEBA, f"M4: {nombre}: notas sin releer", parte_sin, f"≤ {SIN_RELEER_MAXIMO}",
-                              parte_sin <= SIN_RELEER_MAXIMO, f"{sin}/{total}"))  # fmt: skip
+                              parte_sin <= SIN_RELEER_MAXIMO, detalle))  # fmt: skip
     filas.append(criterio(PRUEBA, "M5: integridad (todas, una vez, enlaces con nota)", completo, "sí", completo,
                           "; ".join(integridad)))  # fmt: skip
     return filas, completo

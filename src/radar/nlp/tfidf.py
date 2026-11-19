@@ -16,6 +16,7 @@ import threading
 
 from radar import config
 from radar.comun.archivos import anexar_csv, escribir_csv, leer_csv, reparar_csv
+from radar.comun.avance import Avance
 from radar.comun.candado import exclusivo
 from radar.comun.energia import sin_suspension
 from radar.comun.http import Cliente, Rechazado
@@ -43,6 +44,7 @@ MAX_DF = 0.9
 TERMINOS_DE_LA_ETIQUETA = (*preproceso.TERMINOS_FENOMENO, "enfen", "fen", "niño", "niña", "costero")
 LOTE_LECTURA = 100  # filas por medio que se mandan a descargar de una vez (El Tiempo pide de a 100 en su API)
 ARCHIVO_CONTEOS = "conteos.csv"
+AVANCE_CADA = 60  # segundos entre líneas de avance de la lectura
 
 
 # ---------------------------------------------------------------- corpus
@@ -131,7 +133,9 @@ def leer_cuerpos(todo, ruta, esquema, fila_de, parar, limite=None):
             por_medio[nota["medio"]].append((nota, estrato))
     if limite:
         por_medio = {m: p[:limite] for m, p in por_medio.items()}
-    log.info(f"Corpus {len(todo)} notas · ya leídas {len(hechos)} · por leer {sum(map(len, por_medio.values()))}")
+    por_leer = sum(map(len, por_medio.values()))
+    log.info(f"Corpus {len(todo)} notas · ya leídas {len(hechos)} · por leer {por_leer}")
+    avance = Avance(f"Lectura {ruta.name}", por_leer, previos=len(hechos), cada=AVANCE_CADA)
     cola, abiertos, conteo = (
         queue.Queue(),
         len(por_medio),
@@ -148,8 +152,7 @@ def leer_cuerpos(todo, ruta, esquema, fila_de, parar, limite=None):
             fila = fila_de(nota, estrato, resultado)
             anexar_csv(ruta, esquema, [fila])
             conteo["con error" if fila["error"] else "leídas"] += 1
-            if sum(conteo.values()) % 200 == 0:
-                log.info(f"  {dict(conteo)}")
+            avance.paso()
     log.info(f"Lectura: {dict(conteo)} · {ruta.relative_to(config.RAIZ)}")
     return []
 
