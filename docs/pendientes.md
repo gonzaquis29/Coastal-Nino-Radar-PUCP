@@ -2,31 +2,46 @@
 
 Orden según dependencias reales y fechas, revisado con lo aprendido en los pilotos; el calendario del README es orientativo. Cada tarea se define, se aprueba, se construye y se valida con muestras nuevas, una a la vez. Estado del índice de discrepancia y del flujo de NLP: [nlp/discrepancia.md](nlp/discrepancia.md).
 
-## Por dónde seguir (decidido el 16-nov)
-Faltan 4 días para el corte (vie 20-nov 23:59) y 11 para el congelamiento (27-nov). Orden:
-1. **YouTube y Trends (punto 1), lo primero.** Definición aprobada y código escrito el 16-nov (`radar.youtube`, `radar.trends`; [youtube/definicion.md](youtube/definicion.md)), con pruebas sintéticas en verde; falta correrlo con datos reales. Pasos:
-   - **El usuario** crea dos variables de entorno: `YOUTUBE_API_KEY` (la clave de YouTube Data API v3) y `RADAR_YOUTUBE_SAL` (al menos 16 caracteres al azar). Nunca van en el chat ni en el repo.
-   - **Día 1 corrido el 16-nov** ([youtube/definicion.md](youtube/definicion.md#10-resultados-del-día-1-16-nov-2026)): **pasan Y1 (1.225 videos), Y2 (114) y Y4 (0,953)**. Y2 y Y4 pasan después de corregir la medición (respuestas) y la regla del tipo de canal (dirección del README), sin cambiar los umbrales. YouTube sigue siendo central: la red social se intenta con YouTube (Y3 se mide en el corte). La búsqueda que faltaba se hizo el 17-nov.
-   - **Día 2 corrido el 17-nov** ([youtube/definicion.md](youtube/definicion.md#11-resultados-del-día-2-17-nov-2026)): **pasan Y1 (1.564), Y2 (136) y Y4 (0,949)**. 41 de las 56 quincenas siguen saturadas: se declaran (la muestra es un piso).
-   - ~~**Corte**~~ Corrido el 22-nov ([youtube/definicion.md](youtube/definicion.md#13-resultados-del-corte-22-nov-2026)): **pasan Y1 a Y5** (1.762 videos; Y3, 151 canales; Y5, 1.007 y 622). El borrado vence a los 30 días: `python -m radar.youtube.borrar`.
-   - **Trends, primera exportación el 17-nov** ([youtube/definicion.md](youtube/definicion.md#12-resultados-de-trends-primera-exportación-17-nov-2026)): **G1 pasa (3 de 4)**; Tumbes tiene dato solo en el 13 % de las semanas (declarado). Tema "El Niño · Fenómeno" (`/g/120ldl7m`). Segunda exportación el 22-nov ([youtube/definicion.md](youtube/definicion.md#14-resultados-de-trends-segunda-exportación-22-nov-2026)): G1 pasa y **G2 no pasa** por Tumbes (0,790; los demás ≥ 0,97), así que su serie es el promedio de las dos exportaciones, como se fijó. La consulta nacional por región también está hecha.
-2. ~~**18-nov: ronda b y T5**~~ Hechas el 19-nov, tras la rutina (81.168 notas). Ronda b: R1 no pasa (+0,017), así que se usa la cascada de 3 días como se fijó ([analitica/recomendador.md](analitica/recomendador.md)). T5 ([nlp/discrepancia.md](nlp/discrepancia.md#t5-confirmación-con-las-notas-sin-ver-19-nov-informativo)): C3 57/68 pasa, C4 117/118, y las 2 rojas son errores de la capa 3. `discrepancia calcular` corrió el 19-nov: 2.727 notas, con 526 verdes, 139 amarillas y 43 rojas. También se repitieron `viabilidad resultados` (el control positivo con `numero` baja a 19 de 20) y `tfidf leer` y `vectores` (T4 sigue en 0,803).
-3. ~~**Recálculo final (punto 2)**~~ Aplicado el 17-nov a las 22:45: pasan M1b a M5, V1 (9/9) y V2 (10/10), con 80.341 notas en el consolidado ([noticias/recalculo.md](noticias/recalculo.md#recálculo-final-fase-2-y-aplicación-17-nov-2026)). `semaforo calibrar` y `validar` pasan con los mismos umbrales. La rutina del 17-nov (22:45) dejó 80.810 notas. Enlaces y embeddings ya se repitieron (puntos 1 y 3 de la semana 2).
-4. **App (FastAPI + React, decisión del 19-nov en lugar de Streamlit; [README](../README.md#despliegue)):** definición aprobada el 19-nov ([app/definicion.md](app/definicion.md)): pantallas Verificar, Preguntar y Panorama, con Metodología al pie, y criterios P1 a P12 y U1 a U6. **La API está hecha** (`python -m radar.app`) y pasa P1 a P5; la paleta pasa P9 ([app/definicion.md](app/definicion.md#8-resultados-19-nov)). **La interfaz (`web/`) no está empezada:** se construye cuando el equipo lo decida.
-5. **Modelo de engagement:** cuando haya datos de YouTube, o su alternativa con Trends.
+## Por dónde seguir (actualizado el 22-nov)
+**La recolección está cerrada** (corte del 20-nov): ya no hay rutina diaria. Quedan 5 días para el congelamiento (vie 27-nov). Alcance (decisión del 19-nov): solo el producto; no se planifican informe, declaración, avances semanales, presentación ni grabación. Cada tarea sigue el flujo de siempre: mapa de enfoques, definición con criterios fijados antes, aprobación del usuario, construcción (solo con su orden explícita) y validación con muestras nuevas.
 
-## Estado al 19-nov
-- **Noticias:** 81.168 notas de los 4 medios (1-ene a 19-nov) y 2.727 sobre El Niño. Los huecos de la diaria del 10 al 14-nov se recuperaron y leyeron el 16-nov ([recoleccion/diaria.md](recoleccion/diaria.md#recuperación-de-huecos-16-nov)). La macro-región está asignada (`region.notas` pasa).
-- **Corpus oficial:** ENFEN hasta el comunicado N.° 20 (21 documentos) y avisos del Senamhi; 938 párrafos.
-- **Hecho y validado:** histórico y viabilidad, TF-IDF (no pasa T4) y embeddings, tópicos (polaridad descriptiva), capas 3 y 5 del índice, semáforo, estudio de eventos (descriptivo), recomendador (ronda a; la b se decide el 18-nov) y agente (ronda c pasa, 9-nov). El NLI se cerró sin medir.
-- **Escrito, sin datos:** YouTube y Trends (esperan la clave y las exportaciones).
-- **Sin empezar:** modelo de engagement, red social e interfaz de la app (la API y el registro de uso ya están escritos y validados; al 19-nov).
-- **Al 19-nov:** recálculo aplicado (81.168 notas tras la rutina), ronda b del recomendador (R1 no pasa: se usa la cascada de 3 días), T5 (informativo) y `discrepancia calcular` hechos; YouTube días 1 y 2 y la primera exportación de Trends pasan sus criterios.
+1. **Modelo de engagement** (README, punto 11; insumo de ML del sílabo). Sin definición todavía.
+   - **Datos:** YouTube del corte del 22-nov, con 1.007 videos para entrenar y 622 para probar (Y5; [youtube/definicion.md](youtube/definicion.md#13-resultados-del-corte-22-nov-2026)).
+   - **Antes de definirlo:** el README fija la partición (entrenar con enero a agosto, probar con septiembre al corte) y excluye los videos con menos de 14 días. Como la descarga fue el 22-nov y no el 20-nov, el último video que entra es del 8-nov, no del 6-nov. Revisarlo al definir.
+   - **Variables previstas:** el semáforo del título y la descripción del video, los tópicos y los rasgos del título, con los suscriptores y los días desde la publicación como controles. Las emociones **no** entran: la decisión del 17-nov las dejó solo descriptivas, aunque el README las lista.
+2. **Red social con YouTube** (README, red; Y3 pasa con 151 canales). Sin definición todavía: red canal–canal por co-mención en los comentarios, con `radar.youtube`.
+3. **Analítica web** (README, punto 10): KPIs de engagement frente a la cercanía con lo oficial (Spearman, descriptivo), Trends por departamento alrededor de cada comunicado ([youtube/definicion.md](youtube/definicion.md#14-resultados-de-trends-segunda-exportación-22-nov-2026); Tumbes usa el promedio de dos exportaciones) e indicadores de los medios. Depende de 1 y 2 para lo de YouTube.
+4. **Actualizar con las notas del corte** (corridas cortas, sin definición nueva):
+   - `python -m radar.nlp.discrepancia calcular`: es reanudable y solo agrega las notas que faltan. Quedó en 2.727 notas sobre El Niño y ahora hay 2.785.
+   - `python -m radar.analitica.eventos validar --ronda c`, con los comunicados N.° 19 y 20 (sigue descriptivo).
+   - Emociones de los comentarios del corte (`python -m radar.youtube.emociones`, unos 40 min), solo descriptivas.
+5. **App** ([app/definicion.md](app/definicion.md), aprobada el 19-nov). La API está hecha y pasa P1 a P5, y la paleta pasa P9. **La interfaz (`web/`) no está empezada** y se construye solo cuando el usuario lo ordene. El gráfico F (YouTube) y el engagement en Metodología esperan a 1 y 3.
 
-## Siempre (rutina hasta el corte del 20-nov)
-- Recolección diaria (`python -m radar.recoleccion.diario --persona <nombre> --publicar`), con máximo 48 h entre ejecuciones. La última fue el 16-nov a las 09:00, después de 129 h sin correr: dejó **huecos** en Andina (`sitemap-ultimo` empieza el 14-nov) y RPP (`web/peru` desde el 11-nov y `web/futbol` desde el 12-nov), recuperados el 16-nov ([recoleccion/diaria.md](recoleccion/diaria.md#recuperación-de-huecos-16-nov); RPP cubre 0,990). Leídos el mismo día con `historico` (1.861 notas, sin errores; 80.341 en el consolidado) y `region.notas` (pasa). Después corrió el 17-nov a las 22:45, el 19-nov a las 09:20 y el 22-nov a las 10:00. Esa última cerró la recolección: corrió 73 h después de la anterior y sus huecos se recuperaron ([recoleccion/diaria.md](recoleccion/diaria.md#recuperación-de-huecos-22-nov)). Quedan 81.879 notas. Un solo proceso a la vez pide páginas (`data/red.lock`): si un proceso largo está corriendo, cortarlo con Ctrl+C, hacer la rutina y relanzarlo.
-- Después: `python -m radar.noticias.historico` (solo notas nuevas) y `python -m radar.region.notas`. Última rutina con `corpus`: 6-nov, con 77.839 notas. El PDF del comunicado N.° 19 del ENFEN cambió el 1-nov, pero sus datos y párrafos quedan iguales. Su control con `pypdf` baja a 0,974 (umbral 0,98) por ruido de ese extractor: repite el encabezado y separa palabras.
-- Si la recolección avisa "Nuevo documento del ENFEN", correr `python -m radar.oficial.corpus` sin `--solo` (ver el punto 6.2).
+**Borrado de YouTube:** los datos crudos vencen a los 30 días de la descarga (el día 1 fue el 16-nov, así que vence el 16-dic). Se borran con `python -m radar.youtube.borrar`.
+
+## Estado al 22-nov
+- **Noticias:** 81.879 notas de los 4 medios (1-ene al corte) y 2.785 sobre El Niño, con la macro-región asignada (`region.notas` pasa). La última recolección (22-nov) recuperó sus huecos ([recoleccion/diaria.md](recoleccion/diaria.md#recuperación-de-huecos-22-nov)).
+- **Corpus oficial:** ENFEN hasta el comunicado N.° 20 (21 documentos) y avisos del Senamhi hasta el 477. Siguen dos fallas conocidas y declaradas: el control con `pypdf` del N.° 19 (0,974) y el acuerdo polígono/regla del Senamhi.
+- **YouTube:** corte del 22-nov, en el que pasan Y1 a Y5 (1.762 videos, 154 con ≥ 30 comentarios, 151 canales conectados). Las emociones son solo descriptivas.
+- **Trends:** dos exportaciones (17 y 22-nov) y la consulta nacional por región. G1 pasa y G2 no pasa por Tumbes (0,790), que usa el promedio.
+- **Hecho y validado:**
+  - histórico y viabilidad;
+  - recálculo final (17-nov);
+  - TF-IDF (no pasa T4) y embeddings (e5);
+  - tópicos (polaridad descriptiva);
+  - capas 3 y 5 del índice, con T5 informativo;
+  - semáforo;
+  - estudio de eventos (descriptivo);
+  - recomendador (ronda b: R1 no pasa, así que se usa la cascada de 3 días);
+  - agente (ronda c pasa);
+  - red de enlaces (R2 no pasa para INDECI y PCM por enlaces SEO);
+  - API de la app.
+  
+  El NLI se cerró sin medir.
+- **Sin empezar:** modelo de engagement, red social con YouTube, analítica web e interfaz de la app.
+
+## Rutina diaria (cerrada el 22-nov)
+La recolección diaria terminó con el corte. Se registró en [recoleccion/diaria.md](recoleccion/diaria.md): ejecuciones, huecos del 16 y del 22-nov y cómo se recuperaron. Si hubiera que leer algo más: `python -m radar.noticias.historico` y `python -m radar.region.notas`. Un solo proceso a la vez pide páginas (`data/red.lock`).
 
 ## 1. Desbloquear YouTube y Trends (urgente: núcleo que no se recorta)
 Desbloqueado: la clave existe desde el 16-nov y Trends se exportó el 17-nov. Lo que queda (corte del 21-nov, segunda exportación) está en "Por dónde seguir". La tabla se deja como registro de lo que se decidía.
