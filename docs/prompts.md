@@ -569,3 +569,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 64. me preocupa ese por poco, hay algo que debemos mejorar? / realmente estas seguro que debemos hacer eso? lo digo porque me parece que es critico / Sí, declárala
 
 **Resultado:** la IA remuestreó el V2 por canal (pasa en el 67 %; el AUC es estable) y revisó qué videos cruzan las colas. Comprobó que el filtro no deja pasar videos por la plantilla del canal (4 de 1.762). Descartó una prueba de sensibilidad que solo podía favorecer al V2. Declaró la fragilidad y su consecuencia en la sección 8, sin cambiar el criterio.
+65. Sí, defínela (analítica web).
+
+**Resultado:** la IA escribió `docs/analitica/web.md` con el mapa de enfoques de las cuatro partes (engagement frente a la cercanía, Trends por departamento, indicadores de los medios y registro de uso) y los criterios W1 a W11, fijados antes de ver resultados. La respuesta a la pregunta 5 se apoya en la correlación dentro del canal, y solo es "sí" o "no" si el IC por canal excluye 0 y el signo se repite en los dos períodos. No construyó nada: espera la aprobación.
