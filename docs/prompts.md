@@ -566,3 +566,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 63. Sí, constrúyela (validación de la cercanía en videos).
 
 **Resultado:** la IA escribió `radar.modelos.cercania` (etapa `cercania`), con el AUC por canal y 3 pruebas sintéticas. Pasan V1 (AUC 0,882; IC 0,782–0,932) y V2 (0,472 frente a 0,460, por poco). Frente al negativo difícil da 0,779. La separación es de tema, como en las notas.
+64. me preocupa ese por poco, hay algo que debemos mejorar? / realmente estas seguro que debemos hacer eso? lo digo porque me parece que es critico / Sí, declárala
+
+**Resultado:** la IA remuestreó el V2 por canal (pasa en el 67 %; el AUC es estable) y revisó qué videos cruzan las colas. Comprobó que el filtro no deja pasar videos por la plantilla del canal (4 de 1.762). Descartó una prueba de sensibilidad que solo podía favorecer al V2. Declaró la fragilidad y su consecuencia en la sección 8, sin cambiar el criterio.

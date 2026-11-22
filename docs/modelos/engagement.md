@@ -250,6 +250,7 @@ Solo lee con `radar.youtube.almacen`. Las variables por video llevan ids, así q
 - En videos, la cercanía separa lo oficial de otros temas tan bien como en las notas, así que **la lectura de M5 se sostiene**.
 - Hay dos matices que se declaran:
   - el IC de V1 baja a 0,78, porque el positivo tiene solo 6 canales;
-  - V2 pasa por 0,012.
+  - V2 pasa por 0,012 y es frágil. Al remuestrear por canal (2.000 veces, revisión posterior al resultado), el margen pasa en el 67 % de los casos (IC −0,06 a +0,14). En cambio, el AUC se mantiene entre 0,857 y 0,902 si se quita cualquiera de los 6 canales oficiales. Las colas se cruzan por dos causas. Por el lado oficial, hay videos con muy poco texto (títulos de 6 a 10 palabras) o de otro tema. Por el lado negativo, hay alertas de lluvia en portugués e inglés: los términos que los excluirían están solo en español. El filtro no deja pasar videos por la plantilla del canal (4 de 1.762).
+  - Consecuencia: la cercanía se usa en conjunto (M5 y la pantalla F de la app). No sirve para un veredicto video por video, ni para marcar videos o canales sueltos como cercanos o lejanos. El criterio y el resultado no se cambian.
 - Como en E3, **la separación es de tema:** frente a videos de lluvias sin El Niño baja a 0,78 (V3), y los videos de medios y otros sobre El Niño quedan casi tan cerca como los oficiales (V5). La cercanía dice "habla de lo mismo que el ENFEN", no "dice lo mismo".
 
