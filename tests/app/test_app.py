@@ -108,3 +108,112 @@ def test_interfaz_sirve_index_y_no_sale_de_dist(cliente, tmp_path):
     (tmp_path / "secreto.txt").write_text("no", encoding="utf-8")
     assert "app" in cliente.get("/verificar").text
     assert cliente.get("/../secreto.txt").text != "no"
+
+
+# ---------------------------------------------------------------- Panorama F, Metodología, cabeceras y topes
+
+PUNTOS = (
+    "tipo,mes,coseno,objetivo,tasa\nmedio,2026-01,0.5,-4.9,0.010\nmedio,2026-03,0.6,-4.8,0.020\n"
+    "oficial,2026-02,0.8,-5.0,0.004\notros,2026-03,0.4,-4.1,0.030\notros,2026-04,0.3,-4.0,0.050\n"
+    "otros,2026-04,0.2,-4.0,0.070\n"
+)
+WEB = (
+    "parte,indicador,grupo,valor,ic_inf,ic_sup,n\nA,respuesta,,sí,,,968\n"
+    "A,rho_dentro_del_canal,,-0.1683,-0.2602,-0.0995,968\nA,rho_dentro_del_canal,prueba,-0.2619,,,\n"
+)
+
+
+@pytest.fixture
+def datos_youtube(monkeypatch, tmp_path):
+    (tmp_path / "youtube").mkdir()
+    (tmp_path / "analitica").mkdir()
+    (tmp_path / "youtube" / "2026-11-22_analitica-puntos.csv").write_text(PUNTOS, encoding="utf-8")
+    (tmp_path / "analitica" / "web-engagement.csv").write_text(WEB, encoding="utf-8")
+    monkeypatch.setattr(config, "DIR_YOUTUBE", tmp_path / "youtube")
+    monkeypatch.setattr(config, "DIR_ANALITICA", tmp_path / "analitica")
+    return tmp_path
+
+
+def youtube(**filtros):
+    return servicio.Panorama.youtube(object.__new__(servicio.Panorama), **filtros)
+
+
+def test_f_youtube_indicadores_y_puntos_sin_ids(datos_youtube, monkeypatch):
+    monkeypatch.setattr(servicio.almacen, "hoy", lambda: servicio.dt.date(2026, 11, 25))
+    r = youtube()
+    assert r["disponible"] and r["total"] == 6 and len(r["puntos"]) == 6
+    assert {k for p in r["puntos"] for k in p} == {"tipo", "mes", "cercania", "tasa"}  # sin ids ni nombres
+    # P12: el orden de los tipos es fijo (medio, oficial, otros), nunca por tasa
+    assert [i["tipo"] for i in r["indicador_tasa"]] == ["medio", "oficial", "otros"]
+    assert [i["mediana"] for i in r["indicador_tasa"]] == [pytest.approx(0.015), 0.004, 0.05]
+    i2 = r["indicador_respuesta"]
+    assert (i2["respuesta"], i2["rho"], i2["ic_inf"], i2["ic_sup"], i2["n"]) == ("sí", -0.1683, -0.2602, -0.0995, 968)
+    assert i2["texto"] == tx.RESPUESTA_YOUTUBE["sí"] and not r["por_region"]
+
+
+def test_f_youtube_filtra_por_mes_y_no_cambia_los_indicadores(datos_youtube, monkeypatch):
+    monkeypatch.setattr(servicio.almacen, "hoy", lambda: servicio.dt.date(2026, 11, 25))
+    r = youtube(desde="2026-03-01", hasta="2026-03-31", macroregion="lima")
+    assert [p["mes"] for p in r["puntos"]] == ["2026-03", "2026-03"]
+    assert r["indicador_tasa"] == youtube()["indicador_tasa"]
+
+
+def test_f_youtube_vencido_queda_sin_datos(datos_youtube, monkeypatch):
+    monkeypatch.setattr(servicio.almacen, "hoy", lambda: servicio.dt.date(2026, 12, 22))
+    r = youtube()
+    assert not r["disponible"] and r["puntos"] == [] and r["indicador_respuesta"] is None
+
+
+def test_textos_de_youtube_sin_promesas_y_faciles():
+    textos = [*tx.RESPUESTA_YOUTUBE.values(), tx.CERCANIA_ES_TEMA]
+    assert not [t for t in textos if palabras(t) & set(tx.PROMESAS)]
+    assert not [t for t in textos if palabras(t) & set(tx.JERGA)]
+    assert {t: round(legibilidad.inflesz(t)) for t in textos if legibilidad.inflesz(t) < 65} == {}
+
+
+def test_metodologia_lee_rutas_y_cuenta_criterios(monkeypatch, tmp_path):
+    from radar.app import metodologia
+
+    (tmp_path / "processed" / "red").mkdir(parents=True)
+    (tmp_path / "processed" / "red" / "youtube-validacion.csv").write_text(
+        "prueba,criterio,valor,umbral,pasa,detalle\nRed social de YouTube,R1,1,1,1,\nRed social de YouTube,R3,0,1,0,\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(config, "DIR_DATOS", tmp_path)
+    monkeypatch.setattr(metodologia, "TARJETAS", (("red/youtube-validacion.csv", "Red social de YouTube", "Red", "x"),))
+    assert (
+        metodologia.ruta_de("red/youtube-validacion.csv") == tmp_path / "processed" / "red" / "youtube-validacion.csv"
+    )
+    [t] = metodologia.tarjetas()
+    assert (t["pasa"], t["pasan"], t["total"]) == (False, 1, 2)
+
+
+def test_cabeceras_de_seguridad(cliente):
+    r = cliente.get("/api/salud")
+    assert "default-src 'self'" in r.headers["content-security-policy"]
+    assert r.headers["x-content-type-options"] == "nosniff" and r.headers["referrer-policy"] == "no-referrer"
+    assert r.headers["cache-control"] == "no-store"
+    assert "content-security-policy" not in cliente.get("/api/openapi.json").headers
+
+
+def test_topes_del_registro(monkeypatch):
+    topes = eventos.Topes()
+    assert all(topes.permite(SESION, ahora=0) for _ in range(eventos.LOTES_POR_MINUTO_SESION))
+    assert not topes.permite(SESION, ahora=1)
+    assert topes.permite("otra000000000000", ahora=1)
+    assert topes.permite(SESION, ahora=61)  # pasó un minuto
+
+
+def test_registro_lleno_no_crece(cliente, monkeypatch):
+    lote = {"sesion": SESION, "dispositivo": "celular", "eventos": [{"evento": "vista", "pantalla": "verificar"}]}
+    monkeypatch.setattr(eventos, "BYTES_MAXIMOS", 1)
+    assert cliente.post("/api/eventos", json=lote).status_code == 204
+    assert cliente.post("/api/eventos", json=lote).status_code == 204
+    assert len(eventos.leer()) == 1  # el primero crea el archivo; el segundo ya no entra
+
+
+def test_seccion_youtube_en_la_ruta(cliente, datos_youtube, monkeypatch):
+    monkeypatch.setattr(servicio, "panorama", lambda: object.__new__(servicio.Panorama))
+    monkeypatch.setattr(servicio.almacen, "hoy", lambda: servicio.dt.date(2026, 11, 25))
+    r = cliente.get("/api/panorama/youtube", params={"desde": "2026-04-01"})
+    assert r.status_code == 200 and {p["mes"] for p in r.json()["puntos"]} == {"2026-04"}

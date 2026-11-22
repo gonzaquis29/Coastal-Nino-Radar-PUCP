@@ -6,7 +6,8 @@ from radar import config
 from radar.app import eventos
 from radar.comun.archivos import leer_csv
 
-# (archivo, prueba, título, qué mide en palabras simples). El orden es el de la pantalla.
+# (archivo, prueba, título, qué mide en palabras simples). El archivo es la carpeta de su validacion.csv o una ruta
+# dentro de data/processed. El orden es el de la pantalla.
 TARJETAS = (
     ("nlp", "Semáforo: distancia y reglas", "Semáforo",
      "Si separa las notas que siguen a un comunicado de las de otros temas, y si los colores salen bien en casos de"
@@ -36,6 +37,15 @@ TARJETAS = (
     ("youtube", "YouTube: viabilidad", "YouTube", "Si hay suficientes videos y comentarios."),
     ("youtube", "YouTube: emociones", "Emociones de los comentarios",
      "Acuerdo con dos referencias independientes. No pasa: descriptivas."),
+    ("modelos/engagement-validacion.csv", "Cercanía en videos", "Cercanía de los videos con lo oficial",
+     "Si la cercanía separa los videos de las instituciones oficiales de los de otros temas."),
+    ("modelos/engagement-validacion.csv", "Modelo de engagement", "Modelo de engagement",
+     "Si predice la interacción de videos nuevos mejor que las líneas base, y si el contenido agrega algo."),
+    ("red/youtube-validacion.csv", "Red social de YouTube", "Red social de YouTube",
+     "Si las comunidades de autores de comentarios son reales y estables. La estabilidad no pasa: descriptiva."),
+    ("analitica/web-validacion.csv", "Analítica web", "Analítica web",
+     "Si hay datos suficientes para la pregunta 5 y Trends, si las citas de los medios tienen fechas posibles y si el"
+     " registro de uso cuenta bien."),
     ("trends", "Trends: viabilidad", "Google Trends", "Si hay datos por departamento."),
     ("app", "App: API", "API de esta app",
      "Si responde lo mismo que los cálculos, a tiempo, solo con los campos permitidos de las notas y sin texto libre"
@@ -55,14 +65,18 @@ def _si(valor):
     return str(valor).strip().lower() in ("1", "true", "sí", "si")
 
 
+def ruta_de(archivo):
+    if archivo.endswith(".csv"):
+        return config.DIR_DATOS / "processed" / archivo
+    return getattr(config, f"DIR_{archivo.upper()}", config.DIR_DATOS / "processed" / archivo) / "validacion.csv"
+
+
 def tarjetas():
     salida = []
     cache = {}
     for archivo, prueba, titulo, que_mide in TARJETAS:
         if archivo not in cache:
-            ruta = (
-                getattr(config, f"DIR_{archivo.upper()}", config.DIR_DATOS / "processed" / archivo) / "validacion.csv"
-            )
+            ruta = ruta_de(archivo)
             cache[archivo] = leer_csv(ruta) if ruta.exists() else []
         filas = [f for f in cache[archivo] if f["prueba"] == prueba]
         if not filas:
@@ -70,6 +84,7 @@ def tarjetas():
         criterios = [{"criterio": f["criterio"], "valor": f["valor"], "umbral": f["umbral"], "pasa": _si(f["pasa"])}
                      for f in filas]  # fmt: skip
         salida.append({"titulo": titulo, "que_mide": que_mide, "pasa": all(c["pasa"] for c in criterios),
+                       "pasan": sum(c["pasa"] for c in criterios), "total": len(criterios),
                        "criterios": criterios})  # fmt: skip
     return salida
 

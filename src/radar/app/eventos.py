@@ -4,7 +4,10 @@ Cada campo es una opción de una lista cerrada o un número: nunca texto libre, 
 un id al azar que vive en la pestaña del navegador.
 """
 
+import collections
 import datetime as dt
+import threading
+import time
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -15,6 +18,10 @@ from radar.comun.archivos import anexar_csv, leer_csv
 
 ARCHIVO = "eventos.csv"
 EVENTOS_POR_LOTE = 50
+# Topes para que nadie llene el disco: lotes por minuto (por sesión y en total) y tamaño máximo del registro
+LOTES_POR_MINUTO_SESION = 30
+LOTES_POR_MINUTO_TOTAL = 600
+BYTES_MAXIMOS = 50 * 1024 * 1024
 
 Pantalla = Literal["verificar", "preguntar", "panorama", "metodologia"]
 COLUMNAS = ("momento", "sesion", "dispositivo", "evento", "pantalla", "anterior", "segundos", "tipo_resultado",
@@ -39,7 +46,7 @@ class Evento(BaseModel):
     posicion: int | None = Field(default=None, ge=0, le=100)
     herramienta: Literal["estado_vigente", "buscar_oficial", "medir_discrepancia", "recomendar", "fuera"] | None = None
     fuera_alcance: bool | None = None
-    seccion: Literal["hallazgos", "linea", "magnitudes", "reaccion", "temas", "citas"] | None = None
+    seccion: Literal["hallazgos", "linea", "magnitudes", "reaccion", "temas", "citas", "youtube"] | None = None
     filtro: Literal["fechas", "macroregion"] | None = None
 
 
@@ -49,6 +56,34 @@ class Lote(BaseModel):
     sesion: str = Field(pattern=r"^[a-z0-9]{16}$")
     dispositivo: Literal["celular", "escritorio"]
     eventos: list[Evento] = Field(max_length=EVENTOS_POR_LOTE)
+
+
+class Topes:
+    """Cuenta los lotes del último minuto en memoria (la sesión es al azar: no identifica a nadie)."""
+
+    def __init__(self):
+        self.candado = threading.Lock()
+        self.momentos = collections.defaultdict(collections.deque)
+
+    def permite(self, sesion, ahora=None):
+        ahora = time.monotonic() if ahora is None else ahora
+        with self.candado:
+            for clave in list(self.momentos):  # quita lo de hace más de un minuto, de todas las sesiones
+                cola = self.momentos[clave]
+                while cola and cola[0] <= ahora - 60:
+                    cola.popleft()
+                if not cola:
+                    del self.momentos[clave]
+            propios, todos = self.momentos[sesion], self.momentos["*"]
+            if len(propios) >= LOTES_POR_MINUTO_SESION or len(todos) >= LOTES_POR_MINUTO_TOTAL:
+                return False
+            propios.append(ahora)
+            todos.append(ahora)
+            return True
+
+
+def lleno():
+    return ruta().exists() and ruta().stat().st_size >= BYTES_MAXIMOS
 
 
 def ruta():

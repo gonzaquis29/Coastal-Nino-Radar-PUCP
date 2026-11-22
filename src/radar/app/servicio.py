@@ -19,7 +19,9 @@ from radar.comun.archivos import leer_csv
 from radar.nlp import afirmaciones as af
 from radar.nlp import discrepancia, semaforo, temporalidad
 from radar.oficial import enfen
+from radar.youtube import almacen
 
+TIPO_PUNTOS = "analitica-puntos"  # el mismo de radar.analitica.web (no se importa: arrastra los modelos)
 COMUNICADOS_EN_LINEA = 6  # comunicados que muestra la mini línea de tiempo de Verificar
 PARRAFOS_QUE_HACER = 2
 DIAS_NOTA_RECIENTE = 3  # la cascada fresca de la ronda b del recomendador
@@ -401,6 +403,41 @@ class Panorama:
                             "notas": next(int(f["notas"]) for f in filas if f["valor"] == m),
                             **{f["actor"]: float(f["proporcion"]) for f in filas if f["valor"] == m}}
                            for m in medios]}  # fmt: skip
+
+    def youtube(self, desde=None, hasta=None, macroregion=None):
+        """F: tasa de engagement frente a la cercanía por video (sin ids), más los 2 indicadores.
+
+        Los puntos vencen con YouTube: si el archivo más reciente tiene más de 30 días (o no hay), F queda sin datos.
+        Los indicadores son los del análisis completo; el filtro de fechas solo recorta la dispersión, y no hay región.
+        """
+        tipos = [{"id": k, "texto": v} for k, v in tx.TIPOS_CANAL.items()]
+        base = {"tipos": tipos, "por_region": False, "nota": tx.CERCANIA_ES_TEMA}
+        archivos = almacen.archivos(TIPO_PUNTOS, bases=(config.DIR_YOUTUBE,))
+        if not archivos or almacen.vence(almacen.fecha_de(archivos[-1])) <= almacen.hoy():
+            return base | {"disponible": False, "puntos": [], "indicador_tasa": [], "indicador_respuesta": None}
+        filas = leer_csv(archivos[-1])
+        puntos = [{"tipo": f["tipo"], "mes": f["mes"], "cercania": round(float(f["coseno"]), 4),
+                   "tasa": round(float(f["tasa"]), 6)}
+                  for f in filas if f["tipo"] in tx.TIPOS_CANAL
+                  and _en_rango(f["mes"], desde and desde[:7], hasta and hasta[:7])]  # fmt: skip
+        indicador_tasa = []
+        for t in tx.TIPOS_CANAL:  # orden fijo de los tipos, nunca por tasa ni por cercanía (P12)
+            tasas = [float(f["tasa"]) for f in filas if f["tipo"] == t]
+            if tasas:
+                indicador_tasa.append({"tipo": t, "texto": tx.TIPOS_CANAL[t], "mediana": statistics.median(tasas),
+                                       "n": len(tasas)})  # fmt: skip
+        web = leer_csv(config.DIR_ANALITICA / "web-engagement.csv")
+        respuesta = next((f for f in web if f["parte"] == "A" and f["indicador"] == "respuesta"), None)
+        rho = next((f for f in web if f["parte"] == "A" and f["indicador"] == "rho_dentro_del_canal"
+                    and not f["grupo"]), None)  # fmt: skip
+        indicador_respuesta = None
+        if respuesta and rho:
+            indicador_respuesta = {"respuesta": respuesta["valor"], "texto": tx.RESPUESTA_YOUTUBE[respuesta["valor"]],
+                                   "rho": float(rho["valor"]), "ic_inf": float(rho["ic_inf"]),
+                                   "ic_sup": float(rho["ic_sup"]), "n": int(rho["n"])}  # fmt: skip
+        return base | {"disponible": True, "corte": almacen.fecha_de(archivos[-1]).isoformat(), "puntos": puntos,
+                       "total": len(filas), "indicador_tasa": indicador_tasa,
+                       "indicador_respuesta": indicador_respuesta}  # fmt: skip
 
     def hallazgos(self):
         reaccion = self.reaccion()["comunicados"]

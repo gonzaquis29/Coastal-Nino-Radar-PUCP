@@ -12,8 +12,8 @@ LARGO_PREGUNTA = 500
 
 Macroregion = Literal[tuple(tx.MACROREGIONES)]
 Interes = Literal[tuple(tx.INTERESES)]
-Seccion = Literal["hallazgos", "linea", "magnitudes", "reaccion", "temas", "citas"]
-SECCIONES_CON_FILTRO = ("linea", "magnitudes", "temas")
+Seccion = Literal["hallazgos", "linea", "magnitudes", "reaccion", "temas", "citas", "youtube"]
+SECCIONES_CON_FILTRO = ("linea", "magnitudes", "temas", "youtube")
 
 
 class PedidoVerificar(BaseModel):

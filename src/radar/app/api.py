@@ -9,8 +9,8 @@ import logging
 import threading
 import time
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from radar import config
@@ -22,6 +22,16 @@ DIST = config.DIR_WEB / "dist"
 # El semáforo y el agente no garantizan ser seguros entre hilos: se atiende una consulta con modelos a la vez
 CANDADO_MODELOS = threading.Lock()
 ESTADO = {"listo": False, "segundos_arranque": None}
+# La interfaz no carga nada de fuera: solo sus propios archivos y llamadas a esta misma API
+CABECERAS = {
+    "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self';"
+    " connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+    "X-Frame-Options": "DENY",
+}
+RUTAS_DOCUMENTACION = ("/api/docs", "/api/openapi.json")  # Swagger carga sus archivos de fuera: sin la CSP
 
 
 def hoy():
@@ -42,6 +52,20 @@ async def ciclo(_app):
 def crear(cargar=True):
     app = FastAPI(title="Radar Niño Costero", lifespan=ciclo if cargar else None, docs_url="/api/docs",
                   openapi_url="/api/openapi.json", redoc_url=None)  # fmt: skip
+    topes = eventos.Topes()
+
+    @app.middleware("http")
+    async def cabeceras(request: Request, siguiente):
+        respuesta = await siguiente(request)
+        for clave, valor in CABECERAS.items():
+            if clave == "Content-Security-Policy" and request.url.path.startswith(RUTAS_DOCUMENTACION):
+                continue
+            respuesta.headers.setdefault(clave, valor)
+        if request.url.path.startswith("/api/"):
+            respuesta.headers.setdefault("Cache-Control", "no-store")
+        elif request.url.path.startswith("/assets/"):
+            respuesta.headers["Cache-Control"] = "public, max-age=31536000, immutable"  # nombres con hash
+        return respuesta
 
     @app.get("/api/salud")
     def salud():
@@ -84,6 +108,11 @@ def crear(cargar=True):
 
     @app.post("/api/eventos", status_code=204)
     def registrar(lote: eventos.Lote):
+        if not topes.permite(lote.sesion):
+            raise HTTPException(429, "Demasiados eventos")
+        if eventos.lleno():
+            registro.warning("El registro de uso llegó a su tamaño máximo: no se guardan más eventos")
+            return Response(status_code=204)
         eventos.registrar(lote)
 
     @app.get("/api/{resto:path}", include_in_schema=False)

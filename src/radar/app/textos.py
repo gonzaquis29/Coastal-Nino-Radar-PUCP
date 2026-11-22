@@ -48,6 +48,16 @@ INTERESES = {
 }
 MACROREGIONES = {"costa_norte": "Costa norte", "costa_centro": "Costa centro", "lima": "Lima y Callao"}
 
+# Panorama F (YouTube): tipos de canal y la respuesta de W2 en palabras (docs/analitica/web.md, sección 6)
+TIPOS_CANAL = {"medio": "Medios", "oficial": "Instituciones oficiales", "otros": "Otros canales"}
+CERCANIA_ES_TEMA = "La cercanía mide si un video habla del mismo tema que el ENFEN, no si está de acuerdo con él."
+RESPUESTA_YOUTUBE = {
+    "sí": "Sí. Dentro de un mismo canal, los videos que hablan de otro tema que el ENFEN tienen algo más de"
+    " interacción.",
+    "no": "No. Dentro de un mismo canal, la interacción no cambia con la cercanía al ENFEN.",
+    "no concluyente": "No se puede decir. Los datos no alcanzan para saber si la interacción cambia con la cercanía.",
+}
+
 # U2: no aparecen en Verificar ni en Preguntar
 JERGA = ("capa", "distancia", "coseno", "umbral", "auc", "nli", "embedding", "origen", "percentil")
 # U6: nunca en un resultado sin datos
