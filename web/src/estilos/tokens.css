@@ -1,0 +1,151 @@
+/* Tokens del sistema visual. Los colores de datos son los validados con validate_palette.js (P9,
+   docs/app/definicion.md sección 8); el modo oscuro tiene sus propios pasos, no una inversión. */
+
+:root {
+  color-scheme: light;
+  --plano: #f9f9f7;
+  --superficie: #fcfcfb;
+  --superficie-2: #f2f1ec;
+  --superficie-3: #e9e8e2;
+  --tinta: #0b0b0b;
+  --tinta-2: #52514e;
+  --tinta-3: #66655f;
+  --tenue: #898781; /* solo ejes y marcas, nunca texto que haya que leer */
+  --borde: rgba(11, 11, 11, 0.1);
+  --borde-fuerte: rgba(11, 11, 11, 0.22);
+  --rejilla: #e1e0d9;
+  --eje: #c3c2b7;
+  --acento: #1c5cab;
+  --acento-tinta: #ffffff;
+  --acento-suave: #e7eefa;
+  --acento-texto: #1c5cab;
+  --foco: #1c5cab;
+  --sombra: 0 1px 2px rgba(11, 11, 11, 0.06), 0 4px 16px rgba(11, 11, 11, 0.05);
+  --resalte: #fdf1c7;
+
+  /* Estado: solo veredictos con datos, siempre con ícono y frase */
+  --bien: #0ca30c;
+  --alerta: #fab219;
+  --mal: #d03b3b;
+  --bien-tinta: #ffffff;
+  --alerta-tinta: #0b0b0b;
+  --mal-tinta: #ffffff;
+  --bien-fondo: #eaf6ea;
+  --alerta-fondo: #fff6df;
+  --mal-fondo: #fbeaea;
+
+  /* Medidor de cercanía: un solo tono, sin semáforo (U6) */
+  --medidor: #1c5cab;
+  --medidor-fondo: #e1e0d9;
+
+  /* Datos */
+  --coinciden: #1baf7a;
+  --difieren: #eb6834;
+  --sin-datos: #b5b3ad;
+  --mag-debil: #86b6ef;
+  --mag-moderada: #3987e5;
+  --mag-fuerte: #1c5cab;
+  --mag-extraordinaria: #0d366b;
+  --tema-1: #eda100;
+  --tema-2: #e87ba4;
+  --tema-3: #008300;
+  --tema-4: #6250d6;
+  --tema-otros: #b5b3ad;
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+  --serie-3: #1baf7a;
+
+  --radio: 14px;
+  --radio-chico: 9px;
+  --toque: 44px;
+  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --plano: #0d0d0d;
+    --superficie: #1a1a19;
+    --superficie-2: #232321;
+    --superficie-3: #2c2c2a;
+    --tinta: #f0efec;
+    --tinta-2: #c3c2b7;
+    --tinta-3: #a9a89f;
+    --tenue: #898781;
+    --borde: rgba(255, 255, 255, 0.1);
+    --borde-fuerte: rgba(255, 255, 255, 0.24);
+    --rejilla: #2c2c2a;
+    --eje: #383835;
+    --acento: #5598e7;
+    --acento-tinta: #0b0b0b;
+    --acento-suave: #1b2a40;
+    --acento-texto: #86b6ef;
+    --foco: #86b6ef;
+    --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
+    --resalte: #4a3d12;
+    --bien-fondo: #13280f;
+    --alerta-fondo: #2e2610;
+    --mal-fondo: #321515;
+    --medidor: #5598e7;
+    --medidor-fondo: #383835;
+    --coinciden: #199e70;
+    --difieren: #d95926;
+    --sin-datos: #6b6a66;
+    --mag-debil: #184f95;
+    --mag-moderada: #2a78d6;
+    --mag-fuerte: #6da7ec;
+    --mag-extraordinaria: #9ec5f4;
+    --tema-1: #c98500;
+    --tema-2: #d55181;
+    --tema-3: #0ca30c;
+    --tema-4: #9085e9;
+    --tema-otros: #6b6a66;
+    --serie-1: #3987e5;
+    --serie-2: #d95926;
+    --serie-3: #199e70;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plano: #0d0d0d;
+  --superficie: #1a1a19;
+  --superficie-2: #232321;
+  --superficie-3: #2c2c2a;
+  --tinta: #f0efec;
+  --tinta-2: #c3c2b7;
+  --tinta-3: #a9a89f;
+  --tenue: #898781;
+  --borde: rgba(255, 255, 255, 0.1);
+  --borde-fuerte: rgba(255, 255, 255, 0.24);
+  --rejilla: #2c2c2a;
+  --eje: #383835;
+  --acento: #5598e7;
+  --acento-tinta: #0b0b0b;
+  --acento-suave: #1b2a40;
+  --acento-texto: #86b6ef;
+  --foco: #86b6ef;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
+  --resalte: #4a3d12;
+  --bien-fondo: #13280f;
+  --alerta-fondo: #2e2610;
+  --mal-fondo: #321515;
+  --medidor: #5598e7;
+  --medidor-fondo: #383835;
+  --coinciden: #199e70;
+  --difieren: #d95926;
+  --sin-datos: #6b6a66;
+  --mag-debil: #184f95;
+  --mag-moderada: #2a78d6;
+  --mag-fuerte: #6da7ec;
+  --mag-extraordinaria: #9ec5f4;
+  --tema-1: #c98500;
+  --tema-2: #d55181;
+  --tema-3: #0ca30c;
+  --tema-4: #9085e9;
+  --tema-otros: #6b6a66;
+  --serie-1: #3987e5;
+  --serie-2: #d95926;
+  --serie-3: #199e70;
+}
