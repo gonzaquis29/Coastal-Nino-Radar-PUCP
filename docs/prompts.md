@@ -542,3 +542,18 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 55. Sí, constrúyelo (modelo de engagement).
 
 **Resultado:** la IA escribió `radar.modelos` (`rasgos` y `engagement`) con 12 pruebas sintéticas, y calculó las variables de 1.609 videos. Entrenó con validación cruzada por canal: eligió el boosting (MAE 0,495). Evaluó la prueba una vez: pasan M1 (0,43), M2 (+12,6 %) y M3 (+0,063, por poco), y solo la cercanía es estable (M5). Corrigió la escala del rival Poisson en el detalle y lo repitió con `--repetir`, sin cambios en M1 a M4.
+56. Continuamos entonces (red social con YouTube).
+
+**Resultado:** la IA midió los comentarios del corte. El 9 % de los autores comenta en 2 canales o más; el 53 % de las aristas son un solo autor; hay solo 10 medios en la red; el backbone estricto deja 18 canales. Propuso en `docs/redes/youtube.md` la proyección con el coseno de Salton, Louvain contra un nulo bipartito (curveball) y los criterios R1 a R7, con el cruce con medios para la pregunta 6.
+57. Primero revísalo de nuevo, analízalo, que es crítico (red social).
+
+**Resultado:** la IA verificó los supuestos. 96 canales comentan en sus propios videos (se quitan esos comentarios); 34 canales tienen menos de 5 autores (mínimo de 5 para ser nodo y de 10 para la pregunta 6); el 74 % del cruce con medios es con un solo medio (cruce excedente frente al nulo, y una repetición sin ese medio); hay canales de varios países (composición por país). Reescribió los criterios R1 a R8.
+58. Vuelve a revisar para ver si ya estaría coherente y con buena calidad (red social).
+
+**Resultado:** la IA precisó lo que quedaba ambiguo. El nulo usa los mismos filtros, el mismo peso y el componente mayor. El rival de R3 es la propagación de etiquetas asíncrona y ponderada. Los medios del cruce son los nodos de tipo medio. El signo de R5 no se fija antes (valor p de dos colas) y la asortatividad es una correlación de Pearson ponderada por arista. Confirmó que `networkx` 3.6 tiene las funciones.
+59. Apruebo (definición de la red social).
+
+**Resultado:** la IA la marcó como aprobada el 22-nov en el documento y en los pendientes. No construyó nada: espera la orden.
+60. Sí, procede (red social), con buenas prácticas, manejo de errores, optimización, calidad, buen rendimiento, sin comentarios innecesarios, estructura adecuada y nombres claros.
+
+**Resultado:** la IA escribió `radar.redes.audiencias`, con funciones puras (bipartita dispersa, curveball, Salton, Louvain, backbone y asortatividad), y `radar.redes.youtube` (línea de comandos, 1.000 nulos en paralelo con avance), más 9 pruebas sintéticas. Pasan R1, R2 (por poco) y R4; no pasa R3. La pregunta 6 no es concluyente y R7 es débil (0,076; p 0,007).
