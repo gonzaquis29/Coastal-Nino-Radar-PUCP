@@ -321,7 +321,7 @@ async function axe(p) {
   const tasa = await p.locator("[data-indicador=tasa] .indicador__valor").allInnerTexts();
   revisadas += tasa.length;
   if (JSON.stringify(tasa) !== JSON.stringify(api.youtube.indicador_tasa.map((i) => pct.format(i.mediana)))) diferencias.push("F indicador 1");
-  anotar("P8", { valor: diferencias.length ? `${diferencias.length} diferencias` : "100 %", umbral: "100 %", pasa: diferencias.length === 0, detalle: `${revisadas} cifras revisadas contra la API; ${diferencias.join("; ")}` });
+  anotar("P8", { valor: diferencias.length ? `${diferencias.length} diferencias` : "100 %", umbral: "100 %", pasa: diferencias.length === 0, detalle: [`${revisadas} cifras revisadas contra la API`, ...diferencias].join("; ") });
 
   // P10: emergente, tabla con descarga y "Cómo leer" en cada gráfico; "Descriptivo" solo en C
   const SOBRE = { linea: ".zona-toque", magnitudes: "circle.punto", reaccion: ".zona-toque", temas: "svg", citas: ".medidores__fila", youtube: "circle.punto" };

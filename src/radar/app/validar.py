@@ -126,7 +126,7 @@ def main():
             bien, total = citas_en(r.json(), parrafos)
             literales, citas = literales + bien, citas + total
             avance.paso()
-        for seccion in ("hallazgos", "linea", "magnitudes", "reaccion", "temas", "citas"):
+        for seccion in ("hallazgos", "linea", "magnitudes", "reaccion", "temas", "citas", "youtube"):
             notas += list(notas_en(cliente.get(f"/api/panorama/{seccion}").json()))
         notas += list(notas_en(cliente.get("/api/metodologia").json()))
     fuera = sorted({k for n in notas for k in n if k not in CAMPOS_PERMITIDOS})
