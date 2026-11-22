@@ -1,6 +1,6 @@
 # Analítica web (README, punto 10; pregunta 5)
 
-**Estado:** propuesta del 22-nov, pendiente de aprobación. Nada se construye sin la orden del usuario. Los criterios se fijan aquí, antes de ver los resultados. Los tamaños de muestra de la sección 2 se contaron sin mirar ninguna relación.
+**Estado:** propuesta del 22-nov, revisada una vez, pendiente de aprobación. Nada se construye sin la orden del usuario. Los criterios se fijan aquí, antes de ver los resultados. Los tamaños de muestra de la sección 2 se contaron sin mirar ninguna relación.
 
 ## 1. Qué responde
 La pregunta 5 del README tiene dos partes, y el punto 10 le suma dos piezas de apoyo:
@@ -79,42 +79,48 @@ Los medios van en orden alfabético y nunca se ordenan por cercanía (P12 de la 
 
 ### A. Engagement frente a la cercanía
 1. **Muestra:** los videos de `engagement-variables.csv` con cercanía, en los canales que tienen 3 videos o más.
-2. **Correlación dentro del canal:**
-   - En cada canal, la cercanía y el objetivo se pasan a rangos, que se centran y se dividen por el número de videos del canal.
+2. **Quitar el tiempo antes de comparar:** desde septiembre la tasa de los medios cae a la mitad, y la cobertura de El Niño cambia de tema a lo largo del año. Si un canal publica más lejos de lo oficial al final del año, la caída de la tasa daría una correlación falsa. Por eso, al objetivo y a la cercanía se les resta la mediana de su tipo de canal y mes, y la correlación se calcula con esos residuos. Como informativo se da también sin quitar el mes.
+3. **Correlación dentro del canal:**
+   - En cada canal, los dos residuos se pasan a rangos, que se centran y se dividen por el número de videos del canal.
    - Con esos valores de todos los canales juntos se calcula Pearson. Es un Spearman estratificado por canal, y cada video pesa lo mismo.
    - El signo se lee al revés: ρ < 0 quiere decir que **lo más alejado tiene más engagement**.
-3. **Incertidumbre:** IC 95 % con un bootstrap por canal de 1.000 réplicas (semilla del proyecto). Se sortean canales y entran todos sus videos.
-4. **Por período:** lo mismo, por separado en el entrenamiento (enero a agosto) y en la prueba (septiembre al corte), porque desde septiembre cambia el régimen de la tasa de los medios.
-5. **Respuesta a la pregunta A, con la regla fijada aquí:**
+4. **Incertidumbre:** IC 95 % con un bootstrap por canal de 1.000 réplicas (semilla del proyecto). Se sortean canales y entran todos sus videos.
+5. **Por período:** lo mismo, por separado en el entrenamiento (enero a agosto) y en la prueba (septiembre al corte), porque desde septiembre cambia el régimen de la tasa de los medios.
+6. **Respuesta a la pregunta A, con la regla fijada aquí:**
    - **"Sí" o "no"** (según el signo) solo si el IC excluye 0 y el signo es el mismo en los dos períodos.
    - En cualquier otro caso, **"no concluyente"**. Esa es la frase que va en la app.
+   - Exigir el mismo signo en la prueba (40 canales, 318 videos) es conservador: con poca muestra es más fácil quedar en "no concluyente" que afirmar algo falso. Se prefiere así.
+7. **KPIs:** por tipo de canal y mes, el número de videos y las medianas de vistas, likes, comentarios y tasa. Son descriptivos.
+8. **Uso de la prueba:** la partición de prueba del modelo se usa aquí solo para describir; no se elige ni se ajusta ningún modelo con ella.
 
 ### B. Trends por departamento
 1. **Series:** `radar.trends.cargar.serie_final`, que ya promedia Tumbes.
 2. **Por comunicado:**
-   - Se compara la semana de Trends que contiene la fecha del comunicado (semanas de domingo a sábado) con el promedio de las 3 semanas anteriores.
-   - Se cuenta en cuántos comunicados sube, por departamento. Entran los comunicados con 3 semanas anteriores dentro del período.
+   - De los 20 comunicados de 2026, 14 salen un viernes. En las semanas de domingo a sábado, la semana del comunicado solo tiene 2 días después de él. Por eso se compara el promedio de **la semana del comunicado y la siguiente** con el promedio de las 3 semanas anteriores a la del comunicado.
+   - Entran los comunicados cuya semana siguiente está completa (el N.° 20 queda fuera) y que tienen sus 3 semanas anteriores dentro del período.
+   - Se cuenta en cuántos comunicados sube, por departamento.
    - Es descriptivo y no lleva valor p. Se declara que las 3 semanas anteriores pueden incluir otro comunicado, porque salen cada 2 a 4 semanas.
 3. **Correlación cruzada:**
    - Se compara la diferencia semanal de Trends de cada departamento con la diferencia semanal de todas las notas sobre El Niño, en las mismas semanas de domingo a sábado en hora de Lima. Como informativo se repite con las notas que nombran a ese departamento.
    - Se usan las diferencias porque las dos series crecen todo el año, y sin quitar la tendencia cualquier par sale correlacionado (eventos, medición previa).
    - Se prueban los desfases de −2 a +2 semanas. Un desfase positivo quiere decir que Trends va detrás de las notas.
-   - **Nulo:** se desplaza en círculo una serie respecto de la otra, en todos los desplazamientos de más de 2 semanas. En cada uno se toma el máximo de |r| en los 5 desfases. Con 46 semanas, el nulo tiene unos 40 valores, y esa resolución se declara.
+   - **Nulo:** 1.000 series sustitutas de Trends con las fases al azar, que conservan su autocorrelación (Theiler et al., 1992). En cada una se toma el máximo de |r| en los 5 desfases, así el nulo ya cuenta que se probaron 5. Un desplazamiento circular solo daría unos 40 valores con 46 semanas, y no alcanza la resolución que pide la corrección del punto siguiente.
+   - **Tres departamentos:** el umbral se corrige por Bonferroni, así que se exige superar el p98,3 del nulo (0,05 / 3).
    - Solo entran los departamentos que pasan G1. Tumbes se muestra sin criterio.
 
 ### C. Indicadores de los medios
 - **Volumen:** notas sobre El Niño por medio y mes, sin las de fecha dudosa.
 - **Secciones:** proporción de las 5 secciones con más notas de cada medio, más "otras".
 - **Tiempo de reacción:**
-  - Para cada comunicado y medio: días (en hora de Lima) entre la publicación del comunicado (`comunicados.csv`) y la primera nota del medio que lo cita como `informe`, `enlace` o `numero`.
+  - Para cada comunicado y medio: días (en hora de Lima) entre la emisión del comunicado (`fecha_emision` de `comunicados.csv`) y la primera nota del medio que lo cita como `informe`, `enlace` o `numero`, dentro de los 14 días siguientes. Una cita posterior ya no es reacción, sino referencia; se cuenta aparte.
   - No cuenta `proximo`, que es anunciar el siguiente comunicado.
-  - Por medio se reporta la mediana y el número de comunicados. Solo si el medio citó al menos 5.
+  - Por medio se reporta la mediana y el número de comunicados. Solo si el medio citó al menos 5: contadas sin mirar los días, son Andina 17, Exitosa 17 y El Tiempo 9; RPP (4) queda fuera.
 
 ### D. Registro de uso
 - Se lee con `radar.app.eventos.leer`.
 - **Sesión:** id de sesión.
 - **Embudo:** proporción de sesiones que llegan a cada paso, en el orden de la app.
-- **Tiempo por pantalla:** la mediana del campo de tiempo de los eventos `vista`.
+- **Tiempo por pantalla:** en cada evento `vista`, `segundos` es el tiempo pasado en la pantalla `anterior`. Por eso se agrupa por `anterior` y se da la mediana.
 - Se valida con registros sintéticos de resultado conocido. El uso real se calcula el 1-dic con la misma orden.
 
 ## 5. Criterios (fijados antes de ver resultados)
@@ -124,11 +130,11 @@ Los medios van en orden alfabético y nunca se ordenan por cercanía (P12 de la 
 | W1 | Canales con ≥ 3 videos con cercanía, y sus videos | ≥ 30 y ≥ 300 (contado: 84 y 1.018) | La parte A queda solo con W3 y W4 |
 | W2 | Correlación dentro del canal: IC 95 % por canal que excluye 0 y el mismo signo en los dos períodos | Las dos cosas | "No concluyente" |
 | W3 | Spearman dentro de medios y dentro de otros, ponderado, con su IC por canal | Informativo | — |
-| W4 | Mediana del objetivo (y de la tasa) por tercil de cercanía, con IC por canal | Informativo | — |
+| W4 | Mediana del objetivo (y de la tasa) por tercil de cercanía, con IC por canal | Informativo: mezcla canales y tipos, solo sirve para leer la dispersión | — |
 | W5 | Mediana de la tasa por color de reglas (rojo y amarillo frente a verde), con su número de videos | Informativo (n pequeño) | — |
 | W6 | Departamentos que entran a B (G1) | ≥ 3 (G1 ya pasó: 3) | B solo descriptiva |
 | W7 | Comunicados en que sube el interés, por departamento | Descriptivo | — |
-| W8 | Máximo de \|r\| en los desfases de −2 a +2 frente al p95 del nulo circular, por departamento | > p95 para afirmar relación | "Sin relación medible" en ese departamento |
+| W8 | Máximo de \|r\| en los desfases de −2 a +2 frente al nulo de fases al azar, por departamento | > p98,3 (Bonferroni por 3) para afirmar relación | "Sin relación medible" en ese departamento |
 | W9 | Calidad del tiempo de reacción: citas con fecha anterior a la publicación de su comunicado | ≤ 2 % de las citas | El tiempo de reacción no se reporta |
 | W10 | Registro de uso: con 3 registros sintéticos (embudo completo, abandono y sesiones mezcladas), sesiones, embudo y tiempos coinciden con lo esperado | 100 % | Se corrige antes de la presentación |
 | W11 | Privacidad de las salidas: columnas con id de video o canal, título o seudónimo en los archivos para la app | 0 | Se quitan |
@@ -150,7 +156,8 @@ Los medios van en orden alfabético y nunca se ordenan por cercanía (P12 de la 
 
 ## 7. Límites que se declaran
 - La cercanía mide el tema, no el acuerdo (V3). El V2 de los videos es frágil, así que no hay lectura video por video.
-- La correlación dentro del canal no es causal. Si el canal cambia de estilo con el tiempo, eso puede quedar mezclado.
+- La correlación dentro del canal no es causal. Quitar el mes por tipo absorbe la tendencia común, pero no un cambio de estilo propio de un canal.
 - Trends es relativo y se muestrea, y Tumbes casi no tiene datos. Pocas notas nombran a cada departamento, así que la comparación principal usa todas.
 - Son 71 citas de comunicados en 4 medios, así que el tiempo de reacción es solo indicativo.
+- Los tres departamentos de W8 comparten la misma serie de notas, así que sus resultados no son independientes.
 - No habrá uso real antes del congelamiento. El embudo de la presentación es la única evidencia de uso.

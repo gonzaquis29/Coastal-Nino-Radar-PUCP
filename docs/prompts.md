@@ -572,3 +572,10 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 65. Sí, defínela (analítica web).
 
 **Resultado:** la IA escribió `docs/analitica/web.md` con el mapa de enfoques de las cuatro partes (engagement frente a la cercanía, Trends por departamento, indicadores de los medios y registro de uso) y los criterios W1 a W11, fijados antes de ver resultados. La respuesta a la pregunta 5 se apoya en la correlación dentro del canal, y solo es "sí" o "no" si el IC por canal excluye 0 y el signo se repite en los dos períodos. No construyó nada: espera la aprobación.
+66. revisa de nuevo (analítica web)
+
+**Resultado:** la IA corrigió seis puntos de la definición:
+- A quita la mediana por tipo y mes antes de la correlación dentro del canal, para que la caída de la tasa desde septiembre no fabrique una relación, y suma los KPIs.
+- B compara la semana del comunicado y la siguiente (14 de 20 salen un viernes) y usa 1.000 sustitutas con fases al azar, con Bonferroni por los 3 departamentos.
+- La reacción de los medios queda dentro de 14 días (sin RPP, con 4 citas).
+- El tiempo por pantalla se agrupa por la pantalla anterior.
