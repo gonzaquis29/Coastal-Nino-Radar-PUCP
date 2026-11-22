@@ -5,7 +5,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
 ## Por dónde seguir (actualizado el 22-nov)
 **La recolección está cerrada** (corte del 20-nov): ya no hay rutina diaria. Quedan 5 días para el congelamiento (vie 27-nov). Alcance (decisión del 19-nov): solo el producto; no se planifican informe, declaración, avances semanales, presentación ni grabación. Cada tarea sigue el flujo de siempre: mapa de enfoques, definición con criterios fijados antes, aprobación del usuario, construcción (solo con su orden explícita) y validación con muestras nuevas.
 
-1. **Modelo de engagement** (README, punto 11; insumo de ML del sílabo). Sin definición todavía.
+1. **Modelo de engagement** (README, punto 11; insumo de ML del sílabo). **Hecho el 22-nov** (`python -m radar.modelos.engagement`; [modelos/engagement.md](modelos/engagement.md)): pasan M0 a M3. El boosting ordena por tipo con Spearman 0,43, mejora el MAE un 12,6 % frente a la persistencia, y el contenido agrega +0,063 (por poco); solo la cercanía es estable (M5).
    - **Datos:** YouTube del corte del 22-nov, con 1.007 videos para entrenar y 622 para probar (Y5; [youtube/definicion.md](youtube/definicion.md#13-resultados-del-corte-22-nov-2026)).
    - **Antes de definirlo:** el README fija la partición (entrenar con enero a agosto, probar con septiembre al corte) y excluye los videos con menos de 14 días. Como la descarga fue el 22-nov y no el 20-nov, el último video que entra es del 8-nov, no del 6-nov. Revisarlo al definir.
    - **Variables previstas:** el semáforo del título y la descripción del video, los tópicos y los rasgos del título, con los suscriptores y los días desde la publicación como controles. Las emociones **no** entran: la decisión del 17-nov las dejó solo descriptivas, aunque el README las lista.
@@ -38,7 +38,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
   - API de la app.
   
   El NLI se cerró sin medir.
-- **Sin empezar:** modelo de engagement, red social con YouTube, analítica web e interfaz de la app.
+- **Sin empezar:** red social con YouTube, analítica web e interfaz de la app.
 
 ## Rutina diaria (cerrada el 22-nov)
 La recolección diaria terminó con el corte. Se registró en [recoleccion/diaria.md](recoleccion/diaria.md): ejecuciones, huecos del 16 y del 22-nov y cómo se recuperaron. Si hubiera que leer algo más: `python -m radar.noticias.historico` y `python -m radar.region.notas`. Un solo proceso a la vez pide páginas (`data/red.lock`).

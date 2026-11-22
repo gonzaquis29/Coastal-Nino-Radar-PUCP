@@ -25,6 +25,7 @@ DIR_YOUTUBE = DIR_DATOS / "processed" / "youtube"  # derivados por video (tambi√
 DIR_RAW_TRENDS = DIR_RAW / "trends"  # CSV exportados a mano desde la web de Google Trends
 DIR_TRENDS = DIR_DATOS / "processed" / "trends"
 DIR_APP = DIR_DATOS / "processed" / "app"  # registro de uso de la app (an√≥nimo, sin texto)
+DIR_MODELOS = DIR_DATOS / "processed" / "modelos"  # resultados del modelo de engagement (solo agregados, sin ids)
 DIR_WEB = RAIZ / "web"  # interfaz en React; la API sirve web/dist
 
 # ---------------------------------------------------------------- fechas del proyecto (README, "Ventana de datos")

@@ -527,3 +527,18 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 50. Sí, expórtala (segunda exportación de Google Trends).
 
 **Resultado:** la IA exportó con Claude in Chrome los 4 departamentos y la consulta nacional por región. G1 pasa y G2 no pasa por Tumbes (0,790). Aplicó la regla fijada antes, que promedia las dos exportaciones, solo en el departamento que no llega; lo agregó al cargador con una prueba.
+51. Modelo de engagement: primero mapear, analizar y definir (mapa de enfoques, recomendación según los datos, definición con criterios fijados antes); esperar la aprobación antes de construir.
+
+**Resultado:** la IA midió el corte sin entrenar nada: la tasa no depende de la antigüedad en el entrenamiento (ρ −0,01), los días de entrenamiento (83 a 323) y de prueba (14 a 82) no se solapan, 13 % de tasas en 0 y un canal con el 12 % de los videos. Propuso en `docs/modelos/engagement.md` el logit de la tasa suavizada (beta-binomial), Ridge y gradient boosting frente a la mediana y a un modelo solo con controles, y los criterios M1 a M5. Sin emociones y con el último video del 8-nov.
+52. Vuelve a analizar; necesito que estemos totalmente seguros, es la parte más crítica.
+
+**Resultado:** la IA verificó cada supuesto con los datos. La regla de 14 días se sostiene: entre dos descargas, la tasa cambia −0,3 %. Encontró un cambio de régimen: desde septiembre, la tasa de los medios cae a la mitad dentro de los mismos canales y sus vistas se quintuplican. Trends no lo explica dentro del entrenamiento. Reescribió la definición: los criterios separan el orden (Spearman dentro de cada tipo) del nivel (MAE frente a la persistencia), agrega el origen móvil como informativo y quita los días, Trends y la marca de "Short".
+53. Dale una última revisión para garantizar calidad y buen rendimiento.
+
+**Resultado:** la IA corrió una validación cruzada por canal, solo en el entrenamiento. El boosting le gana al Ridge (MAE 0,501 frente a 0,529 de la mediana). La señal está en los canales "otros" (Spearman 0,36), casi no hay en los medios, y los rasgos del título casi no agregan. Ajustó la definición: B1 con el mismo algoritmo que el modelo elegido, nuevos controles (videos del canal, país, día y hora) y el enlace a `.gob.pe`. Quitó la parada temprana, que mezclaba canales. M1 se pondera por tipo y M2 pide solo una mejora real, sin el 5 %.
+54. Apruebo (definición del modelo de engagement).
+
+**Resultado:** la IA marcó la definición como aprobada el 22-nov en el documento y en los pendientes. No construyó nada: espera la orden.
+55. Sí, constrúyelo (modelo de engagement).
+
+**Resultado:** la IA escribió `radar.modelos` (`rasgos` y `engagement`) con 12 pruebas sintéticas, y calculó las variables de 1.609 videos. Entrenó con validación cruzada por canal: eligió el boosting (MAE 0,495). Evaluó la prueba una vez: pasan M1 (0,43), M2 (+12,6 %) y M3 (+0,063, por poco), y solo la cercanía es estable (M5). Corrigió la escala del rival Poisson en el detalle y lo repitió con `--repetir`, sin cambios en M1 a M4.
