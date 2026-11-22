@@ -450,17 +450,29 @@ class Panorama:
         notas_anteriores = len({(f["medio"], f["id"]) for f in self.datos if f["categoria"] == "desactualizada"})
         atras = statistics.median(anteriores) if anteriores else 0
         atras_texto = f"{atras:.0f} comunicado atrás" if atras == 1 else f"{atras:.0f} comunicados atrás"
+        # Mini series de las tarjetas: veces por comunicado, % que coincide por mes y notas con un dato anterior por mes
+        por_mes = collections.defaultdict(lambda: [0, 0])
+        for n in con_datos:
+            por_mes[n["fecha"][:7]][0] += n["color"] == "verde"
+            por_mes[n["fecha"][:7]][1] += 1
+        anteriores_por_mes = collections.defaultdict(set)
+        for f in self.datos:
+            if f["categoria"] == "desactualizada":
+                anteriores_por_mes[f["fecha"][:7]].add((f["medio"], f["id"]))
+        meses = sorted(set(por_mes) | set(anteriores_por_mes))
         return [
             {"id": "reaccion", "valor": f"{suben} de {len(reaccion)}",
              "texto": f"comunicados del ENFEN fueron seguidos por más notas sobre El Niño (mediana: "
-                      f"{'+' if mediana >= 0 else ''}{mediana * 100:.0f} %).", "descriptivo": True},
+                      f"{'+' if mediana >= 0 else ''}{mediana * 100:.0f} %).", "descriptivo": True,
+             "serie": [{"x": f["fecha"], "y": f["veces"]} for f in reaccion]},
             {"id": "coinciden", "valor": f"{coinciden / len(con_datos) * 100:.0f} %",
              "texto": f"de las notas con datos comparables coinciden con el ENFEN. Solo el "
                       f"{len(con_datos) / len(con_color) * 100:.0f} % de las {len(con_color)} notas trae esos datos.",
-             "descriptivo": False},
+             "descriptivo": False,
+             "serie": [{"x": m, "y": round(por_mes[m][0] / por_mes[m][1], 4)} for m in meses if por_mes[m][1]]},
             {"id": "anteriores", "valor": str(notas_anteriores),
              "texto": f"notas usaron un dato de un comunicado anterior (mediana: {atras_texto}).",
-             "descriptivo": False},
+             "descriptivo": False, "serie": [{"x": m, "y": len(anteriores_por_mes[m])} for m in meses]},
         ]  # fmt: skip
 
 

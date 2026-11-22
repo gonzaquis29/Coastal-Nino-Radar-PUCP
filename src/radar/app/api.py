@@ -10,6 +10,7 @@ import threading
 import time
 
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
@@ -53,6 +54,7 @@ def crear(cargar=True):
     app = FastAPI(title="Radar Niño Costero", lifespan=ciclo if cargar else None, docs_url="/api/docs",
                   openapi_url="/api/openapi.json", redoc_url=None)  # fmt: skip
     topes = eventos.Topes()
+    app.add_middleware(GZipMiddleware, minimum_size=1000)  # la interfaz y el Panorama viajan comprimidos (U4)
 
     @app.middleware("http")
     async def cabeceras(request: Request, siguiente):

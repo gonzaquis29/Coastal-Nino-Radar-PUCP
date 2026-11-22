@@ -50,6 +50,9 @@ TARJETAS = (
     ("app", "App: API", "API de esta app",
      "Si responde lo mismo que los cálculos, a tiempo, solo con los campos permitidos de las notas y sin texto libre"
      " en el registro de uso."),
+    ("app", "App: interfaz", "Pantallas de esta app",
+     "Si se pueden usar con teclado y lector de pantalla, si muestran las mismas cifras que los cálculos, si los"
+     " textos se entienden y si cargan rápido en el celular."),
 )  # fmt: skip
 
 LIMITACIONES = (

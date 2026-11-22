@@ -1,5 +1,6 @@
 """Pruebas de la app sin modelos: textos (U2, U3, U6), registro de uso (P5), notas (P3) y rutas de la API."""
 
+import json
 import re
 
 import pytest
@@ -217,3 +218,37 @@ def test_seccion_youtube_en_la_ruta(cliente, datos_youtube, monkeypatch):
     monkeypatch.setattr(servicio.almacen, "hoy", lambda: servicio.dt.date(2026, 11, 25))
     r = cliente.get("/api/panorama/youtube", params={"desde": "2026-04-01"})
     assert r.status_code == 200 and {p["mes"] for p in r.json()["puntos"]} == {"2026-04"}
+
+
+def test_u2_u3_u6_en_los_textos_de_la_interfaz():
+    interfaz = tx.textos_de_la_interfaz()
+    assert not [t for t in interfaz if palabras(t) & set(tx.JERGA)]
+    assert not [t for t in interfaz if palabras(t) & set(tx.PROMESAS)]
+    ayudas = [tx.INTERFAZ[p][k] for p, k in tx.AYUDAS]
+    assert {t: round(legibilidad.inflesz(t)) for t in ayudas if legibilidad.inflesz(t) < 65} == {}
+
+
+def test_textos_de_la_interfaz_al_dia():
+    """web/src/generado/textos.json es una copia exacta de radar.app.textos (python -m radar.app.textos)."""
+    import json
+
+    generado = config.DIR_WEB / "src" / "generado" / "textos.json"
+    assert json.loads(generado.read_text(encoding="utf-8")) == json.loads(json.dumps(tx.para_la_interfaz()))
+
+
+def test_validar_interfaz_junta_los_criterios_del_navegador(monkeypatch, tmp_path):
+    from radar.app import metodologia
+    from radar.app import validar_interfaz as v
+
+    ids = ("P6", "P7", "P8", "P10", "P12", "U1", "U2", "U4", "U5", "U6")
+    navegador = {i: {"valor": 0, "umbral": "0", "pasa": i != "U5", "detalle": "x"} for i in ids}
+    (tmp_path / v.ARCHIVO_NAVEGADOR).write_text(json.dumps({"criterios": navegador}), encoding="utf-8")
+    guardadas = []
+    monkeypatch.setattr(v.config, "DIR_APP", tmp_path)
+    monkeypatch.setattr(v, "p8_api_contra_csv", lambda: (3, []))
+    monkeypatch.setattr(v, "guardar", lambda filas, ruta: guardadas.extend(filas))
+    v.main()
+    assert len(guardadas) == 12 and {f["prueba"] for f in guardadas} == {v.PRUEBA}
+    assert [f["criterio"][:3] for f in guardadas if not f["pasa"]] == ["U5."]
+    assert next(f for f in guardadas if f["criterio"].startswith("P8"))["valor"] == "3/3"
+    assert any(t[1] == v.PRUEBA for t in metodologia.TARJETAS)
