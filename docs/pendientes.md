@@ -15,7 +15,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
    - `python -m radar.nlp.discrepancia calcular`: es reanudable y solo agrega las notas que faltan. Quedó en 2.727 notas sobre El Niño y ahora hay 2.785.
    - `python -m radar.analitica.eventos validar --ronda c`, con los comunicados N.° 19 y 20 (sigue descriptivo).
    - Emociones de los comentarios del corte (`python -m radar.youtube.emociones`, unos 40 min), solo descriptivas.
-5. **App** ([app/definicion.md](app/definicion.md), aprobada el 19-nov). La API está hecha y pasa P1 a P5, y la paleta pasa P9. **La interfaz (`web/`) no está empezada** y se construye solo cuando el usuario lo ordene. El gráfico F (YouTube) y el engagement en Metodología esperan a 1 y 3.
+5. **App** ([app/definicion.md](app/definicion.md), aprobada el 19-nov). La API está hecha y pasa P1 a P5, y la paleta pasa P9. **La interfaz (`web/`) se planifica desde el 22-nov en una sesión aparte** y se construye solo cuando el usuario lo ordene. El gráfico F (YouTube) y el engagement en Metodología ya tienen sus datos (puntos 1 y 3).
 
 **Borrado de YouTube:** los datos crudos vencen a los 30 días de la descarga (el día 1 fue el 16-nov, así que vence el 16-dic). Se borran con `python -m radar.youtube.borrar`.
 

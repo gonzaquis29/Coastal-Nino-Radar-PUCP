@@ -130,3 +130,9 @@ def test_guardar_validacion_no_borra_otras_etapas(tmp_path, monkeypatch):
     filas = {f["criterio"]: f["valor"] for f in web.leer_csv(web.ruta("validacion"))}
     assert filas == {"W1 a": "1", "W9 b": "3"}
     assert web.ya_corridas(["engagement", "uso"]) == []
+
+
+def test_encabezado_de_archivo_sin_filas(tmp_path):
+    vacio = tmp_path / "vacio.csv"
+    vacio.write_text("tipo,id\n", encoding="utf-8")
+    assert web.encabezado(vacio) == ["tipo", "id"]

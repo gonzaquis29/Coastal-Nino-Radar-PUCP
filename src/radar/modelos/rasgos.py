@@ -7,7 +7,7 @@ import re
 from urllib.parse import urlsplit
 
 import numpy as np
-from scipy.stats import spearmanr
+from scipy.stats import rankdata, spearmanr
 
 from radar import config
 from radar.oficial.enfen import magnitudes_de_frase
@@ -188,8 +188,6 @@ def remuestras_por_grupo(grupos, veces, semilla):
 
 def auc(positivos, negativos):
     """Probabilidad de que un positivo al azar supere a un negativo al azar (empates cuentan la mitad)."""
-    from scipy.stats import rankdata
-
     p, n = np.asarray(positivos, float), np.asarray(negativos, float)
     if not len(p) or not len(n):
         return float("nan")

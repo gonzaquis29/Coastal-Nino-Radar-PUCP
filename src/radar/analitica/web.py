@@ -7,6 +7,7 @@ comunicado, indicadores de los medios y registro de uso, con los criterios W1 a 
 import argparse
 import collections
 import copy
+import csv
 import datetime as dt
 import functools
 import logging
@@ -553,13 +554,17 @@ def uso():
 # ---------------------------------------------------------------- W11 y línea de comandos
 
 
+def encabezado(ruta_csv):
+    """Columnas del archivo, aunque no tenga filas."""
+    with open(ruta_csv, encoding="utf-8", newline="") as archivo:
+        return next(csv.reader(archivo), [])
+
+
 def privacidad():
     archivos = [ruta(n) for n in ("engagement", "trends", "medios", "uso")]
     archivos += almacen.archivos(TIPO_PUNTOS, bases=(config.DIR_YOUTUBE,))[-1:]
     presentes = [r for r in archivos if r.exists()]
-    malas = sorted(
-        {f"{r.name}:{c}" for r in presentes for c in (leer_csv(r)[:1] or [{}])[0] if c in COLUMNAS_PROHIBIDAS}
-    )
+    malas = sorted({f"{r.name}:{c}" for r in presentes for c in encabezado(r) if c in COLUMNAS_PROHIBIDAS})
     return [
         criterio(
             PRUEBA,

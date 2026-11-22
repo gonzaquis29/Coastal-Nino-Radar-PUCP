@@ -597,3 +597,6 @@ Todo quedó en la sección 8 del documento.
 - La pregunta 5 da "sí": ρ parcial dentro del canal −0,168, con IC −0,260 a −0,099 y el mismo signo en los dos períodos y por fecha. Lo que contradice al ENFEN no tiene más engagement.
 - En W8, ningún departamento muestra relación medible entre Trends y las notas.
    - Al correr solo `uso`, la IA encontró que guardar una etapa borraba las filas de validación de las otras. Lo corrigió (reemplazo por criterio, con su prueba) y repitió todo con `--repetir`: dio los mismos valores. Lo declaró en la sección 9.
+70. eso lo deberiamos hacer en un chat nuevo verdad? hemos avanzado bastante aqui, valida que este todo con calidad alta y sin incoherencias o bugs, valida
+
+**Resultado:** la interfaz pasó a una sesión aparte. La IA revisó el código y los documentos de la cercanía y de la analítica web. Comprobó W2 con dos cálculos independientes: el Spearman promedio por canal da −0,155, y en 46 de 79 canales la mitad lejana tiene más engagement. Corrigió tres detalles: W11 ahora lee el encabezado aunque el archivo no tenga filas; `rankdata` se importa arriba; y se actualizó el punto 5 de pendientes. Además, declaró que las medianas por mes se calculan una vez fuera del bootstrap.

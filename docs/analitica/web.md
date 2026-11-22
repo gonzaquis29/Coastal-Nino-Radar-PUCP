@@ -89,7 +89,7 @@ Los medios van en orden alfabético y nunca se ordenan por cercanía (P12 de la 
    - El Short y el logaritmo de las palabras se pasan a rangos centrados de la misma forma, y se quitan de los dos residuos con una regresión lineal.
    - Con lo que queda de todos los canales juntos se calcula Pearson. Es un Spearman parcial estratificado por canal, y cada video pesa lo mismo.
    - El signo se lee al revés: ρ < 0 quiere decir que **lo más alejado tiene más engagement**.
-4. **Incertidumbre:** IC 95 % con un bootstrap por canal de 1.000 réplicas (semilla del proyecto). Se sortean canales y entran todos sus videos.
+4. **Incertidumbre:** IC 95 % con un bootstrap por canal de 1.000 réplicas (semilla del proyecto). Se sortean canales y entran todos sus videos. Las medianas por tipo y mes se calculan una vez con toda la muestra, y no en cada réplica.
 5. **Por período:** lo mismo, por separado en el entrenamiento (enero a agosto) y en la prueba (septiembre al corte), porque desde septiembre cambia el régimen de la tasa de los medios.
 6. **Respuesta a la pregunta A, con la regla fijada aquí:**
    - **"Sí" o "no"** (según el signo) solo si se cumplen las tres condiciones: el IC excluye 0, el signo es el mismo en los dos períodos y se repite con los videos que salieron en búsquedas por fecha.
