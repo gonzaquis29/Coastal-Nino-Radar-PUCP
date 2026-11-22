@@ -143,3 +143,33 @@ def test_coseno_vacio_no_rompe_ridge():
     d = eg.Datos(filas, {"alfa": 1.0, "beta": 99.0, "topicos": [0], "con_topicos": False, "con_no_coincide": True})
     assert np.isnan(d.X[0, d.columnas.index("coseno")])
     assert np.isfinite(eg.ajustar("L", {"alfa": 1}, d.X, d.y).predict(d.X)).all()
+
+
+def test_auc():
+    assert rg.auc([3, 4], [1, 2]) == 1.0
+    assert rg.auc([1, 2], [3, 4]) == 0.0
+    assert rg.auc([1, 2], [1, 2]) == 0.5  # empates a la mitad
+    assert math.isnan(rg.auc([], [1]))
+
+
+def test_auc_por_grupo():
+    azar = np.random.default_rng(0)
+    positivos, negativos = azar.normal(1, 0.5, 60), azar.normal(0, 0.5, 200)
+    valor, (inf, sup) = rg.auc_por_grupo(positivos, [f"p{i % 6}" for i in range(60)], negativos,
+                                         [f"n{i % 50}" for i in range(200)], 200, 1)  # fmt: skip
+    assert 0.85 < valor < 0.98 and inf < valor < sup
+
+
+def test_controles_separan_positivo_y_negativo(monkeypatch):
+    from radar.modelos import cercania
+
+    videos = {
+        "of": _video(id="of", canal="oficial", titulo="Comunicado ENFEN: El Niño costero en Perú"),
+        "gob": _video(id="gob", canal="otro", titulo="El Niño en Piura, Perú"),
+        "neg": _video(id="neg", canal="otro", titulo="Receta de ceviche", descripcion="", enlaces=[]),
+        "lluvia": _video(id="lluvia", canal="otro", titulo="Lluvias en Tumbes", descripcion="", enlaces=[]),
+    }
+    monkeypatch.setattr(cercania.almacen, "ultimos", lambda tipo: videos if tipo == "videos" else {})
+    monkeypatch.setattr(cercania.canales, "tipos", lambda: {"oficial": {"tipo": "oficial"}, "otro": {"tipo": "otros"}})
+    grupos = {k: [v["id"] for v in vs] for k, vs in cercania.controles().items()}
+    assert grupos == {"P": ["of"], "P2": ["gob"], "N": ["neg"], "N2": ["neg", "lluvia"]}

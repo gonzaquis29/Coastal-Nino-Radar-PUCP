@@ -186,6 +186,26 @@ def remuestras_por_grupo(grupos, veces, semilla):
         yield np.concatenate([por_grupo[g] for g in elegidos])
 
 
+def auc(positivos, negativos):
+    """Probabilidad de que un positivo al azar supere a un negativo al azar (empates cuentan la mitad)."""
+    from scipy.stats import rankdata
+
+    p, n = np.asarray(positivos, float), np.asarray(negativos, float)
+    if not len(p) or not len(n):
+        return float("nan")
+    rangos = rankdata(np.concatenate([p, n]))
+    return float((rangos[: len(p)].sum() - len(p) * (len(p) + 1) / 2) / (len(p) * len(n)))
+
+
+def auc_por_grupo(positivos, grupos_positivos, negativos, grupos_negativos, veces, semilla):
+    """(AUC, IC 95 %) remuestreando canales con reemplazo, por separado en los positivos y en los negativos."""
+    p, n = np.asarray(positivos, float), np.asarray(negativos, float)
+    rp = remuestras_por_grupo(grupos_positivos, veces, semilla)
+    rn = remuestras_por_grupo(grupos_negativos, veces, semilla + 1)
+    replicas = [auc(p[i], n[j]) for i, j in zip(rp, rn, strict=True)]
+    return auc(p, n), intervalo(replicas)
+
+
 def intervalo(valores, nivel=0.95):
     v = np.asarray([x for x in valores if not math.isnan(x)])
     if not len(v):

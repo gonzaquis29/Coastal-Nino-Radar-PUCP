@@ -557,3 +557,12 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 60. Sí, procede (red social), con buenas prácticas, manejo de errores, optimización, calidad, buen rendimiento, sin comentarios innecesarios, estructura adecuada y nombres claros.
 
 **Resultado:** la IA escribió `radar.redes.audiencias`, con funciones puras (bipartita dispersa, curveball, Salton, Louvain, backbone y asortatividad), y `radar.redes.youtube` (línea de comandos, 1.000 nulos en paralelo con avance), más 9 pruebas sintéticas. Pasan R1, R2 (por poco) y R4; no pasa R3. La pregunta 6 no es concluyente y R7 es débil (0,076; p 0,007).
+61. ¿Te pareció adecuado lo realizado con el modelo? ¿Hay algo más que validar? / Sí, defínela.
+
+**Resultado:** la IA señaló que la cercanía nunca se validó en videos. Propuso en `docs/modelos/engagement.md` (sección 8) un control positivo (51 videos de 6 canales oficiales) y uno negativo (407 descartados sin El Niño ni términos del filtro, la misma definición que en las notas), con los criterios V1 a V5 (AUC ≥ 0,80, sin cruce de percentiles). Sin código.
+62. Apruebo (validación de la cercanía en videos).
+
+**Resultado:** la IA la marcó como aprobada en la sección 8. No construyó nada: espera la orden.
+63. Sí, constrúyela (validación de la cercanía en videos).
+
+**Resultado:** la IA escribió `radar.modelos.cercania` (etapa `cercania`), con el AUC por canal y 3 pruebas sintéticas. Pasan V1 (AUC 0,882; IC 0,782–0,932) y V2 (0,472 frente a 0,460, por poco). Frente al negativo difícil da 0,779. La separación es de tema, como en las notas.

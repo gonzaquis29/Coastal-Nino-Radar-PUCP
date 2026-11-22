@@ -208,3 +208,48 @@ Solo lee con `radar.youtube.almacen`. Las variables por video llevan ids, así q
 - El nivel de la tasa de los medios en la alerta no se puede predecir con el entrenamiento: queda declarado.
 
 **Corrección declarada:** la primera corrida de `evaluar` comparaba el MAE del rival C (que predice la tasa) con el objetivo en logit. Se corrigió la escala y se repitió con `--repetir`. M1 a M4 dan lo mismo, porque las semillas son fijas y el Spearman no cambia con la escala; solo cambian el MAE, el R² y el sesgo de C en el detalle.
+
+## 8. Validación de la cercanía en videos (aprobada el 22-nov) y resultados
+
+**Por qué:** la cercanía es el único aporte estable del contenido (M5), y la analítica web va a usar su relación con el engagement. El semáforo se calibró con notas de prensa (E3 y S2); nunca se comprobó en títulos y descripciones de YouTube. No toca la prueba del modelo, que ya está cerrada.
+
+**Cómo, sin etiquetar** (igual que E3: control positivo frente a control negativo, con la misma función y el mismo texto que usa el modelo):
+
+| Control | Definición | Videos | Uso |
+|---|---|---|---|
+| **P, positivo** | Videos de canales de tipo **oficial** que pasan el filtro (todos, también los de menos de 14 días) | 51 en las variables del modelo, de 6 canales, más los publicados después del 8-nov | Decide |
+| P2 | Videos de otros canales que pasan el filtro y cuya descripción enlaza a `.gob.pe` | ~95 | Informativo |
+| **N, negativo** | Videos del período que el filtro descartó por no mencionar El Niño y que **tampoco tienen ningún término** de `config/terminos_titulo.csv` (lluvia, huaico, calor…); es la misma definición que el negativo de las notas (`terminos_cuerpo`) | 407 | Decide |
+| N2 | Todos los descartados por no mencionar El Niño (incluye lluvias o alertas sin El Niño: un negativo difícil) | 1.675 | Informativo |
+
+**Medida:** el coseno de `semaforo.Semaforo.medir` sobre `texto_para_distancia(título, descripción)` en la fecha de publicación. Es exactamente la variable del modelo. Los textos insuficientes (menos de 5 palabras) quedan fuera y se cuentan.
+
+**Criterios fijados antes:**
+
+| Id | Criterio | Umbral | Si no pasa |
+|---|---|---|---|
+| V1 | AUC de P frente a N, con IC 95 % por bootstrap de canales | ≥ 0,80 (el umbral de E3) | En videos, la cercanía no separa lo oficial de otros temas. Se declara, la lectura de M5 queda debilitada y la analítica la usa con esa advertencia |
+| V2 | p25 de P > p75 de N (sin cruce, como S2) | Se cumple | Igual que V1 |
+| V3 | AUC de P frente a N2 (negativo difícil) | Informativo | — |
+| V4 | AUC de P2 frente a N | Informativo | — |
+| V5 | Orden de las medianas: oficial > medio y otros sobre El Niño > N | Informativo | — |
+
+**Cómo se correría:** `python -m radar.modelos.engagement cercania`, sin red, unos minutos con minilm. Escribe los criterios en `engagement-validacion.csv` (prueba "Cercanía en videos") y no guarda textos.
+
+**Resultados (22-nov):** 1.842 videos medidos en 1,4 min. Quedaron fuera por texto insuficiente 3 del positivo y 22 del negativo.
+
+| Id | Resultado | Umbral | |
+|---|---|---|---|
+| V1 | AUC **0,882** (IC 95 % por canal 0,782–0,932); P: 55 videos de 6 canales; N: 385 de 268 | ≥ 0,80 | **Pasa** |
+| V2 | p25 del positivo 0,472 frente al p75 del negativo 0,460 | p25 > p75 | **Pasa, por poco** |
+| V3 | AUC frente al negativo difícil (1.613 descartados, con lluvias y alertas sin El Niño): 0,779 (IC 0,616–0,858) | Informativo | — |
+| V4 | AUC de los no oficiales que enlazan a `.gob.pe` (109) frente al negativo: 0,905 (IC 0,848–0,939) | Informativo | — |
+| V5 | Medianas: oficial 0,604 > medio 0,577 y otros 0,571 > negativo 0,254 | Informativo | El orden se cumple |
+
+**Lectura:**
+- En videos, la cercanía separa lo oficial de otros temas tan bien como en las notas, así que **la lectura de M5 se sostiene**.
+- Hay dos matices que se declaran:
+  - el IC de V1 baja a 0,78, porque el positivo tiene solo 6 canales;
+  - V2 pasa por 0,012.
+- Como en E3, **la separación es de tema:** frente a videos de lluvias sin El Niño baja a 0,78 (V3), y los videos de medios y otros sobre El Niño quedan casi tan cerca como los oficiales (V5). La cercanía dice "habla de lo mismo que el ENFEN", no "dice lo mismo".
+

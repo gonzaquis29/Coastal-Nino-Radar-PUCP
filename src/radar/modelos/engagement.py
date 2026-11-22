@@ -3,6 +3,7 @@
 Uso: python -m radar.modelos.engagement variables   # sin red; minilm y el semáforo una vez; reanudable
      python -m radar.modelos.engagement entrenar    # solo el entrenamiento: M0, validación cruzada por canal, elección
      python -m radar.modelos.engagement evaluar     # la prueba, UNA vez: M1 a M6 (--repetir para volver a escribirla)
+     python -m radar.modelos.engagement cercania    # V1 a V5: la cercanía en videos frente a controles (sección 8)
 Requiere pip install -e ".[nlp]".
 
 Las variables por video (con ids) van a data/processed/youtube/ con la fecha del corte, así que vencen con los datos
@@ -26,6 +27,7 @@ from radar import config
 from radar.comun.archivos import anexar_csv, escribir_csv, guardar_json, leer_csv, leer_json, reparar_csv
 from radar.comun.registro import configurar
 from radar.comun.texto import ahora
+from radar.modelos import cercania
 from radar.modelos import rasgos as rg
 from radar.noticias.viabilidad import criterio, reporte
 from radar.youtube import almacen, canales, filtro
@@ -539,7 +541,7 @@ def guardar_validacion(filas):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("etapa", choices=("variables", "entrenar", "evaluar"))
+    ap.add_argument("etapa", choices=("variables", "entrenar", "evaluar", "cercania"))
     ap.add_argument("--limite", type=int, help="variables: solo los N primeros pendientes (ensayo)")
     ap.add_argument("--repetir", action="store_true", help="evaluar: vuelve a escribir la prueba ya evaluada")
     args = ap.parse_args(argv)
@@ -549,6 +551,11 @@ def main(argv=None):
         if args.etapa == "variables":
             destino = variables(args.limite)
             log.info(f"Variables en {destino.name}")
+            return 0
+        if args.etapa == "cercania":
+            filas = cercania.validar()
+            guardar_validacion(filas)
+            reporte(filas, [], inicio)
             return 0
         if args.etapa == "entrenar":
             eleccion, filas = entrenar()
