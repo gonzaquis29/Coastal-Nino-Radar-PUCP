@@ -588,3 +588,6 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 - B usa diferencias de log(1 + x) y sustitutas IAAFT.
 - Se declara la causa común en W8.
 Todo quedó en la sección 8 del documento.
+68. Apruebo (analítica web)
+
+**Resultado:** la IA marcó la definición como aprobada (W1 a W11). No construyó nada: espera la orden.

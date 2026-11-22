@@ -1,6 +1,6 @@
 # Analítica web (README, punto 10; pregunta 5)
 
-**Estado:** propuesta del 22-nov, con dos revisiones (la segunda, un análisis crítico con datos en la sección 8), pendiente de aprobación. Nada se construye sin la orden del usuario. Los criterios se fijan aquí, antes de ver los resultados. Los tamaños de muestra de la sección 2 se contaron sin mirar ninguna relación.
+**Estado:** aprobada el 22-nov, tras dos revisiones (la segunda, un análisis crítico con datos en la sección 8). Se construye solo con la orden del usuario. Los criterios se fijan aquí, antes de ver los resultados. Los tamaños de muestra de la sección 2 se contaron sin mirar ninguna relación.
 
 ## 1. Qué responde
 La pregunta 5 del README tiene dos partes, y el punto 10 le suma dos piezas de apoyo:
