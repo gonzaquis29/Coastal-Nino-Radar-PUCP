@@ -579,3 +579,12 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 - B compara la semana del comunicado y la siguiente (14 de 20 salen un viernes) y usa 1.000 sustitutas con fases al azar, con Bonferroni por los 3 departamentos.
 - La reacción de los medios queda dentro de 14 días (sin RPP, con 4 citas).
 - El tiempo por pantalla se agrupa por la pantalla anterior.
+67. realiza un analisis completo y critico (analítica web)
+
+**Resultado:** la IA comprobó con datos cada supuesto, sin mirar el engagement ni Trends. Cambios:
+- W2 deja fuera a los oficiales (8 meses con menos de 5 videos).
+- Descuenta el formato Short y el largo del texto (ρ 0,16 con la cercanía).
+- Exige que el signo se repita con los videos de búsquedas por fecha (el 26 % entró solo por relevancia).
+- B usa diferencias de log(1 + x) y sustitutas IAAFT.
+- Se declara la causa común en W8.
+Todo quedó en la sección 8 del documento.
