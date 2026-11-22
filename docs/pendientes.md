@@ -10,7 +10,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
    - **Antes de definirlo:** el README fija la partición (entrenar con enero a agosto, probar con septiembre al corte) y excluye los videos con menos de 14 días. Como la descarga fue el 22-nov y no el 20-nov, el último video que entra es del 8-nov, no del 6-nov. Revisarlo al definir.
    - **Variables previstas:** el semáforo del título y la descripción del video, los tópicos y los rasgos del título, con los suscriptores y los días desde la publicación como controles. Las emociones **no** entran: la decisión del 17-nov las dejó solo descriptivas, aunque el README las lista.
 2. **Red social con YouTube** (README, red; Y3 pasa con 151 canales). **Hecha el 22-nov** (`python -m radar.redes.youtube`; [redes/youtube.md](redes/youtube.md)): pasan R1, R2 (Q 0,241 frente a un p95 de 0,230) y R4; no pasa R3 (comunidades inestables); la pregunta 6 no es concluyente (R6 cambia el signo): red canal–canal por comentaristas compartidos (no co-mención: las @menciones no se guardan), con un nulo bipartito.
-3. **Analítica web** (README, punto 10). **Aprobada el 22-nov; se construye con la orden del usuario** ([analitica/web.md](analitica/web.md), criterios W1 a W11). Plan: KPIs de engagement frente a la cercanía con lo oficial (Spearman, descriptivo), Trends por departamento alrededor de cada comunicado ([youtube/definicion.md](youtube/definicion.md#14-resultados-de-trends-segunda-exportación-22-nov-2026); Tumbes usa el promedio de dos exportaciones) e indicadores de los medios. Depende de 1 y 2 para lo de YouTube.
+3. **Analítica web** (README, punto 10). **Hecha el 22-nov** (`python -m radar.analitica.web todo`; [analitica/web.md](analitica/web.md)): pasan W1, W6 y W9 a W11. La pregunta 5 da **sí**: dentro del canal, lo más alejado de lo oficial tiene algo más de engagement (ρ −0,17; IC −0,26 a −0,10), sin que lo que contradice tenga más. Trends no muestra relación medible con la cobertura (W8). Plan original: KPIs de engagement frente a la cercanía con lo oficial (Spearman, descriptivo), Trends por departamento alrededor de cada comunicado ([youtube/definicion.md](youtube/definicion.md#14-resultados-de-trends-segunda-exportación-22-nov-2026); Tumbes usa el promedio de dos exportaciones) e indicadores de los medios. Depende de 1 y 2 para lo de YouTube.
 4. **Actualizar con las notas del corte** (corridas cortas, sin definición nueva):
    - `python -m radar.nlp.discrepancia calcular`: es reanudable y solo agrega las notas que faltan. Quedó en 2.727 notas sobre El Niño y ahora hay 2.785.
    - `python -m radar.analitica.eventos validar --ronda c`, con los comunicados N.° 19 y 20 (sigue descriptivo).
@@ -38,7 +38,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
   - API de la app.
   
   El NLI se cerró sin medir.
-- **Sin empezar:** analítica web e interfaz de la app.
+- **Sin empezar:** interfaz de la app.
 
 ## Rutina diaria (cerrada el 22-nov)
 La recolección diaria terminó con el corte. Se registró en [recoleccion/diaria.md](recoleccion/diaria.md): ejecuciones, huecos del 16 y del 22-nov y cómo se recuperaron. Si hubiera que leer algo más: `python -m radar.noticias.historico` y `python -m radar.region.notas`. Un solo proceso a la vez pide páginas (`data/red.lock`).

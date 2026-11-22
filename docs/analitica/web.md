@@ -1,6 +1,6 @@
 # Analítica web (README, punto 10; pregunta 5)
 
-**Estado:** aprobada el 22-nov, tras dos revisiones (la segunda, un análisis crítico con datos en la sección 8). Se construye solo con la orden del usuario. Los criterios se fijan aquí, antes de ver los resultados. Los tamaños de muestra de la sección 2 se contaron sin mirar ninguna relación.
+**Estado:** aprobada y construida el 22-nov (resultados en la sección 9), tras dos revisiones (la segunda, un análisis crítico con datos en la sección 8). Se construye solo con la orden del usuario. Los criterios se fijan aquí, antes de ver los resultados. Los tamaños de muestra de la sección 2 se contaron sin mirar ninguna relación.
 
 ## 1. Qué responde
 La pregunta 5 del README tiene dos partes, y el punto 10 le suma dos piezas de apoyo:
@@ -187,3 +187,43 @@ Se revisó cada supuesto con los datos, sin mirar la relación con el engagement
 | Tiempo: quedan 5 días y la interfaz de la app no está empezada | Las cuatro partes son lecturas de archivos ya calculados; se estiman en 3 a 4 h | Se construye en una sola orden, `todo`, y deja tiempo a la interfaz |
 
 **Qué no cambia:** el diseño dentro del canal, la regla de "no concluyente" y que B y C sean descriptivos.
+
+## 9. Resultados (22-nov)
+Se corrió con `python -m radar.analitica.web todo` (0,5 min). Pasan W1, W6, W9, W10 y W11.
+
+**Repetición declarada:** al correr solo `uso` se vio que guardar una etapa borraba las filas de las otras en `web-validacion.csv`. Se corrigió: ahora se reemplaza por criterio, con su prueba. Después se repitió todo con `--repetir`, sin cambiar nada del cálculo. Con la semilla fija, dio los mismos valores en todos los criterios. Desde entonces, `engagement` y `trends` se niegan a repetir sin `--repetir`.
+
+**A. Engagement frente a la cercanía (pregunta 5): sí.**
+
+| Id | Resultado | |
+|---|---|---|
+| W1 | 79 canales, 968 videos | Pasa |
+| W2 | ρ parcial dentro del canal **−0,168** (IC 95 % por canal −0,260 a −0,099). Entrenamiento −0,076, prueba −0,262, búsquedas por fecha −0,147 | **Respuesta: sí** (las tres condiciones) |
+| W2 sin quitar el mes | −0,157 | Informativo |
+| W3 | Spearman dentro de medios y de otros −0,166 (IC −0,232 a −0,088) | Informativo |
+| W4 | Mediana de la tasa por tercil de cercanía: baja 1,20 %, media 1,13 %, alta 0,90 % | Informativo |
+| W5 | Rojo o amarillo 0,82 % (54 videos) frente a verde 1,00 % (225) | Informativo, n pequeño |
+
+**Lectura:**
+- Dentro de un mismo canal, los videos que hablan menos de lo que trata el ENFEN tienen algo más de engagement. El efecto es moderado (ρ −0,17).
+- Se sostiene al quitar el mes, el formato y el largo del texto, y sin los videos que entraron solo por relevancia.
+- En el entrenamiento es débil (−0,08), y desde septiembre es más fuerte (−0,26).
+- "Alejado" quiere decir "de otro tema", no "que contradice". Los videos cuyos datos no coinciden con el ENFEN (rojo o amarillo) **no** tienen más engagement que los verdes (W5, n pequeño).
+- Esto responde el sentido que el modelo dejó abierto (M5 decía que la cercanía aporta, no hacia dónde). No es causal.
+
+**B. Trends por departamento: sin relación medible con la cobertura.**
+- **W6:** entran Piura, Lambayeque y La Libertad. Pasa.
+- **W7 (descriptivo):** el interés sube tras 11 de 18 comunicados en Piura y en La Libertad, y tras 10 de 18 en Lambayeque. En Tumbes sube tras 4 de 18, porque casi todas sus semanas están en 0.
+- **W8:** ningún departamento supera el umbral corregido. La Libertad da 0,295 (umbral 0,430), Lambayeque 0,196 (0,425) y Piura 0,241 (0,424). Con las notas que nombran a cada departamento, los valores van de 0,18 a 0,33 (informativo).
+- **Lectura:** con 46 semanas, no se puede afirmar que el interés de búsqueda siga a la cobertura semana a semana. Los niveles entre regiones salen de la consulta nacional: Piura 100, Tumbes 65, La Libertad 56 y Lambayeque 45.
+
+**C. Medios.**
+- **W9:** 0 de 77 citas tienen fecha anterior a su comunicado. Pasa.
+- **Tiempo de reacción (mediana de días hasta la primera cita, dentro de 14 días):** Andina 1 (17 comunicados), Exitosa 1 (17) y El Tiempo 2,5 (8; uno más solo después de 14 días). RPP citó 4 y no se reporta.
+- El volumen y las secciones están en `web-medios.csv`.
+
+**D. Registro de uso.**
+- **W10:** pasa. Con los registros sintéticos da 4 sesiones, el embudo 4, 3, 2 y 1, y 20 s en Verificar.
+- Uso real: 0 sesiones. Se calcula el 1-dic con la misma orden (`uso`).
+
+**W11:** 0 columnas con identificadores en las 5 salidas.

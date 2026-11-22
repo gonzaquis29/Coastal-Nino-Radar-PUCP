@@ -591,3 +591,9 @@ Todo quedó en la sección 8 del documento.
 68. Apruebo (analítica web)
 
 **Resultado:** la IA marcó la definición como aprobada (W1 a W11). No construyó nada: espera la orden.
+69. Sí, constrúyela (analítica web).
+
+**Resultado:** la IA escribió `radar.analitica.indicadores` (funciones puras) y `radar.analitica.web` (línea de comandos), con 18 pruebas sintéticas. Corrió una vez y pasan W1, W6 y W9 a W11.
+- La pregunta 5 da "sí": ρ parcial dentro del canal −0,168, con IC −0,260 a −0,099 y el mismo signo en los dos períodos y por fecha. Lo que contradice al ENFEN no tiene más engagement.
+- En W8, ningún departamento muestra relación medible entre Trends y las notas.
+   - Al correr solo `uso`, la IA encontró que guardar una etapa borraba las filas de validación de las otras. Lo corrigió (reemplazo por criterio, con su prueba) y repitió todo con `--repetir`: dio los mismos valores. Lo declaró en la sección 9.
