@@ -204,3 +204,35 @@ python -m radar.trends.cargar             # G1 (y G2 con la segunda exportación
 - **G2:** se mide con la segunda exportación, después del corte, y la misma consulta.
 - **Consulta nacional con desglose por región:** sirve para comparar niveles, no entra en G1 y sigue sin hacer.
 
+## 13. Resultados del corte (22-nov-2026)
+
+**Fecha:** el corte corrió el 22-nov a las 10:05, no el 21-nov como estaba previsto, porque la rutina se atrasó. Las búsquedas siguen cubriendo hasta el 20-nov (`FIN_CORTE`). Los conteos y los comentarios, en cambio, se leen el 22-nov e incluyen las respuestas de esos dos días; se declara.
+
+**Descarga:** 4.147 videos encontrados (todos descargados) y 1.944 canales. Se bajaron los comentarios, con sus respuestas, de 905 videos, hasta 10 páginas por video. Tomó unos 9 min y quedaron 7.703 unidades libres del cupo. `canales` clasificó los 1.944 canales (6 oficiales, 69 medios, 1.869 otros) y dejó 93 ambiguos.
+
+| Id | Resultado | Umbral | |
+|----|-----------|--------|---|
+| Y1 | 1.762 videos pasan el filtro | ≥ 300 | **Pasa** |
+| Y2 | 154 videos con ≥ 30 comentarios descargados (igual al conteo de la API) | ≥ 100 | **Pasa** |
+| Y3 | Componente conectado de la red canal–canal: 151 canales | ≥ 30 | **Pasa** |
+| Y4 | 0,945 de los 656 canales de la muestra (6 oficiales, 24 medios, 626 otros) | ≥ 0,70 | **Pasa** |
+| Y5 | 1.007 videos para entrenar y 622 para probar | ≥ 150 / ≥ 50 | **Pasa** |
+
+- **Saturación declarada:** 73 de 111 búsquedas por fecha y 53 de 55 por relevancia llegan al tope de resultados. La muestra sigue siendo un piso.
+- **Descartes del filtro:** 1.675 videos no mencionan El Niño y 710 no son de Perú.
+- **Qué decide:** la red social se hace con YouTube (Y3) y hay datos para el modelo de engagement (Y5).
+
+## 14. Resultados de Trends: segunda exportación (22-nov-2026)
+
+**Exportación:** la hizo la IA con Claude in Chrome, a pedido del usuario. Usó la misma consulta que el 17-nov (tema "El Niño · Fenómeno", todas las categorías, búsqueda web), ahora del 1-ene al 20-nov. Los archivos son `data/raw/trends/<departamento>_2026-11-22.csv`. Las dos exportaciones dan 46 semanas completas.
+
+| Departamento | Semanas con dato (≥ 1) | ρ de Spearman con la del 17-nov |
+|---|---|---|
+| Tumbes | 15 % | 0,790 |
+| Piura | 80 % | 0,971 |
+| Lambayeque | 78 % | 0,980 |
+| La Libertad | 85 % | 0,983 |
+
+- **G1 pasa (3 de 4).**
+- **G2 no pasa:** el mínimo es 0,790 en Tumbes (umbral 0,80). Los otros tres superan 0,97. Se aplica la regla fijada antes: la serie de Tumbes es el promedio de las dos exportaciones en sus semanas comunes, y la de los demás es la del 22-nov. El criterio es por departamento, así que el promedio solo se aplica donde no llega. `radar.trends.cargar` lo hace solo (`serie_final`) y marca la columna `exportacion`. Se declara: con casi todas sus semanas en 0, Tumbes es la serie con más ruido de muestreo de Trends.
+- **Consulta nacional (hecha):** la serie de Perú y el desglose por región, en `data/raw/trends/nacional/`. El desglose sirve para comparar niveles entre regiones y no entra en G1 ni en G2. En el período, Piura tiene el mayor interés relativo (100), seguida de Tumbes (65), La Libertad (56) y Lambayeque (45). El índice es relativo a las búsquedas de cada región, así que Tumbes tiene interés alto aunque su volumen sea bajo.

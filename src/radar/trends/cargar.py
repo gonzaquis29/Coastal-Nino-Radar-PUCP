@@ -6,7 +6,8 @@ departamento de config.DEPARTAMENTOS_TRENDS: el CSV "Interés a lo largo del tie
 "huaico") van como <departamento>-contexto_<fecha>.csv y no entran en G1 ni en G2.
 
 - G1: ≥ 3 de los 4 departamentos con dato (valor ≥ 1; "<1" y 0 no cuentan) en ≥ 50 % de las semanas completas.
-- G2: dos exportaciones de la misma consulta en días distintos tienen ρ de Spearman ≥ 0,8 en cada departamento.
+- G2: dos exportaciones de la misma consulta en días distintos tienen ρ de Spearman ≥ 0,8 en cada departamento. Si un
+  departamento no llega, su serie es el promedio de las dos exportaciones en las semanas comunes (regla fijada antes).
 
 Se niega a cargar una exportación cuya región o cuyas fechas no coinciden con el nombre del archivo.
 
@@ -139,19 +140,46 @@ def medir(series):
                               proporcion >= SEMANAS_CON_DATO, f"{len(semanas)} semanas completas"))  # fmt: skip
     filas.append(criterio(PRUEBA, "G1 departamentos con dato en >= 50 % de las semanas", con_dato,
                           f">= {DEPARTAMENTOS_MINIMOS}", con_dato >= DEPARTAMENTOS_MINIMOS))  # fmt: skip
-    pares = {d: v for d, v in series.items() if len({f for f, _ in v}) >= 2}
-    if pares:
-        rhos = {}
-        for d, v in pares.items():
-            (_, a), (_, b) = v[0], v[-1]
-            comunes = sorted({s for s, *_ in a} & {s for s, *_ in b})
-            va, vb = dict((s, x) for s, x, _ in a), dict((s, x) for s, x, _ in b)
-            rhos[d] = spearman([va[s] for s in comunes], [vb[s] for s in comunes])
-        minimo = min(rhos.values())
+    r = rhos(series)
+    if r:
+        minimo = min(r.values())
         filas.append(criterio(PRUEBA, "G2 ρ de Spearman entre exportaciones (mínimo)", round(minimo, 3),
-                              f">= {RHO_MINIMO}", len(pares) == len(series) and minimo >= RHO_MINIMO,
-                              str({d: round(r, 3) for d, r in rhos.items()})))  # fmt: skip
+                              f">= {RHO_MINIMO}", len(r) == len(series) and minimo >= RHO_MINIMO,
+                              str({d: round(x, 3) for d, x in r.items()})))  # fmt: skip
+        promediados = sorted(d for d, x in r.items() if not x >= RHO_MINIMO)
+        if promediados:
+            filas.append(criterio(INFO, "G2 departamentos con las dos exportaciones promediadas", len(promediados),
+                                  "-", True, ", ".join(promediados)))  # fmt: skip
     return filas
+
+
+def _comunes(a, b):
+    return sorted({s for s, *_ in a} & {s for s, *_ in b})
+
+
+def rhos(series):
+    """{departamento: ρ de Spearman entre la primera y la última exportación} de los que tienen dos o más."""
+    salida = {}
+    for d, v in series.items():
+        if len({f for f, _ in v}) < 2:
+            continue
+        (_, a), (_, b) = v[0], v[-1]
+        va, vb = {s: x for s, x, _ in a}, {s: x for s, x, _ in b}
+        comunes = _comunes(a, b)
+        salida[d] = spearman([va[s] for s in comunes], [vb[s] for s in comunes])
+    return salida
+
+
+def serie_final(v, rho):
+    """[(semana, valor, menor_que_1, exportación)]: la última exportación, o el promedio de la primera y la última si
+    G2 no llega en ese departamento."""
+    fecha, ultima = v[-1]
+    if rho is None or rho >= RHO_MINIMO:
+        return [(s, x, m, fecha.isoformat()) for s, x, m in ultima]
+    (f0, a), (f1, b) = v[0], v[-1]
+    da, db = {s: (x, m) for s, x, m in a}, {s: (x, m) for s, x, m in b}
+    etiqueta = f"promedio {f0.isoformat()} y {f1.isoformat()}"
+    return [(s, (da[s][0] + db[s][0]) / 2, da[s][1] and db[s][1], etiqueta) for s in _comunes(a, b)]
 
 
 def guardar(filas, ruta):
@@ -174,15 +202,15 @@ def main(argv=None):
                 continue
             semanas = semanas_completas(serie, fecha)
             series.setdefault(d, []).append((fecha, semanas))
-        if d in series:
-            fecha, semanas = series[d][-1]
-            interes += [{"departamento": d, "semana": s, "valor": v, "menor_que_1": m, "exportacion": fecha}
-                        for s, v, m in semanas]  # fmt: skip
     if not series:
         log.error(f"No hay exportaciones válidas en {config.DIR_RAW_TRENDS} (<departamento>_<AAAA-MM-DD>.csv).")
         for a in alertas:
             log.error("- " + a)
         return 1
+    r = rhos(series)
+    for d, v in series.items():
+        interes += [{"departamento": d, "semana": s, "valor": x, "menor_que_1": m, "exportacion": e}
+                    for s, x, m, e in serie_final(v, r.get(d))]  # fmt: skip
     config.DIR_TRENDS.mkdir(parents=True, exist_ok=True)
     escribir_csv(config.DIR_TRENDS / "interes.csv", COLUMNAS_INTERES, interes)
     filas = medir(series)

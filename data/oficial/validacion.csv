@@ -17,11 +17,11 @@ enfen,"región del océano = posición en el resumen (1.ª costa, 2.ª Pacífico
 enfen,el cuerpo que repite al resumen tiene el mismo tipo y región,30/30,≥ 95%,1,
 enfen,párrafos que no son encabezado de tabla,279/279,100 %,1,
 enfen (informativo),tipos en comunicados sin resumen (N.° 17 y 18),53/53,referencia,1,impactos 22; pronostico 9; recomendacion 9; pesca 8; otro 5
-senamhi,avisos candidatos con panel de detalle,142/142,100 %,1,
-senamhi,"número, nivel, título, emisión, inicio y fin del detalle = tabla",142/142,100 %,1,
-senamhi,nivel máximo de los mapas diarios = nivel de la tabla,142/142,100 %,1,
-senamhi,costa_norte: polígono oficial y regla de título/departamentos coinciden,359/378,≥ 95 %,0,"senamhi-2026-447/3:polígono, senamhi-2026-443/3:polígono, senamhi-2026-421/3:polígono, senamhi-2026-403/1:regla, senamhi-2026-383/1:regla, senamhi-2026-376/2:regla, senamhi-2026-312/1:regla, senamhi-2026-233/1:regla, senamhi-2026-217/1:polígono, senamhi-2026-190/2:polígono, senamhi-2026-190/3:polígo"
-senamhi,costa_centro: polígono oficial y regla de título/departamentos coinciden,353/378,≥ 95 %,0,"senamhi-2026-464/1:regla, senamhi-2026-464/2:regla, senamhi-2026-464/3:regla, senamhi-2026-456/1:regla, senamhi-2026-456/2:regla, senamhi-2026-447/3:polígono, senamhi-2026-443/3:polígono, senamhi-2026-368/1:polígono, senamhi-2026-368/2:polígono, senamhi-2026-312/1:regla, senamhi-2026-217/1:polígono,"
+senamhi,avisos candidatos con panel de detalle,145/145,100 %,1,
+senamhi,"número, nivel, título, emisión, inicio y fin del detalle = tabla",145/145,100 %,1,
+senamhi,nivel máximo de los mapas diarios = nivel de la tabla,145/145,100 %,1,
+senamhi,costa_norte: polígono oficial y regla de título/departamentos coinciden,368/388,≥ 95 %,0,"senamhi-2026-472/3:polígono, senamhi-2026-447/3:polígono, senamhi-2026-443/3:polígono, senamhi-2026-421/3:polígono, senamhi-2026-403/1:regla, senamhi-2026-383/1:regla, senamhi-2026-376/2:regla, senamhi-2026-312/1:regla, senamhi-2026-233/1:regla, senamhi-2026-217/1:polígono, senamhi-2026-190/2:polígo"
+senamhi,costa_centro: polígono oficial y regla de título/departamentos coinciden,363/388,≥ 95 %,0,"senamhi-2026-464/1:regla, senamhi-2026-464/2:regla, senamhi-2026-464/3:regla, senamhi-2026-456/1:regla, senamhi-2026-456/2:regla, senamhi-2026-447/3:polígono, senamhi-2026-443/3:polígono, senamhi-2026-368/1:polígono, senamhi-2026-368/2:polígono, senamhi-2026-312/1:regla, senamhi-2026-217/1:polígono,"
 senamhi,avisos sin costa en el título cuyo polígono no toca estaciones de costa norte o centro,159/159,100 %,1,
 senamhi,días de avisos cancelados cubiertos por otro aviso del mismo tipo,2/2,100 %,1,
-senamhi (informativo),avisos con macro-región por polígono (el resto usa la regla de respaldo),140/140,referencia,1,
+senamhi (informativo),avisos con macro-región por polígono (el resto usa la regla de respaldo),143/143,referencia,1,

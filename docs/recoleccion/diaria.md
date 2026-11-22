@@ -103,3 +103,10 @@ El 16-nov la recolección corrió después de 129 h y avisó huecos en Andina (`
 - **RPP:** el archivo por fecha recorre, además del histórico, los días de `config.HUECOS_RPP` (10, 11 y 12-nov). Aportó 36 notas que la diaria no tenía (3, 26 y 7).
 - **Validación:** se comparó con la diaria de esos días. Día por día cubre de 0,93 a 0,99, porque la diaria y el archivo a veces fechan la misma nota en días distintos. Con los días vecinos (9 al 13-nov) y sin las páginas "live" (5, que el archivo no lista, como en la validación del 24-oct), cubre 296 de 299 notas (**0,990**, umbral 0,99). Este ajuste de la comparación se decidió después de ver la primera cifra.
 - Lo recuperado entra en la lista cruda del medio (`data/raw/noticias/<medio>/lista.csv`), no en `data/urls/`, y se lee con la rutina de `historico`.
+
+## Recuperación de huecos (22-nov)
+La recolección del 22-nov a las 10:00 corrió 73 h después de la anterior. Fue la última del período: el corte es el 20-nov a las 23:59. Avisó dos huecos: Andina (`sitemap-ultimo` empezaba el 19-nov a las 23:00) y RPP (`web/futbol` desde el 20-nov a las 13:55). Se recuperaron igual que el 16-nov:
+- **Andina:** `historico` recorrió los números de nota sin hacer nada aparte.
+- **RPP:** el 19 y el 20-nov se agregaron a `config.HUECOS_RPP`. El archivo de esos días listó 133 y 118 notas, y aportó 24 que la diaria no tenía (16 y 8).
+- **Lectura:** `historico` leyó 699 notas sin errores y el consolidado quedó en 81.879. `region.notas` pasa (2.785 notas sobre El Niño).
+- **Aviso del ENFEN:** la página del comunicado N.° 20 se modificó el 19-nov. `oficial.corpus` lo rehízo sin cambios en los comunicados; entraron 3 avisos nuevos del Senamhi (472, 476 y 477). Siguen las dos fallas de antes: el control con `pypdf` del N.° 19 y el acuerdo polígono/regla del Senamhi.

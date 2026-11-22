@@ -66,3 +66,13 @@ def test_g2_spearman_entre_dos_exportaciones():
 def test_spearman_con_empates():
     assert cargar.spearman([1, 2, 2, 3], [1, 2, 2, 3]) == pytest.approx(1.0)
     assert cargar.spearman([1, 2, 3], [3, 2, 1]) == pytest.approx(-1.0)
+
+
+def test_serie_final_promedia_solo_si_g2_no_llega():
+    s1, s2 = dt.date(2026, 1, 4), dt.date(2026, 1, 11)
+    v = [(dt.date(2026, 11, 17), [(s1, 10.0, False), (s2, 0.5, True)]),
+         (dt.date(2026, 11, 22), [(s1, 20.0, False), (s2, 4.0, False)])]  # fmt: skip
+    assert cargar.serie_final(v, 0.95) == [(s1, 20.0, False, "2026-11-22"), (s2, 4.0, False, "2026-11-22")]
+    promedio = cargar.serie_final(v, 0.5)
+    assert [(s, x, m) for s, x, m, _ in promedio] == [(s1, 15.0, False), (s2, 2.25, False)]
+    assert promedio[0][3] == "promedio 2026-11-17 y 2026-11-22"

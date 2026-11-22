@@ -521,3 +521,9 @@ Se escribieron `docs/nlp/discrepancia.md` (pilotos, decisiones, flujo por capas,
 48. Primero dejemos todo actualizado y coherente, los .md o lo que haga falta para subir los cambios a GitHub; haz git pull primero.
 
 **Resultado:** la IA hizo `git pull` (sin cambios remotos) y actualizó la definición de la app (estado, ruta `opciones`, esquemas y resultados P1 a P5 y P9), los pendientes al 19-nov, el README (pantallas, índice en memoria, arranque), CLAUDE.md y este registro.
+49. Han pasado varios días, fíjate si podemos hacer la recolección de una vez.
+
+**Resultado:** la IA corrió la última recolección diaria (73 h después de la anterior). Recuperó los huecos de Andina y RPP del 19 y 20-nov, rehízo el corpus oficial por un aviso del ENFEN (sin cambios en los comunicados), leyó 699 notas (81.879 en total) y asignó la región. Corrió el corte de YouTube: pasan Y1 a Y5.
+50. Sí, expórtala (segunda exportación de Google Trends).
+
+**Resultado:** la IA exportó con Claude in Chrome los 4 departamentos y la consulta nacional por región. G1 pasa y G2 no pasa por Tumbes (0,790). Aplicó la regla fijada antes, que promedia las dos exportaciones, solo en el departamento que no llega; lo agregó al cargador con una prueba.

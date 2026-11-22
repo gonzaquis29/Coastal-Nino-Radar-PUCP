@@ -33,7 +33,10 @@ INICIO = dt.date(2026, 1, 1)
 FIN_HISTORICO = dt.date(2026, 10, 24)  # primera recolección diaria: desde aquí las notas vienen de data/urls/
 # Días que la recolección diaria no cubrió (alerta de hueco) y que se recuperan por el archivo por fecha de RPP.
 # Andina no necesita lista: el histórico prueba todos los números hasta el mayor de data/urls/.
-HUECOS_RPP = (dt.date(2026, 11, 10), dt.date(2026, 11, 11), dt.date(2026, 11, 12))  # 129 h sin correr (16-nov)
+HUECOS_RPP = (
+    dt.date(2026, 11, 10), dt.date(2026, 11, 11), dt.date(2026, 11, 12),  # 129 h sin correr (16-nov)
+    dt.date(2026, 11, 19), dt.date(2026, 11, 20),  # 73 h sin correr (22-nov): web/futbol empieza el 20-nov
+)  # fmt: skip
 
 # ---------------------------------------------------------------- medios (definición en docs/noticias/definicion.md)
 HOSTS_MEDIOS = {
