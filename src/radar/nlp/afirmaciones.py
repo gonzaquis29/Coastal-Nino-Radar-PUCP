@@ -270,9 +270,10 @@ COMUNICADO_PASADO = re.compile(rf"\b(?:comunicados?|bolet[íi]n(?:es)?|informes?
                                re.I)  # fmt: skip
 MESES_ATRAS_PASADO = 2  # el de hace un mes puede seguir vigente; desde dos meses atrás ya es pasado
 
-# "Enfen descarta un Niño muy fuerte", "es prematuro afirmar…": la frase niega el dato (arreglo del 7-nov)
-NEGACION = re.compile(r"\bdescart\w*|\bprematuro\b|\bno\s+(?:existen?|hay|habr[áa]|se\s+prev[ée]|se\s+espera"
-                      r"|evolucionar[íi]?[áa]|alcanzar[íi]?[áa]|llegar[íi]?[áa]|ser[íi]?[áa]|tendr[íi]?[áa]"
+# "Enfen descarta un Niño muy fuerte", "es prematuro afirmar…": la frase niega el dato (arreglo del 7-nov).
+# "No hay que preocuparse" y "no hay por qué alarmarse" aconsejan, no niegan el dato (arreglo del 23-nov)
+NEGACION = re.compile(r"\bdescart\w*|\bprematuro\b|\bno\s+(?:existen?|hay(?!\s+(?:que|por\s+qu[ée])\b)"
+                      r"|habr[áa]|se\s+prev[ée]|se\s+espera|evolucionar[íi]?[áa]|alcanzar[íi]?[áa]|llegar[íi]?[áa]|ser[íi]?[áa]|tendr[íi]?[áa]"
                       r"|pasar[íi]?[áa])\b", re.I)  # fmt: skip
 
 

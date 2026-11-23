@@ -100,6 +100,7 @@ Las notas nuevas para esa validación son ~170:
   2. plazo de solo año ("hasta 2027"), que se compara por año;
   3. relato de un comunicado de dos o más meses atrás, que cuenta como histórico;
   4. plazo solo si va pegado a El Niño y no a lluvias o calor.
+- **Arreglo del 23-nov (negación):** «no hay que…» y «no hay por qué…» aconsejan y ya no cuentan como negación. Antes, «el ENFEN dice que será débil y ya se va, no hay que preocuparse» quedaba negada y la app la mostraba como cercanía, sin comparar el dato. Medido sin pedir páginas, con la regla vieja frente a la nueva: en el corpus oficial cambian 0 de 1.808 frases; en titulares y resúmenes, 7 de 186.828, ninguna sobre El Niño ni con datos. Los cuerpos no se volvieron a leer, así que `discrepancia-todas.csv` sigue con la regla anterior.
 
   Los otros 10 eran diferencias reales: un vocero que dice más que el comunicado, o notas que redondean.
 - **Ronda b:** ninguno de los 4 desacuerdos de plazo es un error de extracción.

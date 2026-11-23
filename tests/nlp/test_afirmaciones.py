@@ -37,6 +37,9 @@ def test_plazo_solo_si_va_pegado_a_el_nino():
         ("No se descarta un Niño extraordinario.", False),
         ("El Niño sería fuerte, sin descartar que sea extraordinario.", False),
         ("El Niño sería fuerte.", False),
+        ("No hay un Niño fuerte en curso.", True),
+        ("El Niño será débil, no hay que preocuparse por lluvias.", False),
+        ("El Niño será débil y no hay por qué alarmarse.", False),
     ],
 )
 def test_negada(frase, esperado):

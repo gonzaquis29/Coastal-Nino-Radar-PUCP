@@ -713,3 +713,12 @@ No construyó nada: espera la aprobación.
 - el inicio «Hoy», con la zona y el mensaje en dos columnas;
 - la regla con las dos marcas, el glosario, el resultado sin datos con título nuevo, y la cercanía como una línea chica.
 Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en el azul ya validado, porque el naranja significa «difieren» en el Panorama. Midió los criterios: pasan I1 a I5, P1 a P12 y U1 a U6 (sección 11.4). En la medición corrigió el área de toque de dos enlaces y el ancho de los gráficos del Panorama en el celular.
+101. Sí, revísalo
+
+**Resultado:** la IA encontró por qué el mensaje largo «…será débil y ya se va, no hay que preocuparse por lluvias en Piura» salía como cercanía: la regla de negación tomaba «no hay» de «no hay que preocuparse» y descartaba el dato. No cambió nada y propuso el arreglo.
+102. estas seguro¡
+
+**Resultado:** la IA lo comprobó con el servicio de la app: con «no hay que preocuparse» sale cercanía; cambiando solo esas palabras por «tranquilos» sale «Usa un dato anterior del ENFEN» (magnitud desactualizada).
+103. entonces procede a corregirlo
+
+**Resultado:** la IA ajustó la regla para que «no hay que» y «no hay por qué» no cuenten como negación, con tres casos nuevos en las pruebas. Midió el cambio sin pedir páginas: 0 de 1.808 frases oficiales y 7 de 186.828 frases de titulares y resúmenes cambian, ninguna sobre El Niño ni con datos. Los cuerpos de las notas no se volvieron a leer (documentado en `docs/nlp/discrepancia.md`).
