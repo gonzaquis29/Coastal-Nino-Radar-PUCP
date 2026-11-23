@@ -1,9 +1,9 @@
-# Pendientes, por prioridad (actualizado el 22-nov-2026)
+# Pendientes, por prioridad (actualizado el 23-nov-2026)
 
 Orden según dependencias reales y fechas, revisado con lo aprendido en los pilotos; el calendario del README es orientativo. Cada tarea se define, se aprueba, se construye y se valida con muestras nuevas, una a la vez. Estado del índice de discrepancia y del flujo de NLP: [nlp/discrepancia.md](nlp/discrepancia.md).
 
-## Por dónde seguir (actualizado el 22-nov)
-**La recolección está cerrada** (corte del 20-nov): ya no hay rutina diaria. Quedan 5 días para el congelamiento (vie 27-nov). Alcance (decisión del 19-nov): solo el producto; no se planifican informe, declaración, avances semanales, presentación ni grabación. Cada tarea sigue el flujo de siempre: mapa de enfoques, definición con criterios fijados antes, aprobación del usuario, construcción (solo con su orden explícita) y validación con muestras nuevas.
+## Por dónde seguir (actualizado el 23-nov)
+**La recolección está cerrada** (corte del 20-nov): ya no hay rutina diaria. Quedan 4 días para el congelamiento (vie 27-nov). Alcance (decisión del 19-nov): solo el producto; no se planifican informe, declaración, avances semanales, presentación ni grabación. Cada tarea sigue el flujo de siempre: mapa de enfoques, definición con criterios fijados antes, aprobación del usuario, construcción (solo con su orden explícita) y validación con muestras nuevas.
 
 1. **Modelo de engagement** (README, punto 11; insumo de ML del sílabo). **Hecho el 22-nov** (`python -m radar.modelos.engagement`; [modelos/engagement.md](modelos/engagement.md)): pasan M0 a M3. El boosting ordena por tipo con Spearman 0,43, mejora el MAE un 12,6 % frente a la persistencia, y el contenido agrega +0,063 (por poco); solo la cercanía es estable (M5).
    - **Datos:** YouTube del corte del 22-nov, con 1.007 videos para entrenar y 622 para probar (Y5; [youtube/definicion.md](youtube/definicion.md#13-resultados-del-corte-22-nov-2026)).
@@ -16,10 +16,17 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
    - `python -m radar.analitica.eventos validar --ronda c`, con los comunicados N.° 19 y 20 (sigue descriptivo).
    - Emociones de los comentarios del corte (`python -m radar.youtube.emociones`, unos 40 min), solo descriptivas.
 5. **App** ([app/definicion.md](app/definicion.md), aprobada el 19-nov). **Hecha el 22-nov:** la API y la interfaz (`web/`: Verificar, Preguntar, Panorama A a F y Metodología) pasan P1 a P12 y U1 a U6 ([app/definicion.md](app/definicion.md#interfaz-pasos-2-a-4-22-nov)). Si cambian los datos (punto 4), se vuelven a correr `radar.app.validar`, `npm run medir` y `radar.app.validar_interfaz`. El 23-nov se agregó el filtro de tema en Verificar (sección 9): los textos de otros temas con «Alta» bajan de 5,8 % a 0,72 % en corto y de 6 % a 3 % en cuerpo (F1 en cuerpo no pasa y se declara). El clasificador de tema (sección 10) se construyó y no pasa C3 ni C5: rechaza textos de clima que no nombran a El Niño, así que sigue el filtro de palabras. Pendiente sin definir: etiquetas de clima y mar que no dependan de El Niño (avisos del Senamhi como positivos), con una prueba nueva. El 23-nov, Preguntar dejó de mostrar el texto interno del agente (fechas AAAA-MM-DD, ids como `enfen-2026-20` o `costa_norte` y "Semáforo: rojo (reglas)"): la respuesta se arma en `radar.app.textos` (`PREGUNTAR`, con U2 y U3), y el agente no cambia.
+   - **23-nov, arranque:** los vectores de los párrafos oficiales se guardan en disco (`embeddings.con_cache`); el arranque bajó de 63,2 s a 15,6 s. Lo que queda (~14 s) es importar torch y transformers.
+   - **23-nov, rediseño** ([app/definicion.md](app/definicion.md), sección 11): inicio «Hoy» con la zona y el mensaje en dos columnas, escalera de estados, regla de magnitud, avisos del Senamhi a la vista y glosario (ENFEN, Senamhi, El Niño costero, magnitud). Pasan I1 a I5, P1 a P12 y U1 a U6.
+   - **23-nov, negación:** «no hay que…» y «no hay por qué…» ya no niegan el dato ([nlp/discrepancia.md](nlp/discrepancia.md)). Se recalcularon las 2.785 notas y no cambió ningún resultado.
+
+**Antes del congelamiento (vie 27-nov):** subir los commits locales al repositorio del grupo. Opcionales, solo si sobra tiempo: etiquetas de clima y mar para el filtro de tema (sin definir), bajar el arranque que queda y la versión pública.
+
+**Después del congelamiento:** volver a correr `python -m radar.analitica.web uso` tras la presentación.
 
 **Borrado de YouTube:** los datos crudos vencen a los 30 días de la descarga (el día 1 fue el 16-nov, así que vence el 16-dic). Se borran con `python -m radar.youtube.borrar`.
 
-## Estado al 22-nov
+## Estado al 23-nov
 - **Noticias:** 81.879 notas de los 4 medios (1-ene al corte) y 2.785 sobre El Niño, con la macro-región asignada (`region.notas` pasa). La última recolección (22-nov) recuperó sus huecos ([recoleccion/diaria.md](recoleccion/diaria.md#recuperación-de-huecos-22-nov)).
 - **Corpus oficial:** ENFEN hasta el comunicado N.° 20 (21 documentos) y avisos del Senamhi hasta el 477. Siguen dos fallas conocidas y declaradas: el control con `pypdf` del N.° 19 (0,974) y el acuerdo polígono/regla del Senamhi.
 - **YouTube:** corte del 22-nov, en el que pasan Y1 a Y5 (1.762 videos, 154 con ≥ 30 comentarios, 151 canales conectados). Las emociones son solo descriptivas.
@@ -35,7 +42,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
   - recomendador (ronda b: R1 no pasa, así que se usa la cascada de 3 días);
   - agente (ronda c pasa);
   - red de enlaces (R2 no pasa para INDECI y PCM por enlaces SEO);
-  - app: API e interfaz (P1 a P12 y U1 a U6).
+  - app: API e interfaz (P1 a P12 y U1 a U6), con el rediseño del 23-nov (I1 a I5).
   
   El NLI se cerró sin medir.
 - **Sin empezar:** nada del alcance; el punto 4 se hizo el 22-nov.
