@@ -295,7 +295,7 @@ Se validó con `validate_palette.js` (método del skill de visualización), en c
   - no usar la app para pruebas sueltas, para que el registro de uso solo tenga el uso real;
   - si cambian los datos (punto 4 de pendientes), volver a correr `python -m radar.app.validar`, `npm run medir` y `python -m radar.app.validar_interfaz`.
 
-## 9. Textos de otros temas en Verificar (definición aprobada el 23-nov)
+## 9. Textos de otros temas en Verificar (aprobada y construida el 23-nov)
 
 ### 9.1 Problema medido
 - **Verificar da cercanía a cualquier texto, sea del tema o no.** "Alta" empieza en el p95 de las notas de otros temas (sección de umbrales en `docs/nlp/discrepancia.md`), así que, por construcción, cerca del 5 % de los textos ajenos salen "Alta" y cerca del 20 % "Media". S3 lo midió (5,8 %) y pasó, pero nadie tradujo esa tasa a lo que ve el ciudadano: la app muestra "Cercanía: Alta" para un texto de fútbol.
@@ -350,3 +350,32 @@ Se validó con `validate_palette.js` (método del skill de visualización), en c
 - Si F2 no pasa, no se baja la exigencia: se declara cuánto deja fuera el filtro y se muestra el resultado `fuera_de_tema` con la frase "si sí trata del tema, pega la nota completa".
 - **Comandos previstos:** `python -m radar.app.validar_tema muestra|validar`, que guarda la prueba "App: tema" en `data/processed/app/validacion.csv`. Después, `python -m radar.app.validar`, `npm run medir` y `python -m radar.app.validar_interfaz`.
 - **Archivos:** `radar.comun.dominio` (nuevo), `radar.agente.agente` (solo la importación), `radar.app` (servicio, textos, eventos y `validar_tema`), `web/` (el resultado `fuera_de_tema` y P7) y sus pruebas.
+
+### 9.6 Resultados (23-nov)
+- **Código:**
+  - `radar.comun.dominio` tiene el vocabulario único del tema; `radar.agente.agente` lo importa.
+  - En `radar.app.servicio`, Verificar aplica el filtro y devuelve `fuera_de_tema` sin medidor, color ni ícono. Sus textos están en `radar.app.textos` (`FUERA_DE_TEMA` y `FUERA_DE_TEMA_AYUDA`) y pasan U2 y U3.
+  - La interfaz muestra el nuevo resultado y el registro de uso lo acepta.
+  - Pruebas: `tests/comun/test_dominio.py`, `tests/app` y Vitest (13).
+- **Medición:** con `python -m radar.app.validar_tema muestra|validar`. El detalle queda en `data/processed/app/tema-*.csv` y la prueba "App: tema" en `validacion.csv`. Las 53.458 notas usadas pasaron a `config/notas_vistas.csv` (`validacion-tema`).
+
+| Criterio | Valor | Umbral | Pasa |
+|---|---|---|---|
+| F1. Otros temas con «Alta», corto (50.623) | 0,72 % (IC 0,65 a 0,79); antes 5,8 % (S3) | ≤ 2 % | Sí |
+| F1. Otros temas con «Alta», cuerpo (100) | 3 % (IC 1,0 a 8,5); antes 6 % (S3) | ≤ 2 % | **No** |
+| F2. Sobre El Niño que el filtro deja fuera, corto (2.635) | 9,03 % (IC 8,0 a 10,2); de las 58 del corte, 2 | ≤ 10 % | Sí |
+| F3. Sobre El Niño que el filtro deja fuera, cuerpo (100) | 0 % (IC 0 a 3,7) | ≤ 5 % | Sí |
+| F4. «Niño» con otro sentido que pasa / el fenómeno que no pasa | 0 / 0 | 0 / 0 | Sí |
+| F5. Del tema sin «El Niño» que quedan fuera | 0 de 10 | ≤ 1 | Sí |
+| F6. Preguntar: decisiones que cambian; A4 | 0; A4 0,951 y abstención 0,007 | ≥ 0,90 y ≤ 0,05 | Sí |
+| F7. La app: P1 a P12 y U1 a U6 | todos pasan; P7 7/7 con tres textos de otros temas, P4 83/83 | todos | Sí |
+
+- **F1 en cuerpo no pasa, y se declara (decisión del 23-nov).**
+  - En los textos largos, el error bajó a la mitad (de 6 % a 3 %), pero no llega a la meta. Con 100 cuerpos, el intervalo queda a ambos lados del 2 %.
+  - No se ajustó el filtro: no quedan notas de otros temas sin usar, y repetir con los mismos 100 cuerpos sería una medición sesgada.
+  - Como F1 no pasa completo, **P13 no entra** a la sección 6 tal como se definió. Se declara la tasa en corto (0,72 %) y en cuerpo (3 %).
+- **F2 pasa cerca del límite:** de cada 11 titulares sobre El Niño, uno queda "fuera del tema" si se pega solo el titular. La frase de ayuda pide pegar la nota completa, y en cuerpo no se perdió ninguno.
+- **Declaraciones:**
+  - antes de medir, se comprobó que la lista de «niño» con otro sentido (F4) daba 0. Es una regla fija y no cambia el resultado;
+  - las notas reservadas para la capa 3 entraron en los positivos; ninguna sirvió para elegir las palabras.
+- **P7:** ahora tiene 7 textos. La receta, el teléfono y el fútbol esperan `fuera_de_tema`; ya no hay un caso de cercanía "Baja" dentro del tema.

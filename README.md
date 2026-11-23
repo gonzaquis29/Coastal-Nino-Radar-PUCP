@@ -30,6 +30,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 | Macro-región de las notas y su validación | `python -m radar.region.notas` | tras cada ejecución del histórico (sin peticiones a los medios) |
 | Lista de lugares (ubigeos del INEI) | `python -m radar.region.lugares` | ya congelada el 27-oct-2026 (no se vuelve a correr) |
 | App: interfaz (construir) y API | `cd web && npm install && npm run build`, luego `python -m radar.app` (http://localhost:8000) | `build` al cambiar `web/`; la API para usar la app |
+| App: filtro de tema | `python -m radar.app.validar_tema muestra\|validar` | ya medido el 23-nov (se mira una vez; repetir va con `--repetir`) |
 | App: criterios | `python -m radar.app.validar`; con la API corriendo, `cd web && npm run medir` y `python -m radar.app.validar_interfaz` | si cambian los datos o la app |
 | Pruebas | `python -m pytest` y `cd web && npm test` | antes de cada commit |
 | Estilo | `ruff format src tests` y `ruff check src tests` | antes de cada commit |

@@ -651,3 +651,12 @@ Se actualizaron `docs/analitica/eventos.md`, `docs/nlp/discrepancia.md`, `docs/y
 85. Apruebo (filtro de tema)
 
 **Resultado:** la IA marcó como aprobada la sección 9 de `docs/app/definicion.md`, con F1 a F7 y P13. No construyó nada: espera la orden.
+86. Sí, construye (filtro de tema)
+
+**Resultado:** la IA creó `radar.comun.dominio` (el agente lo importa), el filtro de tema y el resultado `fuera_de_tema` en Verificar y en la interfaz, y `radar.app.validar_tema`, con sus pruebas. Midió una vez con toda la fuente:
+- F1 en corto pasa: 0,72 %, antes 5,8 %;
+- F1 en cuerpo no pasa: 3 %, antes 6 %;
+- pasan F2 (9,03 %) a F6. Preguntar no cambia ninguna decisión.
+87. Declararlo y seguir
+
+**Resultado:** la IA dejó F1 en cuerpo como "no pasa", declarado, y no ajustó el filtro. Volvió a medir la app (F7): pasan P1 a P12 y U1 a U6, con P7 de 7/7. P13 no entra a la sección 6. Documentó los resultados en la sección 9.6, el README, `CLAUDE.md` y pendientes.
