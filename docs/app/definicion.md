@@ -516,7 +516,7 @@ Lo que se corrigió durante la medición:
 - Los gráficos del Panorama se dibujaban con 640 px hasta que el navegador avisaba el ancho, y a 360 y 375 px la página se desplazaba a los lados (I2). Ahora miden su caja al aparecer.
 - La primera medición de P7 usó una API arrancada antes del cambio de título; con la API recién arrancada da 7/7.
 
-## 12. Etiquetas de clima y mar para el tema de Verificar (propuesta del 23-nov, revisada; sin aprobar)
+## 12. Etiquetas de clima y mar para el tema de Verificar (definición aprobada el 23-nov; sin construir)
 
 ### 12.1 Por qué
 El clasificador de la sección 10 aprendió "menciona El Niño" porque su única etiqueta positiva era `sobre_nino`: rechazó 6 de 10 textos sintéticos de clima y mar (C5) y perdió más titulares del tema que el filtro de palabras (C3). Hace falta una etiqueta positiva de clima y mar que no dependa de nombrar a El Niño y que no pongamos nosotros (cero etiquetado manual).

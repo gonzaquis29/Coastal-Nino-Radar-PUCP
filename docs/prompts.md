@@ -746,3 +746,6 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 111. revisa de nuevo, es critico
 
 **Resultado:** la IA midió los supuestos en desarrollo y rehízo la sección 12. Encontró que el filtro de palabras ya acepta el 93,6 % del clima y mar, y que su falla real (otros temas con palabras de clima, 19 % pasan) nunca se había medido, porque los negativos de F1 y C1 no tienen términos de clima. Agregó negativos difíciles por etiquetas editoriales de otros temas (1.639 para entrenar y 2.381 nuevos para probar), quitó las etiquetas con otro sentido («mar», «pesca», «clima», «cambio climático»), contó la prueba por plantilla de titular y rehízo los criterios (K1 a K10). Sin aprobar ni construir.
+112. Apruebo
+
+**Resultado:** la IA marcó la sección 12 de `docs/app/definicion.md` como aprobada el 23-nov. No se construye hasta la orden explícita.
