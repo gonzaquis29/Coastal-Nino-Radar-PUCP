@@ -20,7 +20,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
    - **23-nov, rediseño** ([app/definicion.md](app/definicion.md), sección 11): inicio «Hoy» con la zona y el mensaje en dos columnas, escalera de estados, regla de magnitud, avisos del Senamhi a la vista y glosario (ENFEN, Senamhi, El Niño costero, magnitud). Pasan I1 a I5, P1 a P12 y U1 a U6.
    - **23-nov, negación:** «no hay que…» y «no hay por qué…» ya no niegan el dato ([nlp/discrepancia.md](nlp/discrepancia.md)). Se recalcularon las 2.785 notas y no cambió ningún resultado.
 
-**Antes del congelamiento (vie 27-nov):** subir los commits locales al repositorio del grupo. Opcionales, solo si sobra tiempo: etiquetas de clima y mar para el filtro de tema (sin definir), bajar el arranque que queda y la versión pública.
+**Antes del congelamiento (vie 27-nov):** nada obligatorio; los commits se subieron al repositorio del grupo el 23-nov. Opcionales, solo si sobra tiempo: etiquetas de clima y mar para el filtro de tema (sin definir), bajar el arranque que queda y la versión pública.
 
 **Después del congelamiento:** volver a correr `python -m radar.analitica.web uso` tras la presentación.
 

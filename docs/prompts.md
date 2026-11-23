@@ -734,3 +734,9 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 107. si procede
 
 **Resultado:** la IA actualizó `docs/pendientes.md` (rediseño, arranque, arreglo de la negación, qué falta antes y después del congelamiento) y el README (pantalla «Hoy» con el glosario, «Cómo se habló» con YouTube y el arranque con los vectores en disco).
+108. procede a subirlo
+
+**Resultado:** la IA revisó que no hubiera archivos de `data/` ni claves y subió los 33 commits a `origin/main`.
+109. corrigelo de una vez
+
+**Resultado:** la IA quitó de `docs/pendientes.md` la tarea de subir los commits, ya hecha, y lo subió.
