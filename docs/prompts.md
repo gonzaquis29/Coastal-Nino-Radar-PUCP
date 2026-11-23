@@ -722,3 +722,9 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 103. entonces procede a corregirlo
 
 **Resultado:** la IA ajustó la regla para que «no hay que» y «no hay por qué» no cuenten como negación, con tres casos nuevos en las pruebas. Midió el cambio sin pedir páginas: 0 de 1.808 frases oficiales y 7 de 186.828 frases de titulares y resúmenes cambian, ninguna sobre El Niño ni con datos. Los cuerpos de las notas no se volvieron a leer (documentado en `docs/nlp/discrepancia.md`).
+104. No hace falta
+
+**Resultado:** la IA no recalculó y dejó anotado el límite.
+105. si debes volver a calcular
+
+**Resultado:** la IA respaldó los resultados y recalculó la discrepancia de las 2.785 notas con la regla nueva (23,6 min). Ningún color de nota cambió y las filas por dato son idénticas, así que las cifras del Panorama siguen igual (documentado en `docs/nlp/discrepancia.md`).
