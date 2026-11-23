@@ -516,7 +516,7 @@ Lo que se corrigió durante la medición:
 - Los gráficos del Panorama se dibujaban con 640 px hasta que el navegador avisaba el ancho, y a 360 y 375 px la página se desplazaba a los lados (I2). Ahora miden su caja al aparecer.
 - La primera medición de P7 usó una API arrancada antes del cambio de título; con la API recién arrancada da 7/7.
 
-## 12. Etiquetas de clima y mar para el tema de Verificar (definición aprobada el 23-nov; sin construir)
+## 12. Etiquetas de clima y mar para el tema de Verificar (aprobada el 23-nov; construida, no pasa)
 
 ### 12.1 Por qué
 El clasificador de la sección 10 aprendió "menciona El Niño" porque su única etiqueta positiva era `sobre_nino`: rechazó 6 de 10 textos sintéticos de clima y mar (C5) y perdió más titulares del tema que el filtro de palabras (C3). Hace falta una etiqueta positiva de clima y mar que no dependa de nombrar a El Niño y que no pongamos nosotros (cero etiquetado manual).
@@ -594,3 +594,36 @@ El clasificador de la sección 10 aprendió "menciona El Niño" porque su única
   - las etiquetas de otro tema pueden caer en notas que sí son del tema (un sismo con lluvias, una nota política sobre la emergencia). Si pasa, el error va en contra del clasificador en K1, no a su favor;
   - el mar queda con pocos positivos (oleaje, anchoveta, IMARPE, mar peruano): K7 lo mide con 10 sintéticos.
 - **Archivos:** `radar.comun.dominio` (las dos listas), `radar.app.tema` (la opción `--clima-mar`), `radar.app.servicio` (solo el selector, si pasa) y sus pruebas, con notas sintéticas.
+
+### 12.6 Resultados (23-nov): no pasa; la app sigue con el filtro de la sección 9
+- **Código:**
+  - las listas `ETIQUETAS_CLIMA_MAR`, `ETIQUETAS_CON_OTRO_SENTIDO` y `ETIQUETAS_OTRO_TEMA` están en `radar.comun.dominio`;
+  - el clasificador está en un módulo propio, `radar.app.tema_clima` (`muestra`, `entrenar`, `cuerpos`, `validar [--repetir]`), no en una opción `--clima-mar` de `radar.app.tema`: así no se mezclan las dos pruebas;
+  - `FILTRO_DE_TEMA` sigue en `"palabras"`;
+  - pruebas en `tests/app/test_tema_clima.py`.
+- **Orden:** la muestra se fijó antes de entrenar (`tema-clima-muestra.csv`). Se leyeron 272 de 276 cuerpos (4 sin texto, todos negativos difíciles). Las 2.797 notas nuevas pasaron a `config/notas_vistas.csv` (`validacion-clima-mar`).
+- **Entrenamiento** (enero a agosto): 1.167 notas del tema, 1.721 de clima y mar, 45.613 de otros temas y 1.639 negativos difíciles.
+  - Average precision en la CV: de 0,895 (C = 0,1) a 0,919 (C = 100). C volvió a quedar en el borde, con la curva plana.
+  - **Los textos oficiales (opción C) no entraron:** con ellos la CV da un poco menos (0,918), como se esperaba por su registro.
+  - τ = 0,903: el tope de los negativos difíciles (≤ 5 %) es el que manda.
+
+| Criterio | Clasificador | Sección 9 en las mismas notas | Umbral | Pasa |
+|---|---|---|---|---|
+| K1. Negativos difíciles con «Alta», corto (2.381, nuevas) | 0,76 % (18; IC 0,48 a 1,19) | 2,35 % (56) | ≤ 2 % y menos | Sí |
+| K2. Negativos difíciles con «Alta», cuerpo (146, nuevas) | 3,42 % (5; IC 1,5 a 7,8) | 5,5 % (8) | ≤ 2 % y no peor | **No** |
+| K3. `otros_temas` con «Alta», corto (10.408) / cuerpo (400), reutilizadas | 0,27 % / 0 % | 0,88 % (92) / 1,75 % (7) | ≤ 1 % / ≤ 2 % y no peor | Sí |
+| K4. Clima y mar que quedan fuera, corto (338 plantillas, nuevas) | 12,4 % (42) | 4,7 % (16) | ≤ sección 9 + 2 puntos | **No** |
+| K5. Clima y mar que quedan fuera, cuerpo (126, nuevas) | 9,5 % (12; Andina 9 de 50) | 0 % | ≤ 5 % | **No** |
+| K6. Sobre El Niño que quedan fuera, corto (1.618, reutilizadas) | 12,7 % (206) | 10,9 % (176) | no peor | **No** |
+| K7. Sintéticos: «niño» con otro sentido / el fenómeno / del tema sin «El Niño» fuera / otros temas que pasan | 0 / 0 / 7 de 20 / 0 de 10 | — | 0 / 0 / ≤ 2 / ≤ 2 | **No** |
+| K8. Textos oficiales de septiembre al corte que quedan fuera | 30 de 292 | — | informativo | — |
+| K10. Preguntar sin cambios | 0 cambios (A4 0,951) | — | 0 | Sí |
+
+- **K9 no se midió:** el selector no cambia, así que la app es la misma que pasó P1 a P12, U1 a U6 e I1 a I5.
+- **La alternativa J no aplica:** pedía que pasaran K2, K5 y K7, y no pasan.
+- **Lectura:**
+  - las etiquetas de clima y mar sí cambiaron lo que aprende el modelo: rechaza mucho mejor los otros temas, también los que usan palabras de clima (K1: tres veces menos «Alta» que el filtro), y no deja pasar ninguno de los 10 sintéticos ajenos;
+  - pero sigue perdiendo clima y mar: 7 de 20 sintéticos (ola de calor, déficit hídrico, granizada, oleaje, anchoveta, pesca), 12 % de los titulares de clima y mar y 10 % de sus cuerpos. El tope de los negativos difíciles sube τ, y lo que se gana en rechazo se pierde en el tema;
+  - con 1.721 positivos de clima y mar, casi todos de Andina y RPP y del verano lluvioso, el modelo no generaliza al mar ni a la pesca.
+- **Lo nuevo que deja medido:** el filtro de palabras tiene más «Alta» en los otros temas con palabras de clima de lo que decían F1 y C1: 2,35 % en corto y 5,5 % en cuerpo (8 de 146). Se declara como límite de Verificar.
+- **Por qué no se ajusta:** la prueba ya se miró. Bajar τ o cambiar los topes ahora sería elegir con la prueba, y no quedan notas de la zona gris etiquetadas sin usar.

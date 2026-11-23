@@ -27,6 +27,21 @@ NINO_FENOMENO = re.compile(
 )
 MINIMO_LARGO = 2  # palabras distintas del tema en un texto largo, donde "alerta" o "costa" aparecen sueltas
 
+# Etiquetas editoriales que pone cada medio (sección 12.3), fijadas antes de medir. Se compara la etiqueta completa,
+# en minúsculas y sin tildes. Clima y mar sin «mar», «pesca», «clima» ni «cambio climático», que tienen otro sentido
+# (surf, un TLC, un volcán, la COP); esas cuatro sí cuentan para que una nota no sea de otro tema.
+ETIQUETAS_CLIMA_MAR = re.compile(
+    r"senamhi|imarpe|dhn|lluvias?(?: intensas| fuertes)?|precipitaciones|temporada de lluvias|temperaturas?|calor|"
+    r"ola de calor|friaje|heladas?|radiacion uv|huaicos?|huaycos?|inundacion(?:es)?|desbordes?(?: de rios?)?|sequia|"
+    r"oleajes?|mar peruano|anchoveta|meteorologia|fenomenos? climaticos?"
+)
+ETIQUETAS_CON_OTRO_SENTIDO = re.compile(r"mar|pesca|clima|cambio climatico")
+ETIQUETAS_OTRO_TEMA = re.compile(
+    r"deportes|futbol|mundial 2026|elecciones(?: 2026)?|onpe|jne|congreso|keiko fujimori|papa leon xiv|sismos?|"
+    r"terremoto|politica|mundo|estados unidos|policia|delincuencia|extorsion|seguridad ciudadana|educacion|cultura"
+)
+SEPARADOR_ETIQUETAS = re.compile(r"[,;|]")
+
 
 def en_pregunta(consulta):
     """La consulta trata del tema (regla de Preguntar)."""
@@ -42,6 +57,23 @@ def nombra_el_fenomeno(texto):
 def palabras_del_tema(texto):
     """Las palabras distintas del tema que aparecen (en minúsculas y sin tildes)."""
     return {m.group(0).lower() for m in PALABRAS.finditer(sin_tildes(texto or ""))}
+
+
+def etiquetas(nota):
+    """Las etiquetas editoriales de la nota, en minúsculas y sin tildes."""
+    return {sin_tildes(e.strip().lower()) for e in SEPARADOR_ETIQUETAS.split(nota.get("etiquetas") or "") if e.strip()}
+
+
+def etiquetada_clima_mar(nota):
+    return any(ETIQUETAS_CLIMA_MAR.fullmatch(e) for e in etiquetas(nota))
+
+
+def etiquetada_otro_tema(nota):
+    """Solo etiquetas de otros temas: ninguna de clima o mar, ni siquiera de las que tienen otro sentido."""
+    es = etiquetas(nota)
+    if any(ETIQUETAS_CLIMA_MAR.fullmatch(e) or ETIQUETAS_CON_OTRO_SENTIDO.fullmatch(e) for e in es):
+        return False
+    return any(ETIQUETAS_OTRO_TEMA.fullmatch(e) for e in es)
 
 
 def en_texto(texto, largo):

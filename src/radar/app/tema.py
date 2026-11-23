@@ -223,9 +223,10 @@ def medir_textos(s, k, textos_fechas):
 
 
 @exclusivo("radar.app.tema")
-def leer_cuerpos(s, lista, parar):
+def leer_cuerpos(s, lista, parar, destino=None):
     """Lee los cuerpos en memoria (sin guardarlos). No necesita el modelo: guarda el vector del inicio del texto, y
     el clasificador se aplica después; así la lectura puede correr mientras se entrena."""
+    destino = destino or ruta("cuerpos")
     modelo = s.semaforo.modelo
 
     def fila_de(nota, grupo, campos):
@@ -243,8 +244,8 @@ def leer_cuerpos(s, lista, parar):
                        "vector": " ".join(f"{x:.6f}" for x in v)}  # fmt: skip
 
     with sin_suspension():
-        tfidf.leer_cuerpos(lista, ruta("cuerpos"), COLUMNAS_LECTURA, fila_de, parar)
-    return leer_csv(ruta("cuerpos"))
+        tfidf.leer_cuerpos(lista, destino, COLUMNAS_LECTURA, fila_de, parar)
+    return leer_csv(destino)
 
 
 def lista_de_cuerpos(notas):

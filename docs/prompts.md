@@ -749,3 +749,6 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 112. Apruebo
 
 **Resultado:** la IA marcó la sección 12 de `docs/app/definicion.md` como aprobada el 23-nov. No se construye hasta la orden explícita.
+113. Construye
+
+**Resultado:** la IA construyó `radar.app.tema_clima`, con las listas de etiquetas en `radar.comun.dominio` y sus pruebas. Fijó la muestra antes de entrenar, leyó 272 cuerpos en memoria, entrenó (los textos oficiales no entraron por la CV) y midió una sola vez. Pasan K1, K3 y K10, y no pasan K2 y K4 a K7: rechaza mejor los otros temas, pero pierde clima y mar. La app sigue con el filtro de palabras, y se declara su «Alta» nueva en otros temas con palabras de clima (2,35 % en corto y 5,5 % en cuerpo). Resultados en la sección 12.6.
