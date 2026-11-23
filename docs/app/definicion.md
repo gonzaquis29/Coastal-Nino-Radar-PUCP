@@ -379,3 +379,57 @@ Se validó con `validate_palette.js` (método del skill de visualización), en c
   - antes de medir, se comprobó que la lista de «niño» con otro sentido (F4) daba 0. Es una regla fija y no cambia el resultado;
   - las notas reservadas para la capa 3 entraron en los positivos; ninguna sirvió para elegir las palabras.
 - **P7:** ahora tiene 7 textos. La receta, el teléfono y el fútbol esperan `fuera_de_tema`; ya no hay un caso de cercanía "Baja" dentro del tema.
+
+## 10. Clasificador de tema en Verificar (definición del 23-nov, pendiente de aprobación)
+
+### 10.1 Por qué
+El filtro de la sección 9 tiene un techo que no depende de la cantidad de datos:
+- **la presencia de una palabra no es el tema:** un texto largo de otro tema dice "alerta" o "costa" de pasada y pasa (F1 en cuerpo, 3 %), y un titular sobre El Niño sin palabras clave queda fuera (F2, 9 %);
+- **la cercanía no tiene contraste:** compara solo con lo oficial, así que nunca aprendió qué *no* es el tema.
+
+La salida es aprender el tema con toda la fuente, sin etiquetar a mano. Se descartan:
+- NLI: se cerró sin medir y es lento;
+- un LLM: la API no pide nada a internet;
+- la cercanía relativa: obliga a recalibrar el semáforo, y el clasificador resuelve lo mismo y además el titular sin palabras.
+
+### 10.2 Qué se construye
+1. **Etiquetas automáticas**, las que el proyecto ya calcula:
+   - tema: `sobre_nino` = 1, de `radar.noticias.rasgos` (2.785 notas);
+   - otro tema: la definición `otros_temas` de `radar.nlp.semaforo`, sin El Niño y sin términos del filtro en el cuerpo (56.595);
+   - **zona gris:** las 22.499 notas que no mencionan El Niño pero traen términos de clima en el cuerpo (lluvias, calor y también "emergencia" o "dengue"). No entran al entrenamiento, porque su etiqueta es dudosa; se informan aparte (C6).
+2. **Rasgos:** el vector e5 de titular y resumen (`reranker.texto_corto`), con el mismo modelo que ya carga el semáforo, de modo que Verificar no calcula un vector más.
+3. **Modelo:** regresión logística con pesos por clase balanceados.
+   - Se elige con validación cruzada de 5 grupos *solo con el entrenamiento*: la regularización C y el umbral τ, el menor que deja pasar como máximo el 1 % de los textos de otros temas en la validación cruzada.
+   - Semilla fija. Se guarda en `data/processed/app/tema-modelo.joblib`: son unos 770 números y no se versiona, como el resto de `data/`.
+4. **Partición por tiempo:**
+   - entrenamiento con enero a agosto: 1.167 notas del tema y 46.089 de otros temas;
+   - **prueba con septiembre al corte:** 1.618 y 10.506, que no se miran hasta el final;
+   - es la práctica estándar con datos que ya se usaron: no se ajusta nada con la prueba.
+5. **En Verificar:**
+   - si el texto nombra el fenómeno (`dominio.nombra_el_fenomeno`), está en el tema;
+   - si no, decide el clasificador sobre el texto completo cuando es corto, o sobre sus primeras 100 palabras (`PALABRAS_CORTO`) cuando es largo, porque en una nota el tema está al inicio;
+   - fuera del tema, el mismo resultado `fuera_de_tema` de la sección 9;
+   - Preguntar no cambia: sigue con `dominio.en_pregunta`.
+6. **Si no pasa,** queda el filtro de la sección 9 tal como está y se declara.
+
+### 10.3 Muestras
+- **Corto:** todas las notas de la prueba (septiembre al corte).
+- **Cuerpo:** 100 notas por medio de cada grupo de la prueba (400 y 400, semilla nueva), leídas en memoria sin guardarlas, para que el intervalo sea de ±1,5 puntos y no de ±4.
+- Las notas de la prueba ya se usaron el 23-nov para *medir* el filtro de la sección 9, pero no para entrenar ni para elegir nada del clasificador. Se declara.
+- **Sintéticos nuevos**, escritos antes de medir y distintos de los de las secciones 9.4 y 9.5: 10 usos de «niño» con otro sentido, 10 menciones del fenómeno y 10 textos del tema sin «El Niño».
+
+### 10.4 Criterios (fijados antes de construir)
+| | Criterio | Umbral |
+|---|---|---|
+| C1 | Otros temas con «Alta», corto (prueba) | ≤ 1 % y no peor que la sección 9 en las mismas notas |
+| C2 | Otros temas con «Alta», cuerpo (400) | ≤ 2 % |
+| C3 | Notas del tema que quedan fuera, corto (prueba) | ≤ 5 % y no peor que la sección 9 en las mismas notas |
+| C4 | Notas del tema que quedan fuera, cuerpo (400) | ≤ 5 % |
+| C5 | Sintéticos: «niño» con otro sentido que pasa / el fenómeno que no pasa / del tema sin «El Niño» que quedan fuera | 0 / 0 / ≤ 1 de 10 |
+| C6 | Zona gris de la prueba: proporción que pasa | informativo |
+| C7 | La app: P1 a P12 y U1 a U6; P2 (mediana de Verificar ≤ 2 s) | todos |
+| C8 | Preguntar sin cambios | 0 decisiones distintas |
+
+- Si C1 a C5 pasan, **P13** (otros temas con «Alta» en Verificar ≤ 2 %, en corto y en cuerpo) entra a la sección 6.
+- **Comandos previstos:** `python -m radar.app.tema entrenar|muestra|validar`. Archivos: `radar.app.tema` (nuevo), `radar.app.servicio` y sus pruebas.
+- **Riesgo declarado:** la etiqueta dice "menciona El Niño". El modelo podría rechazar textos de lluvias o de mar que no lo nombran; C5 y C6 lo miden.

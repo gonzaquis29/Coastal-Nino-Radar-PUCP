@@ -660,3 +660,16 @@ Se actualizaron `docs/analitica/eventos.md`, `docs/nlp/discrepancia.md`, `docs/y
 87. Declararlo y seguir
 
 **Resultado:** la IA dejó F1 en cuerpo como "no pasa", declarado, y no ajustó el filtro. Volvió a medir la app (F7): pasan P1 a P12 y U1 a U6, con P7 de 7/7. P13 no entra a la sección 6. Documentó los resultados en la sección 9.6, el README, `CLAUDE.md` y pendientes.
+88. veo que igual seguimos con problemas, que es lo que necesitamos? que yo sepa hemos recolectado muchisiam info
+
+**Resultado:** la IA explicó que no falta información (el filtro se midió con 53.458 notas). Lo que limita es que los cuerpos no se guardan, por derecho de autor, y el techo de un filtro por palabras. Recomendó cerrarlo así.
+89. pero como podemos mejorarlo? por que tiene un techo? que deberiamos hacer para mejorar eso, es critico
+
+**Resultado:** la IA explicó las dos causas del techo (que aparezca una palabra no garantiza el tema, y la cercanía no tiene contraste). Mapeó seis enfoques y recomendó un clasificador de tema con etiquetas automáticas, validado con los meses de septiembre en adelante.
+90. Sí, defínela
+
+**Resultado:** la IA escribió la sección 10 de `docs/app/definicion.md`:
+- etiquetas automáticas (tema, otros temas y una zona gris que no entra al entrenamiento);
+- vector e5 y regresión logística, con la partición por tiempo (enero a agosto para entrenar, septiembre al corte para probar);
+- cuerpos de 400 y 400 notas, y los criterios C1 a C8.
+No construyó nada: espera la aprobación.
