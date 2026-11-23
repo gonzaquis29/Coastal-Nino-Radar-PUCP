@@ -295,7 +295,7 @@ Se validó con `validate_palette.js` (método del skill de visualización), en c
   - no usar la app para pruebas sueltas, para que el registro de uso solo tenga el uso real;
   - si cambian los datos (punto 4 de pendientes), volver a correr `python -m radar.app.validar`, `npm run medir` y `python -m radar.app.validar_interfaz`.
 
-## 9. Textos de otros temas en Verificar (definición del 23-nov, pendiente de aprobación)
+## 9. Textos de otros temas en Verificar (definición aprobada el 23-nov)
 
 ### 9.1 Problema medido
 - **Verificar da cercanía a cualquier texto, sea del tema o no.** "Alta" empieza en el p95 de las notas de otros temas (sección de umbrales en `docs/nlp/discrepancia.md`), así que, por construcción, cerca del 5 % de los textos ajenos salen "Alta" y cerca del 20 % "Media". S3 lo midió (5,8 %) y pasó, pero nadie tradujo esa tasa a lo que ve el ciudadano: la app muestra "Cercanía: Alta" para un texto de fútbol.

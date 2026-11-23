@@ -648,3 +648,6 @@ Se actualizaron `docs/analitica/eventos.md`, `docs/nlp/discrepancia.md`, `docs/y
 84. Sí, usa todas
 
 **Resultado:** la IA cambió las muestras de la sección 9 de `docs/app/definicion.md`. F1 usa las 50.623 notas de otros temas y F2 usa 2.635 notas sobre El Niño (las 58 del corte se informan aparte). También declaró la excepción a la regla de `notas_vistas.csv`: esas notas no sirvieron para elegir las palabras del filtro. Sigue sin construir.
+85. Apruebo (filtro de tema)
+
+**Resultado:** la IA marcó como aprobada la sección 9 de `docs/app/definicion.md`, con F1 a F7 y P13. No construyó nada: espera la orden.
