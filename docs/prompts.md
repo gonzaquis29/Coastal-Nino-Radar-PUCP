@@ -740,3 +740,6 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 109. corrigelo de una vez
 
 **Resultado:** la IA quitó de `docs/pendientes.md` la tarea de subir los commits, ya hecha, y lo subió.
+110. Tarea: el pendiente «etiquetas de clima y mar que no dependan de El Niño» para el filtro de tema de Verificar (avisos del Senamhi como positivos, con una prueba nueva). Primero un mapa de todos los enfoques, luego la definición con criterios y umbrales fijados antes de medir, para aprobarla; no construir sin orden explícita. Validar con muestras nuevas.
+
+**Resultado:** la IA midió qué datos quedan sin usar (20.286 notas de la zona gris; 2.402 con etiquetas editoriales de clima o mar del propio medio) y escribió la sección 12 de `docs/app/definicion.md`: mapa de 11 enfoques, elige las etiquetas editoriales como positivos (los avisos del Senamhi solo si mejoran la validación cruzada, por su registro oficial), muestras nuevas de clima y mar y criterios K1 a K9. Sin aprobar ni construir.

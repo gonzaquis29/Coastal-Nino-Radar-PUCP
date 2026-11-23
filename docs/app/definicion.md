@@ -515,3 +515,68 @@ Lo que se corrigió durante la medición:
 - El enlace al comunicado y la palabra «Senamhi» medían menos de 44 px de alto (U5): se agrandó su área de toque sin mover el texto.
 - Los gráficos del Panorama se dibujaban con 640 px hasta que el navegador avisaba el ancho, y a 360 y 375 px la página se desplazaba a los lados (I2). Ahora miden su caja al aparecer.
 - La primera medición de P7 usó una API arrancada antes del cambio de título; con la API recién arrancada da 7/7.
+
+## 12. Etiquetas de clima y mar para el tema de Verificar (propuesta del 23-nov, sin aprobar)
+
+### 12.1 Por qué
+El clasificador de la sección 10 aprendió "menciona El Niño" porque su única etiqueta positiva era `sobre_nino`: rechazó 6 de 10 textos sintéticos de clima y mar (C5) y perdió más titulares del tema que el filtro de palabras (C3). Hace falta una etiqueta positiva de clima y mar que no dependa de nombrar a El Niño y que no pongamos nosotros (cero etiquetado manual).
+
+**Datos disponibles (medidos el 23-nov):**
+- la zona gris tiene **20.286 notas que ninguna muestra usó** (no están en `config/notas_vistas.csv`): 11.586 de enero a agosto y 8.700 de septiembre al corte;
+- de ellas, **2.402 llevan una etiqueta editorial de clima o mar** que puso el propio medio (`etiquetas` de `notas.csv`: «senamhi», «lluvias intensas», «temperatura», «huaicos», «pesca», «imarpe», «friaje»…): 1.879 para entrenar y 523 para probar. Andina tiene 1.778, RPP 562, Exitosa 62 y El Tiempo ninguna;
+- otras 2.060 de la zona gris citan al Senamhi, IMARPE, DHN o ENFEN en `actores`;
+- el corpus oficial tiene 675 párrafos de avisos del Senamhi (143 avisos, solo de temperatura y precipitaciones, del 31-dic al 19-nov) y 119 párrafos del ENFEN de impactos y pesca.
+
+### 12.2 Mapa de enfoques
+| Tipo | Opción | Por qué sí o por qué no |
+|---|---|---|
+| Supervisión distante con metadatos | **A. Etiquetas editoriales del medio** como positivos | **Elegida.** Las pone el medio, no nosotros; no están en el texto que ve el modelo, así que no ofrecen un atajo léxico; hay 2.402 notas sin usar. Cubren lluvias, calor, huaicos, pesca y mar. |
+| Supervisión distante con fuentes | B. Notas que citan al Senamhi, IMARPE, DHN o ENFEN | El nombre de la institución está en el texto: el modelo aprendería «Senamhi» como antes aprendió «Niño», aunque se enmascare. **Solo para medir**, como vista independiente de A. |
+| Textos oficiales como positivos | C. Avisos del Senamhi y párrafos de impactos y pesca del ENFEN | Era la idea anotada. Son pocos, de dos fenómenos y con registro oficial («se prevén temperaturas máximas entre…»), no de noticia: el modelo aprendería el estilo. **Entran solo si mejoran la validación cruzada del entrenamiento**; los avisos de septiembre al corte quedan para la prueba. |
+| Coincidencia temporal | D. Notas publicadas durante un aviso vigente en su macro-región | Etiqueta débil: en esas fechas se publica de todo. No entra. |
+| Aprendizaje con no etiquetados | E. PU (positivos y no etiquetados) con la zona gris | Necesita la proporción de positivos en la zona gris, que no se conoce sin etiquetar. Más complejo que A con el mismo dato. |
+| Sin entrenamiento | F. Similitud con descripciones del tema (prototipos) o NLI zero-shot | Los prototipos son la cercanía, que ya falló (9.1); el NLI se cerró y es lento. |
+| Agrupamiento | G. Tópicos de BERTopic como etiqueta | Los tópicos se calcularon solo con notas sobre El Niño. |
+| Generativo | H. Un LLM que etiquete | La app no pide nada a internet, y sería un etiquetado sin referencia externa. |
+| Reglas | I. Ampliar el vocabulario de `radar.comun.dominio` | No resuelve el límite de 10.1: la palabra no es el tema. |
+| Combinación | J. Filtro de palabras y clasificador juntos | En 10.5 elegirlo con la prueba ya mirada era sesgado; con la prueba nueva se puede, solo como alternativa fijada aquí (12.5). |
+| No hacer nada | K. Dejar el filtro de la sección 9 y declararlo | Es lo que queda si 12.5 no pasa. |
+
+### 12.3 Qué se construye
+1. **Lista de etiquetas editoriales de clima y mar** en `radar.comun.dominio` (`ETIQUETAS_CLIMA_MAR`), fija antes de medir: senamhi, imarpe, dhn, lluvia(s), lluvias intensas o fuertes, precipitaciones, temporada de lluvias, temperatura(s), calor, ola de calor, friaje, helada(s), radiación UV, huaico(s) o huayco(s), inundación(es), desborde(s) (de río), sequía, oleaje(s), mar, mar peruano, pesca, anchoveta, clima, meteorología, fenómenos climáticos y cambio climático. Se compara la etiqueta completa, en minúsculas y sin tildes.
+2. **Clases de entrenamiento** (enero a agosto):
+   - *tema:* `sobre_nino` = 1 (1.167);
+   - *clima y mar:* zona gris sin ver con alguna etiqueta de la lista (1.879). Se une con *tema* en la clase positiva;
+   - *otro tema:* `otros_temas` sin ninguna etiqueta de la lista (se quitan las 575 de otros temas que la tienen, en entrenamiento y en prueba);
+   - la zona gris sin etiqueta sigue fuera.
+3. **Rasgos y modelo:** como en la sección 10 (vector minilm de titular y resumen, regresión logística balanceada, C y τ por validación cruzada de 5 grupos solo con el entrenamiento, τ el menor que deja pasar ≤ 1 % de otros temas). La única elección nueva en la CV: con o sin los textos oficiales (opción C).
+4. **En Verificar:** igual que 10.2.5, detrás del selector `FILTRO_DE_TEMA`, que sigue en `"palabras"` hasta que pase 12.5.
+5. **Comandos previstos:** `python -m radar.app.tema entrenar|muestra|cuerpos|validar --clima-mar`, con la prueba "App: clasificador de tema con clima y mar" en `validacion.csv`. No escribe en `eventos.csv`.
+
+### 12.4 Muestras
+- **Nuevas** (septiembre al corte, nunca usadas):
+  - *clima y mar, corto:* las 523 notas de la zona gris con etiqueta de la lista;
+  - *clima y mar, cuerpo:* hasta 50 por medio de esas 523 (unas 140: El Tiempo no tiene y Exitosa tiene pocas; semilla nueva), leídas en memoria con `Medio.leer`, sin guardar el cuerpo;
+  - *vista B (informativa):* las de la zona gris de septiembre al corte que citan al Senamhi, IMARPE, DHN o ENFEN en `actores` y no llevan etiqueta de la lista;
+  - *avisos del Senamhi* de septiembre al 19-nov (si la opción C entra, no se usan para entrenar);
+  - *sintéticos nuevos*, escritos antes de medir y distintos de los de 9.4 y 10.3: 10 usos de «niño» con otro sentido, 10 menciones del fenómeno y 20 textos del tema sin «El Niño» (10 de clima y 10 de mar y pesca). Todos inventados.
+- **Reutilizadas, y se declara:** las 10.506 de otros temas y las 1.618 sobre El Niño de septiembre al corte ya se midieron en las secciones 9 y 10, sin entrenar ni elegir nada con ellas. No quedan notas de otros temas sin usar (solo 70), así que se repiten con `--repetir`. En cuerpo se usan los vectores de inicio ya guardados en `tema-c-cuerpos.csv` (400 y 399), sin volver a leer las notas.
+- Después de medir, las notas nuevas pasan a `config/notas_vistas.csv` con la muestra `validacion-clima-mar`.
+
+### 12.5 Criterios (fijados antes de construir)
+| | Criterio | Umbral |
+|---|---|---|
+| K1 | Otros temas con «Alta», corto (10.506, reutilizadas) | ≤ 1 % y no peor que la sección 9 (0,97 %) |
+| K2 | Otros temas con «Alta», cuerpo (400, reutilizadas) | ≤ 2 % |
+| K3 | Sobre El Niño que quedan fuera, corto (1.618, reutilizadas) | ≤ 5 % y no peor que la sección 9 (10,9 %) |
+| K4 | Clima y mar que quedan fuera, corto (523, nuevas) | ≤ 10 % y no peor que la sección 9 en las mismas notas |
+| K5 | Clima y mar que quedan fuera, cuerpo (~140, nuevas) | ≤ 5 % |
+| K6 | Sintéticos: «niño» con otro sentido que pasa / el fenómeno que no pasa / del tema sin «El Niño» que quedan fuera | 0 / 0 / ≤ 2 de 20 |
+| K7 | Vista B y avisos del Senamhi que quedan fuera | informativo |
+| K8 | La app: P1 a P12, U1 a U6 e I1 a I5; P2 (mediana de Verificar ≤ 2 s) | todos |
+| K9 | Preguntar sin cambios | 0 decisiones distintas |
+
+- **Decisión:** si K1 a K6 pasan, `FILTRO_DE_TEMA` pasa a `"clasificador"` y P13 entra a la sección 6. Si no, sigue el filtro de palabras y se declara.
+- **Alternativa J, fijada ahora:** si el clasificador no pasa K3 pero sí K1, K2 y K4 a K6, se mide una sola vez la combinación «nombra el fenómeno, o pasa el filtro de palabras y el clasificador» con los mismos criterios, y se declara como segunda medición.
+- **Riesgos declarados:** casi todas las etiquetas editoriales son de Andina y RPP, así que el modelo puede aprender su estilo (K5 se informa por medio); «cambio climático» y «senamhi» pueden marcar notas de política ambiental o institucional, que igual son del clima.
+- **Archivos:** `radar.comun.dominio` (la lista), `radar.app.tema` (la opción `--clima-mar`), `radar.app.servicio` (solo el selector, si pasa) y sus pruebas, con notas sintéticas.
