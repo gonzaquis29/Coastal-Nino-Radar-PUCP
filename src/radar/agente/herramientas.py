@@ -10,7 +10,7 @@ import re
 import numpy as np
 
 from radar.analitica import recomendador
-from radar.nlp import semaforo
+from radar.nlp import embeddings, semaforo
 from radar.oficial.vigencia import Corpus
 
 CITAS = 3  # párrafos citados por respuesta
@@ -38,7 +38,7 @@ class Oficial:
         self.modelo = semaforo._semaforo().modelo  # el mismo minilm del semáforo: se carga una sola vez
         self.parrafos = [p for p in self.base.parrafos if p["tipo"] not in TIPOS_FUERA and p["texto"].strip()]
         self.indice = {p["id"]: i for i, p in enumerate(self.parrafos)}
-        self.vectores = np.asarray(self.modelo.embeber([p["texto"] for p in self.parrafos]))
+        self.vectores = np.asarray(embeddings.con_cache(self.modelo, [p["texto"] for p in self.parrafos]))
 
     def embeber(self, textos):
         return np.asarray(self.modelo.embeber(list(textos)))

@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+from radar import config
 from radar.nlp import embeddings, esquemas
 
 pytest.importorskip("sklearn")
@@ -128,3 +129,25 @@ def test_elegir_prefiere_e5_en_empate():
     assert embeddings.elegir({"minilm": 0.85, "e5": 0.84}) == "e5"
     assert embeddings.elegir({"minilm": 0.88, "e5": 0.84}) == "minilm"
     assert embeddings.elegir({"minilm": 0.80, "e5": 0.91}) == "e5"
+
+
+def test_con_cache_guarda_y_recalcula_si_cambian_los_textos(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "DIR_CACHE_VECTORES", tmp_path)
+
+    class Falso:
+        nombre, repo, prefijo, largo = "falso", "repo/falso", "pasaje: ", 128
+        llamadas = 0
+
+        def embeber(self, textos):
+            Falso.llamadas += 1
+            return np.array([[len(t), 1.0] for t in textos])
+
+    modelo = Falso()
+    primero = embeddings.con_cache(modelo, ["uno", "dos"])
+    segundo = embeddings.con_cache(modelo, ["uno", "dos"])
+    assert Falso.llamadas == 1 and np.array_equal(primero, segundo)
+    embeddings.con_cache(modelo, ["uno", "tres"])
+    assert Falso.llamadas == 2
+    modelo.prefijo = "consulta: "
+    embeddings.con_cache(modelo, ["uno", "dos"])
+    assert Falso.llamadas == 3

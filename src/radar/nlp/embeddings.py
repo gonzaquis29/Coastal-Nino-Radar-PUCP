@@ -12,6 +12,8 @@ Requiere pip install -e ".[nlp]" y los modelos en la caché de Hugging Face.
 import argparse
 import base64
 import collections
+import hashlib
+import io
 import logging
 import os
 import re
@@ -21,7 +23,7 @@ import threading
 import numpy as np
 
 from radar import config
-from radar.comun.archivos import anexar_csv, leer_csv
+from radar.comun.archivos import anexar_csv, escribir_atomico, leer_csv
 from radar.comun.candado import exclusivo
 from radar.comun.energia import sin_suspension
 from radar.comun.registro import configurar, describir
@@ -171,6 +173,28 @@ class Modelo:
         return np.vstack([self.motor.embeber(textos[i : i + lote]) for i in range(0, len(textos), lote)])
 
 
+def con_cache(modelo, textos):
+    """modelo.embeber(textos), guardado en disco. La clave lleva el modelo, su prefijo y todos los textos: si cambia
+    el corpus oficial o el modelo, se recalcula. Así la API no vuelve a embeber los mismos párrafos en cada arranque."""
+    if not textos:
+        return modelo.embeber(textos)
+    clave = hashlib.sha256("".join([modelo.repo, modelo.prefijo, str(getattr(modelo, "largo", "")), *textos])
+                           .encode("utf-8")).hexdigest()[:32]  # fmt: skip
+    ruta = config.DIR_CACHE_VECTORES / f"{modelo.nombre}-{clave}.npy"
+    if ruta.exists():
+        try:
+            vectores = np.load(ruta, allow_pickle=False)
+            if len(vectores) == len(textos):
+                return vectores
+        except (OSError, ValueError):
+            log.warning(f"Caché de vectores ilegible, se recalcula: {ruta.name}")
+    vectores = np.asarray(modelo.embeber(textos))
+    datos = io.BytesIO()
+    np.save(datos, vectores, allow_pickle=False)
+    escribir_atomico(ruta, datos.getvalue())
+    return vectores
+
+
 class Oficial:
     """Los párrafos del ENFEN embebidos por tramos con un modelo, con y sin los términos del fenómeno."""
 
@@ -184,7 +208,7 @@ class Oficial:
                 t = modelo.tramos(f(p["texto"]))
                 textos += t
                 de += [i] * len(t)
-            vectores, de = modelo.embeber(textos), np.array(de)
+            vectores, de = con_cache(modelo, textos), np.array(de)
             por_parrafo = _normalizar(np.vstack([vectores[de == i].mean(0) for i in range(len(parrafos))]))
             self.por[v] = (vectores, de, por_parrafo, _normalizar(por_parrafo.mean(0)))
             self.truncados += modelo.truncados(textos)

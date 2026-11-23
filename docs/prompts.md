@@ -691,3 +691,6 @@ No construyó nada: espera la aprobación.
 95. si arreglala (la fecha ISO del agente)
 
 **Resultado:** la IA encontró que Preguntar mostraba el texto interno del agente: fechas AAAA-MM-DD, ids (`enfen-2026-20`, `costa_norte`, `prevencion`) y jerga ("Semáforo: rojo (reglas)"). Ahora la respuesta se arma con las plantillas `PREGUNTAR` de `radar.app.textos` (U2 y U3), con fechas largas y nombres legibles, y el agente no cambia. Agregó una prueba, y P1 a P12 y U1 a U6 volvieron a pasar.
+96. te refieres que tenemos un servicio muy lento? eso de que parte es / debemos mejroar con urgencia eso, debemos optimizarlo, es pesimo tanto tiempo, o sea yo levanto el proyecto y va a estar ahi demorando tanto?
+
+**Resultado:** la IA midió el arranque por pasos: la mayor parte se iba en volver a calcular los vectores de los párrafos oficiales en cada arranque. Los guardó en disco (`embeddings.con_cache`, en `data/processed/cache/`), y se recalculan solos si cambian el corpus oficial o el modelo. El arranque bajó de 63,2 s a 15,6 s, y P1 a P5 y las pruebas siguen pasando. Lo que queda es importar las librerías.
