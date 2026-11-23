@@ -676,3 +676,12 @@ No construyó nada: espera la aprobación.
 91. Apruebo (clasificador de tema)
 
 **Resultado:** la IA marcó como aprobada la sección 10 de `docs/app/definicion.md`, con C1 a C8. No construyó nada: espera la orden.
+92. Sí, construye (clasificador de tema)
+
+**Resultado:** la IA escribió `radar.app.tema` y sus pruebas, y entrenó con enero a agosto (C = 10, τ 0,83).
+93. cuanto demorara aprox? / paraleliza para que sea mas rapido / que implica que C quede al borde? es malo?
+
+**Resultado:** la IA estimó unos 30 minutos. Para acelerar, separó la lectura de cuerpos del modelo: guarda solo datos derivados, entre ellos el vector del inicio del texto. Así la lectura corrió con 4 hilos mientras se entrenaba. Explicó que C en el borde de la grilla no contamina la prueba y que la curva es plana; lo declaró.
+- Validación: pasan C1 (0,22 %), C2 (0,50 %), C4 y C8.
+- No pasan C3 (12,8 %) ni C5: rechaza 6 de 10 textos de clima sin «El Niño».
+- La app sigue con el filtro de la sección 9 (`FILTRO_DE_TEMA = "palabras"`).

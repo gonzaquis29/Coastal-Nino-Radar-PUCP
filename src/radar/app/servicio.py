@@ -27,6 +27,8 @@ COMUNICADOS_EN_LINEA = 6  # comunicados que muestra la mini línea de tiempo de 
 PARRAFOS_QUE_HACER = 2
 DIAS_NOTA_RECIENTE = 3  # la cascada fresca de la ronda b del recomendador
 INTERES_POR_DEFECTO = "prevencion"
+# Filtro de tema de Verificar: "palabras" (sección 9) o "clasificador" (sección 10, solo si pasa C1 a C5)
+FILTRO_DE_TEMA = "palabras"
 MESES = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre",
          "noviembre", "diciembre")  # fmt: skip
 CAMPOS_NOTA = ("medio", "id", "titular", "fecha", "url", "macroregion")  # P3: lo único que sale de una nota
@@ -129,6 +131,7 @@ class Servicio:
 
     def __init__(self, semaforo_=None):
         self.semaforo = semaforo_ or semaforo._semaforo()
+        self._tema = None
         self.corpus = herramientas.corpus()
         self.historia = self.semaforo.historia
         self.comunicados = {c["id"]: c for c in self.corpus.comunicados}
@@ -160,6 +163,16 @@ class Servicio:
                 "avisos": avisos}  # fmt: skip
 
     # ------------------------------------------------ Verificar
+
+    def en_tema(self, texto, largo):
+        """Sección 9 (palabras) o sección 10 (clasificador), según FILTRO_DE_TEMA."""
+        if FILTRO_DE_TEMA == "clasificador":
+            from radar.app import tema
+
+            if self._tema is None:
+                self._tema = tema.Clasificador(modelo=self.semaforo.modelo)
+            return self._tema.en_tema(texto)
+        return dominio.en_texto(texto, largo)
 
     def medir(self, texto, fecha):
         """El semáforo con el texto como titular (corto) o como cuerpo (largo), igual que el agente."""
@@ -235,7 +248,7 @@ class Servicio:
         r, (titular, resumen, cuerpo) = self.medir(texto, fecha)
         # U6: el color y el método no salen de aquí; el nivel solo es un veredicto cuando hay datos
         salida = {"fecha": fecha, "palabras": r["palabras"], "estado": self.estado(fecha, macroregion)}
-        if r["origen"] in ("reglas", "distancia") and not dominio.en_texto(texto, bool(cuerpo)):
+        if r["origen"] in ("reglas", "distancia") and not self.en_tema(texto, bool(cuerpo)):
             # Sección 9: un texto de otro tema no recibe cercanía ni veredicto
             r = {"origen": "fuera_de_tema", "parrafo": None}
         afirmaciones = self._afirmaciones(titular, resumen, cuerpo, fecha) if r["origen"] == "reglas" else []

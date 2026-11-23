@@ -433,3 +433,32 @@ La salida es aprender el tema con toda la fuente, sin etiquetar a mano. Se desca
 - Si C1 a C5 pasan, **P13** (otros temas con «Alta» en Verificar ≤ 2 %, en corto y en cuerpo) entra a la sección 6.
 - **Comandos previstos:** `python -m radar.app.tema entrenar|muestra|validar`. Archivos: `radar.app.tema` (nuevo), `radar.app.servicio` y sus pruebas.
 - **Riesgo declarado:** la etiqueta dice "menciona El Niño". El modelo podría rechazar textos de lluvias o de mar que no lo nombran; C5 y C6 lo miden.
+
+### 10.5 Resultados (23-nov): no pasa; la app sigue con el filtro de la sección 9
+- **Código:**
+  - `radar.app.tema`, con las órdenes `entrenar`, `muestra`, `cuerpos` y `validar`. `cuerpos` lee en memoria mientras se entrena y guarda solo datos derivados: el filtro de la sección 9, la banda del semáforo y el vector del inicio del texto.
+  - En `radar.app.servicio`, el selector `FILTRO_DE_TEMA` queda en `"palabras"`.
+  - Pruebas en `tests/app/test_tema.py`.
+- **Entrenamiento** (enero a agosto, 47.256 notas, 1.167 del tema):
+  - C = 10 y τ = 0,8285;
+  - average precision en la validación cruzada: 0,872 con C = 0,1, 0,892 con C = 1 y 0,895 con C = 10;
+  - C quedó en el borde de la grilla. La curva es plana, así que la ganancia de subirlo sería mínima; se declara.
+- **Rasgos:** se usó el minilm del semáforo, no el e5. La sección 10.2 decía "e5", pero el semáforo usa minilm; se mantuvo lo que esa sección quería: el mismo modelo que la app ya carga.
+
+| Criterio | Clasificador | Sección 9 en las mismas notas | Umbral | Pasa |
+|---|---|---|---|---|
+| C1. Otros temas con «Alta», corto (10.506) | 0,22 % (IC 0,15 a 0,33) | 0,97 % (102) | ≤ 1 % y no peor | Sí |
+| C2. Otros temas con «Alta», cuerpo (400; 1 sin leer) | 0,50 % (IC 0,14 a 1,80) | 1,75 % (7) | ≤ 2 % | Sí |
+| C3. Del tema que quedan fuera, corto (1.618) | 12,79 % (IC 11,3 a 14,5) | 10,9 % (176) | ≤ 5 % y no peor | **No** |
+| C4. Del tema que quedan fuera, cuerpo (399) | 0 % | 0 % | ≤ 5 % | Sí |
+| C5. Sintéticos: «niño» con otro sentido / el fenómeno / del tema sin «El Niño» | 0 / 0 / 6 de 10 | — | 0 / 0 / ≤ 1 | **No** |
+| C6. Zona gris que pasa (9.503) | 10,0 % | 20,6 % | informativo | — |
+| C8. Preguntar sin cambios | 0 cambios | — | 0 | Sí |
+
+- **Lectura:** se cumplió el riesgo declarado en 10.4.
+  - El clasificador es mucho mejor para rechazar otros temas: cuatro veces menos «Alta» en corto y tres veces menos en cuerpo.
+  - Pero aprendió "menciona El Niño": rechaza textos de clima y mar que no lo nombran (6 de 10 sintéticos, como la pesca, los huaicos o el oleaje), y en corto pierde más notas del tema que el filtro de palabras.
+  - Como la app debe aceptar El Niño, el mar y el clima, no se activa.
+- **Lo que esto dice de la sección 9:** en esta muestra más grande (400 cuerpos de septiembre al corte), el filtro de palabras da 1,75 % de «Alta» en cuerpo, por debajo del 2 %. En la sección 9.6 había dado 3 de 100. Es otra muestra, medida después y como comparación, así que no cambia el "no pasa" de F1; se informa.
+- **Por qué no se ajusta:** la prueba ya se miró. Combinar los dos filtros o cambiar τ ahora sería elegir con la prueba, y no queda otra muestra limpia.
+- **Qué lo resolvería** (pendiente, sin definir): etiquetas de "clima y mar" que no dependan de nombrar a El Niño. Por ejemplo, los avisos del Senamhi y los párrafos de impactos del ENFEN como positivos. Pide otra definición y una prueba nueva, que no existe antes del congelamiento.
