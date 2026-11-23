@@ -11,7 +11,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
    - **Variables previstas:** el semáforo del título y la descripción del video, los tópicos y los rasgos del título, con los suscriptores y los días desde la publicación como controles. Las emociones **no** entran: la decisión del 17-nov las dejó solo descriptivas, aunque el README las lista.
 2. **Red social con YouTube** (README, red; Y3 pasa con 151 canales). **Hecha el 22-nov** (`python -m radar.redes.youtube`; [redes/youtube.md](redes/youtube.md)): pasan R1, R2 (Q 0,241 frente a un p95 de 0,230) y R4; no pasa R3 (comunidades inestables); la pregunta 6 no es concluyente (R6 cambia el signo): red canal–canal por comentaristas compartidos (no co-mención: las @menciones no se guardan), con un nulo bipartito.
 3. **Analítica web** (README, punto 10). **Hecha el 22-nov** (`python -m radar.analitica.web todo`; [analitica/web.md](analitica/web.md)): pasan W1, W6 y W9 a W11. La pregunta 5 da **sí**: dentro del canal, lo más alejado de lo oficial tiene algo más de engagement (ρ −0,17; IC −0,26 a −0,10), sin que lo que contradice tenga más. Trends no muestra relación medible con la cobertura (W8). Plan original: KPIs de engagement frente a la cercanía con lo oficial (Spearman, descriptivo), Trends por departamento alrededor de cada comunicado ([youtube/definicion.md](youtube/definicion.md#14-resultados-de-trends-segunda-exportación-22-nov-2026); Tumbes usa el promedio de dos exportaciones) e indicadores de los medios. Depende de 1 y 2 para lo de YouTube.
-4. **Actualizar con las notas del corte** (corridas cortas, sin definición nueva):
+4. **Actualizar con las notas del corte** (corridas cortas, sin definición nueva). **Hecho el 22-nov:** discrepancia con 2.785 notas (74 % sin datos), eventos con 20 comunicados (14 de 20, mediana +51 %; V1 pasa y V2 no, sigue descriptivo), emociones del corte (solo descriptivas, M2 κ 0,232) y la app medida de nuevo (P1 a P12 y U1 a U6 pasan).
    - `python -m radar.nlp.discrepancia calcular`: es reanudable y solo agrega las notas que faltan. Quedó en 2.727 notas sobre El Niño y ahora hay 2.785.
    - `python -m radar.analitica.eventos validar --ronda c`, con los comunicados N.° 19 y 20 (sigue descriptivo).
    - Emociones de los comentarios del corte (`python -m radar.youtube.emociones`, unos 40 min), solo descriptivas.
@@ -38,7 +38,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
   - app: API e interfaz (P1 a P12 y U1 a U6).
   
   El NLI se cerró sin medir.
-- **Sin empezar:** nada del alcance; queda el punto 4 (actualizar con las notas del corte).
+- **Sin empezar:** nada del alcance; el punto 4 se hizo el 22-nov.
 
 ## Rutina diaria (cerrada el 22-nov)
 La recolección diaria terminó con el corte. Se registró en [recoleccion/diaria.md](recoleccion/diaria.md): ejecuciones, huecos del 16 y del 22-nov y cómo se recuperaron. Si hubiera que leer algo más: `python -m radar.noticias.historico` y `python -m radar.region.notas`. Un solo proceso a la vez pide páginas (`data/red.lock`).
@@ -104,7 +104,7 @@ Decisión del 1-nov: no se corren más recálculos completos (~10 h) después de
 
 Además, en la semana 3:
 - Semáforo calibrado (punto 1).
-- Estudio de eventos: `radar.analitica.eventos` ([analitica/eventos.md](analitica/eventos.md)). **Cerrado el 8-nov como descriptivo:** ninguna de las tres rondas controla el tamaño y la potencia con 18 eventos (la ronda c da V1 0,087 y V2 0,561, aunque V3 y V4 pasan). Se describe por comunicado: la proporción sobre El Niño sube en 14 de 18, con mediana +63 % frente a la semana anterior. Repetir `validar --ronda c` después del corte, con los N.° 19 y 20.
+- Estudio de eventos: `radar.analitica.eventos` ([analitica/eventos.md](analitica/eventos.md)). **Cerrado el 8-nov como descriptivo:** ninguna de las tres rondas controla el tamaño y la potencia con 18 eventos (la ronda c da V1 0,087 y V2 0,561, aunque V3 y V4 pasan). Se describe por comunicado: la proporción sobre El Niño sube en 14 de 18, con mediana +63 % frente a la semana anterior. Repetida el 22-nov con los N.° 19 y 20: 14 de 20, mediana +51 % (V1 ya pasa; V2 no).
 - Modelo de engagement o su alternativa.
 - Recomendador híbrido: `radar.analitica.recomendador` ([analitica/recomendador.md](analitica/recomendador.md)). La ronda a (8-nov) pasa la puerta, R2 a R4 y K2, pero no R1: lo más reciente le gana (MRR 0,387 frente a 0,196). Ronda b aprobada: la cascada fresca de 3 días, calibrada con A (MRR 0,425 frente a 0,387), se decide el **18-nov** con la muestra B (`validar --ronda b`, junto con T5). Requiere la recolección diaria hasta entonces.
 - Agente con herramientas, sin LLM: `radar.agente` ([agente/definicion.md](agente/definicion.md)). La ronda a (9-nov) pasa A2 a A5 pero no A1 (0,83): las preguntas de recomendación se van a búsqueda. La ronda b (9-nov) tampoco: 0,874. La ronda c (desarrollo y prueba separados, clasificador de intención con TF-IDF y e5) **pasa**: A1 0,944 (IC 95 % de 0,904 a 0,984) y A2 a A6. Siguiente: la app (FastAPI + React). ChromaDB sigue sin instalar: el índice va en memoria detrás de la misma interfaz.

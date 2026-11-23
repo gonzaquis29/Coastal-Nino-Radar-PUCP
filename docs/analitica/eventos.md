@@ -84,3 +84,15 @@ Cambios aprobados tras el diagnóstico de la ronda a: el contraste pasa a ser lo
 **Por qué no se da como efecto probado:** con 18 eventos y una serie que va de 1 a 50 notas diarias, el método no controla bien el error (8,7 % de falsos positivos en lugar de 5 %), y detecta un pico de +50 % solo en el 56 % de las veces. Parte del exceso de V1 puede deberse al simulador, que remezcla residuos que ya contienen los picos reales. No se ajustó, para no seguir probando variantes hasta que algo pase.
 
 **Límites:** el N.° 19 (30-oct) y el N.° 20 entran cuando su ventana esté completa (`validar --ronda c` después del corte). YouTube y Trends se describen igual cuando haya datos.
+
+### Repetición con el corte (22-nov)
+`validar --ronda c` con la serie del 1-ene al 22-nov (326 días) y los 20 comunicados con la ventana completa, incluidos el N.° 19 y el N.° 20. Mismo método, sin cambios.
+
+| | Resultado | Umbral | |
+|---|---|---|---|
+| V1 | 0,059 | ≤ 0,07 | pasa |
+| V2 | 0,584 | ≥ 0,80 | **no pasa** |
+| V3 | +191 % (p < 0,001; suben 19 de 20) | p < 0,05 | pasa |
+| V4 | +1 % (p = 0,76; suben 11 de 20) | p ≥ 0,05 | pasa |
+
+V2 sigue sin pasar, así que el estudio sigue descriptivo y sin valor p. Con los 20 comunicados, la proporción sobre El Niño sube en **14 de 20**, con mediana **+51 %** y cuartiles de −9 % a +139 %. Las notas sobre El Niño por día suben en 14 de 20 (mediana +47 %). Esta es la cifra vigente; la de 14 de 18 (+63 %) queda como registro del 8-nov.

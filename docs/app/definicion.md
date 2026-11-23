@@ -110,7 +110,7 @@ Este borrador parte de quién la usa y de lo que muestran nuestros datos. Cada d
 ### 4.3 Panorama (escritorio primero, y también se ve en el celular)
 
 **Hallazgos** (3 tarjetas, cada una con su número y una mini serie):
-- la cobertura de El Niño subió tras 14 de 18 comunicados (mediana +63 %), descriptivo;
+- la cobertura de El Niño subió tras 14 de 20 comunicados (mediana +51 %; era 14 de 18 y +63 % antes del corte), descriptivo;
 - el porcentaje de notas cuyos datos coinciden con el ENFEN;
 - cuántas notas usan un dato de un comunicado anterior, y de cuántos comunicados atrás (columna `atras`).
 
@@ -284,6 +284,8 @@ Se validó con `validate_palette.js` (método del skill de visualización), en c
   - las cifras salían con punto decimal y con decimales desiguales;
   - las viñetas de los PDF se veían como un cuadro al inicio de algunas citas (se ocultan solo en pantalla, sin cambiar el texto oficial).
 - **P1 a P5 se repitieron** con la interfaz terminada, y P3 revisa ahora también la pantalla F: P1 25/25, P2 0,11 s (máximo 0,19 s) y arranque de 35,2 s, P3 0, P4 84/84, P5 0.
+- **Repetición con las notas del corte (22-nov, noche):** con la discrepancia de las 2.785 notas, el estudio de eventos con 20 comunicados y las emociones del corte, se corrieron otra vez `radar.app.validar`, `npm run medir` y `radar.app.validar_interfaz`. Todo pasa y la tabla de arriba no cambia: P6 0, P7 6/6, P8 24/24 (27 en pantalla), P10 6/6, P12 0, U1 2, U2 0, U4 73,9 KB, U5 100 % (128 controles) y U6 0. P1 a P5: P1 25/25, P2 0,11 s (máximo 0,21 s) y arranque de 35,9 s, P3 0, P4 84/84, P5 0. El registro de uso no se creó.
+  - Hallazgos del Panorama tras el corte: la primera tarjeta dice ahora "14 de 20" comunicados (mediana +52 %; con 20 comunicados la mediana promedia los dos centrales, y la app los promedia como cocientes mientras `eventos` lo hace en logaritmos y da +51 %), la segunda 75 % de coincidencia con el 26 % de las 2.781 notas con datos (el 74 % sigue sin datos) y la tercera 97 notas con un dato anterior.
 - **Pruebas:** 27 en `tests/app` y 12 en Vitest (`npm test`), con datos sintéticos.
 - **Hallazgos que quedan fuera de la app:**
   - "La selección peruana jugará el martes en Lima" sale con cercanía Alta, y una nota del precio del dólar con Media. Son los umbrales de la cercanía (NLP); la app solo los muestra.

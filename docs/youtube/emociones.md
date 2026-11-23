@@ -163,3 +163,20 @@ Los informativos confirman lo de la sección 5:
 - Los comentarios religiosos tienen más alegría (15 %) y tristeza (12 %).
 - La ventana de 7 días está completa en 103 de los 136 videos.
 
+
+## 7. Corte del 22-nov (informativo)
+
+Se aplicó tal cual a los comentarios del corte: 22.610 textos (15.204 en la población); retomó los 11.341 ya hechos y tardó 29,5 min. La decisión del 17-nov no cambia: M1 a M3 son solo informativos.
+
+| Id | Resultado | Umbral | |
+|----|-----------|--------|---|
+| M0 | 0 truncados (449 comentarios en más de un tramo) | 0 | Pasa |
+| M1 | 41,6 % con emoción; mediana por video 0,44 (146 videos) | ≥ 30 % | Pasa |
+| M2 | κ 0,232 con 456 evaluables | ≥ 0,40 | No pasa |
+| M3 | κ 0,099 en 400 comentarios | ≥ 0,40 | No pasa |
+
+- El enojo sigue dominando (24,4 %), seguido de alegría (7,6 %) y tristeza (7,0 %); la polaridad es 58 % negativa.
+- 😂 (grupo alegría) sale como enojo en 120 de 219 casos.
+- El zero-shot ve emoción en el 99 % de los comentarios (κ binario 0,005); entre las 6 emociones, κ 0,274.
+- Los comentarios religiosos tienen más alegría (15,5 %) y tristeza (13,1 %).
+- La ventana de 7 días está completa en 821 de 903 videos (46 con menos de 7 días).

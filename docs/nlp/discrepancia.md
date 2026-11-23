@@ -416,6 +416,8 @@ El paso salta las notas ya calculadas y, al relanzar, quita los datos de una not
 
 **Corrida sobre todas las notas (19-nov, después de T5 y del recálculo final):** se calcularon 2.727 de 2.727 notas en 23 min. Hay 3 sin texto y 1 que ya no está publicada. Colores: 526 verdes, 139 amarillas, 43 rojas (1,6 %) y 2.015 sin afirmaciones. Por dato: 2.047 respaldadas, 131 desactualizadas, 102 de otra fuente, 64 con más certeza, 63 que contradicen, 29 sin respaldo y 4 de otra escala. Las 2 rojas de T5 fueron errores de la capa 3, así que una roja no se presenta sola: va con su frase y su dato.
 
+**Actualización con las notas del corte (22-nov):** `calcular` agregó 58 de las 59 notas que faltaban (la otra ya no está publicada) en 0,5 min. Sobre 2.785 notas: 539 verdes, 140 amarillas, 43 rojas (1,5 %) y 2.059 sin afirmaciones (74 % de las 2.781 calculadas); 3 sin texto y 2 que ya no están publicadas. Por dato: 2.071 respaldadas, 132 desactualizadas, 103 de otra fuente, 64 con más certeza, 63 que contradicen, 29 sin respaldo y 4 de otra escala. La nota no publicada se reintentó y quedó dos veces en `discrepancia-todas-notas.csv`; se quitó la fila repetida.
+
 ## Único intento con NLI (punto 5.2; definición aprobada el 8-nov)
 **Medición previa** (sin red, con los titulares y resúmenes de las notas sobre El Niño y las frases del ENFEN):
 - 2.671 de las 3.050 frases que nombran El Niño no tienen datos (87 %). Solo 187 (7 %) pronostican un impacto sin hablar de medidas, y de ellas 12 se atribuyen al ENFEN. El resto trata de medidas, precios o prevención, donde el NLI solo daría falsas alarmas, como en el piloto del 28-oct.

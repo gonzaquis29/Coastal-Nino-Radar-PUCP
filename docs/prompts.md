@@ -618,3 +618,12 @@ Todo quedó en la sección 8 del documento.
 76. Sí, documenta
 
 **Resultado:** la IA agregó los resultados de la interfaz a la sección 8 de `docs/app/definicion.md`. Marcó la app como hecha en `docs/pendientes.md` y sumó al README y a `CLAUDE.md` los comandos para construir y medir la interfaz.
+77. (Sesión aparte, encargada por la anterior) Haz el punto 4 de `docs/pendientes.md`: `radar.nlp.discrepancia calcular`, `radar.analitica.eventos validar --ronda c` con los comunicados N.° 19 y 20, `radar.youtube.emociones` con los comentarios del corte, y vuelve a medir la app (`radar.app.validar`, `npm run medir`, `radar.app.validar_interfaz`); actualiza las cifras que cambien y comprueba que no exista el registro de uso.
+
+**Resultado:** la IA corrió los tres cálculos sin cambiar código.
+- Discrepancia: 2.785 notas (58 nuevas; una ya no está publicada). Siguen 74 % sin datos y 43 rojas. La nota no publicada quedó repetida al reintentarse, y se quitó la fila.
+- Eventos con 20 comunicados: V1 ya pasa (0,059), V2 no (0,584), así que sigue descriptivo. La proporción sobre El Niño sube en 14 de 20 (mediana +51 %).
+- Emociones del corte: 15.204 comentarios. Pasan M0 y M1 (41,6 %), no M2 (κ 0,232) ni M3 (κ 0,099); siguen solo descriptivas.
+- App: pasan P1 a P12 y U1 a U6, y no se creó `eventos.csv`. El Panorama muestra "14 de 20" (+52 %).
+
+Se actualizaron `docs/analitica/eventos.md`, `docs/nlp/discrepancia.md`, `docs/youtube/emociones.md`, la sección 8 de `docs/app/definicion.md`, `docs/pendientes.md` y el README.
