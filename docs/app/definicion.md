@@ -326,19 +326,21 @@ Se validó con `validate_palette.js` (método del skill de visualización), en c
 4. **Resultado nuevo `fuera_de_tema`:** sin medidor, sin color y sin ícono (U6). El texto va en `radar.app.textos` y debe pasar U2 y U3 (INFLESZ de 65 o más), por ejemplo: "Este texto no parece hablar de El Niño, del mar ni del clima. Pega un texto sobre esos temas." El registro de uso acepta `fuera_de_tema` en `tipo_resultado`, que es una lista cerrada (P5).
 5. **Qué no cambia:** el Panorama (ya usa solo las notas sobre El Niño), los umbrales de la cercanía y el semáforo de `radar.nlp`.
 
-### 9.4 Muestras (ninguna repite `config/notas_vistas.csv`; cada una se agrega al elegirla)
+### 9.4 Muestras (se usa toda la fuente; decisión del 23-nov)
 - **Desarrollo** (se puede mirar y ajustar): los 400 negativos de S3, los 450 titulares del diagnóstico y los 33 textos sintéticos. En desarrollo, el filtro deja pasar 17 de los 400 negativos de S3 por el titular.
 - **Validación** (se mira una vez):
-  - *negativos nuevos:* 400 notas con la definición de `otros_temas` de `radar.nlp.semaforo` (100 por medio, semilla nueva), en corto. Para 100 de ellas (25 por medio), además el cuerpo, leído en memoria con `Medio.leer` y sin guardarlo, como en S3;
-  - *positivos nuevos:* las 58 notas sobre El Niño del corte que todavía no se usaron, en corto y en cuerpo. Son pocas, así que el intervalo es ancho; se declara.
+  - *negativos:* **todas** las notas de otros temas (definición de `otros_temas` de `radar.nlp.semaforo`) que no están en `config/notas_vistas.csv`: 50.623 al 23-nov, en corto. Solo se calcula la cercanía de las que pasan el filtro. Para el cuerpo, 100 de ellas (25 por medio, semilla nueva), leídas en memoria con `Medio.leer` y sin guardarlas, como en S3, porque hay que volver a pedirlas a los medios;
+  - *positivos:* **todas** las notas sobre El Niño (2.785) menos las 150 del diagnóstico, es decir 2.635, en corto, y 100 de ellas (25 por medio) en cuerpo. Se informan aparte las 58 del corte que nadie había usado;
+  - *excepción a la regla de `notas_vistas.csv`, declarada:* 2.577 de los positivos están "vistos" porque se usaron en las capas del NLP, pero ninguno sirvió para elegir las palabras del filtro, que vienen de las preguntas del agente y de la muestra de desarrollo. La regla existe para no medir con lo que se ajustó, y eso aquí no ocurre. Con 2.635 notas, el intervalo de F2 es de unos ±1 punto; con 58 eran ±8;
+  - después de medir, los negativos y positivos usados se agregan a `config/notas_vistas.csv` con la muestra `validacion-tema`. Si algún criterio no pasa y se ajusta el filtro, ya no queda una muestra limpia: la segunda medición se hace con `--repetir` y se declara;
   - *sintéticos nuevos*, escritos antes de medir: 10 usos de «niño» con otro sentido, 10 menciones del fenómeno bien escritas y 10 textos del tema que no nombran a El Niño (mar, lluvias, pesca, huaicos). Todos son inventados.
 
 ### 9.5 Criterios (fijados antes de construir)
 | | Criterio | Umbral |
 |---|---|---|
-| F1 | Negativos nuevos con "Alta", en corto y en cuerpo por separado | ≤ 2 % |
-| F2 | Positivos nuevos que el filtro deja fuera, en corto | ≤ 10 % |
-| F3 | Positivos nuevos que el filtro deja fuera, en cuerpo | ≤ 5 % |
+| F1 | Negativos con "Alta", en corto (50.623) y en cuerpo (100) por separado | ≤ 2 % |
+| F2 | Positivos que el filtro deja fuera, en corto (2.635; se informan aparte las 58 del corte) | ≤ 10 % |
+| F3 | Positivos que el filtro deja fuera, en cuerpo (100) | ≤ 5 % |
 | F4 | Usos de «niño» con otro sentido que pasan solo por esa palabra / menciones del fenómeno que no pasan | 0 / 0 |
 | F5 | Textos sintéticos del tema sin "El Niño" que quedan fuera | ≤ 1 de 10 |
 | F6 | Preguntar: con las preguntas ya vistas del agente, toda decisión que cambie se explica por las correcciones de 9.3; A4 sigue en ≥ 0,90 y ≤ 0,05 | 100 % |

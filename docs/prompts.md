@@ -642,3 +642,9 @@ Se actualizaron `docs/analitica/eventos.md`, `docs/nlp/discrepancia.md`, `docs/y
 82. Sí, define A
 
 **Resultado:** la IA escribió la sección 9 de `docs/app/definicion.md`: el problema medido, las alternativas, qué se construye, las muestras y los criterios F1 a F7, más P13 como criterio permanente. En desarrollo encontró tres fallas de `DOMINIO` ("femenino", "calidad" y "Costa Rica"). Registró las 300 notas del diagnóstico en `config/notas_vistas.csv`. No construyó nada: espera la aprobación.
+83. por que no se usa toda la fuente que hemos recolectado durante todos estos dias?
+
+**Resultado:** la IA explicó la regla de `notas_vistas.csv` y contó lo disponible: 50.623 notas de otros temas sin usar, y de las notas sobre El Niño, 2.727 usadas y 58 sin usar. Propuso medir con todas.
+84. Sí, usa todas
+
+**Resultado:** la IA cambió las muestras de la sección 9 de `docs/app/definicion.md`. F1 usa las 50.623 notas de otros temas y F2 usa 2.635 notas sobre El Niño (las 58 del corte se informan aparte). También declaró la excepción a la regla de `notas_vistas.csv`: esas notas no sirvieron para elegir las palabras del filtro. Sigue sin construir.
