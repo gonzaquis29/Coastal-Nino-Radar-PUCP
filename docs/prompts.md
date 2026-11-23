@@ -728,3 +728,9 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 105. si debes volver a calcular
 
 **Resultado:** la IA respaldó los resultados y recalculó la discrepancia de las 2.785 notas con la regla nueva (23,6 min). Ningún color de nota cambió y las filas por dato son idénticas, así que las cifras del Panorama siguen igual (documentado en `docs/nlp/discrepancia.md`).
+106. que mas faltaria entonces? seguir recolectando? algun pendiente?
+
+**Resultado:** la IA revisó `docs/pendientes.md`: la recolección está cerrada y todo el alcance está hecho. Quedaban actualizar los pendientes y el README con lo del 23-nov y subir los commits; lo demás es opcional o posterior al congelamiento.
+107. si procede
+
+**Resultado:** la IA actualizó `docs/pendientes.md` (rediseño, arranque, arreglo de la negación, qué falta antes y después del congelamiento) y el README (pantalla «Hoy» con el glosario, «Cómo se habló» con YouTube y el arranque con los vectores en disco).
