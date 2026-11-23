@@ -628,7 +628,7 @@ El clasificador de la sección 10 aprendió "menciona El Niño" porque su única
 - **Lo nuevo que deja medido:** el filtro de palabras tiene más «Alta» en los otros temas con palabras de clima de lo que decían F1 y C1: 2,35 % en corto y 5,5 % en cuerpo (8 de 146). Se declara como límite de Verificar.
 - **Por qué no se ajusta:** la prueba ya se miró. Bajar τ o cambiar los topes ahora sería elegir con la prueba, y no quedan notas de la zona gris etiquetadas sin usar.
 
-## 13. «Alta» anclada al tema en Verificar, con una prueba externa (propuesta del 23-nov, revisada; sin aprobar)
+## 13. «Alta» anclada al tema en Verificar, con una prueba externa (aprobada el 23-nov con la prueba externa de 2025; sin construir)
 
 ### 13.1 Qué falla, medido en desarrollo (enero a agosto, 23-nov)
 - **El problema no es tanto quién pasa el filtro como quién recibe «Alta».** De 1.500 negativos difíciles (zona gris con etiquetas solo de otros temas), el 4,93 % recibe «Alta» con el filtro de palabras.

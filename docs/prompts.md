@@ -758,3 +758,6 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 115. has analizado correctamente?  verifica
 
 **Resultado:** la IA encontró dos errores en la sección 13: (1) había medido cuánto pasa el filtro y no la «Alta», y con el veto la «Alta» de los negativos difíciles solo baja de 4,93 % a 3,87 %; (2) el corpus oficial empieza el 18-dic-2025, así que las notas de octubre y noviembre de 2025 no se podían medir en su fecha, y la lectura tomaba más horas de las estimadas. Mirando los casos vio que 76 de 90 «Alta» de otros temas vienen de párrafos de recomendación del ENFEN, con solo palabras genéricas. Reescribió la sección 13: «Alta» anclada (sin «Alta» si el párrafo es una recomendación y el texto no tiene palabras específicas del tema; en desarrollo, de 4,93 % a 1,53 % sin perder notas en el filtro), prueba externa de 2025 medida con la misma fecha en 2026 y una prueba previa de 20 notas por medio. Sin aprobar ni construir.
+116. Apruebo con 2025
+
+**Resultado:** la IA marcó la sección 13 de `docs/app/definicion.md` como aprobada el 23-nov, con la prueba externa de 2025. No se construye hasta la orden explícita.
