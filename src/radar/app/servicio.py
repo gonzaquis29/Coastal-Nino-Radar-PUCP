@@ -265,8 +265,8 @@ class Servicio:
                        "linea_tiempo": self.linea_tiempo(fecha, respaldos) if respaldos else []}  # fmt: skip
         elif r["origen"] == "distancia":
             u = r["umbrales"]
-            salida |= {"tipo": "cercania", "nivel": r["banda"], "titulo": f"Cercanía: {tx.CERCANIA[r['banda']]}",
-                       "resumen": tx.CERCANIA_FRASE[r["banda"]], "aviso": tx.SIN_DATOS,
+            salida |= {"tipo": "cercania", "nivel": r["banda"], "titulo": tx.SIN_DATO_TITULO,
+                       "resumen": tx.SIN_DATOS, "aviso": tx.CERCANIA_FRASE[r["banda"]],
                        "medidor": {"valor": r["coseno"], "media_desde": u["lejano"],
                                    "alta_desde": u["cercano"]}}  # fmt: skip
         elif r["origen"] == "fuera_de_tema":

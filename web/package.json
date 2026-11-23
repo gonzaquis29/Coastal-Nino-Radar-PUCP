@@ -11,6 +11,8 @@
     "medir": "node medir/medir.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/archivo": "5.3.0",
+    "@fontsource/atkinson-hyperlegible": "5.3.0",
     "@visx/axis": "4.0.0",
     "@visx/group": "4.0.0",
     "@visx/scale": "4.0.0",

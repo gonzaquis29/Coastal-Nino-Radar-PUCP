@@ -20,37 +20,28 @@ export function posicion(valor: number, mediaDesde: number, altaDesde: number): 
 }
 
 const ETIQUETA: Record<Banda, string> = { lejano: T.verificar.baja, intermedio: T.verificar.media, cercano: T.verificar.alta };
+const ORDEN: Banda[] = ["lejano", "intermedio", "cercano"];
 
 /**
- * La cercanía en un solo tono (U6): sin verde, amarillo ni rojo, porque sin datos no hay veredicto. El número no se
- * muestra: solo el tramo.
+ * Qué tanto habla del mismo tema (sección 11): tres ondas en un solo tono, encendidas hasta su tramo. Sin verde,
+ * amarillo ni rojo (U6), sin número y chica, para que no se lea como «coincide».
  */
 export function Medidor({ valor, mediaDesde, altaDesde, banda }: Props) {
-  const p = posicion(valor, mediaDesde, altaDesde);
-  const pct = Math.round(p * 100);
+  const pct = Math.round(posicion(valor, mediaDesde, altaDesde) * 100);
+  const encendidas = ORDEN.indexOf(banda) + 1;
   return (
-    <div className="medidor">
-      <div
-        className="medidor__barra"
-        role="meter"
-        aria-label={T.verificar.cercania_medidor}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={pct}
-        aria-valuetext={ETIQUETA[banda]}
-      >
-        <div className="medidor__relleno" style={{ width: `${pct}%` }} />
-        <div className="medidor__marca" style={{ left: `${pct}%` }} />
-        <span className="medidor__corte" style={{ left: "33.333%" }} />
-        <span className="medidor__corte" style={{ left: "66.666%" }} />
-      </div>
-      <div className="medidor__tramos" aria-hidden="true">
-        {(["lejano", "intermedio", "cercano"] as Banda[]).map((b) => (
-          <span key={b} className={b === banda ? "activo" : undefined}>
-            {ETIQUETA[b]}
-          </span>
-        ))}
-      </div>
-    </div>
+    <span
+      className="ondas"
+      role="meter"
+      aria-label={T.verificar.cercania_medidor}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={pct}
+      aria-valuetext={ETIQUETA[banda]}
+    >
+      {ORDEN.map((b, i) => (
+        <i key={b} className={i < encendidas ? "on" : undefined} />
+      ))}
+    </span>
   );
 }

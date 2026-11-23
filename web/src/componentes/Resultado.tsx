@@ -4,10 +4,26 @@ import { registrar } from "../registro/registro";
 import { fechaCorta, llenar, T } from "../textos";
 import { Cita } from "./Cita";
 import { Medidor } from "./Medidor";
+import { Regla } from "./Regla";
 
 const FRASES_VISIBLES = 3;
 
-/** El resultado según D1: un veredicto solo si hay datos; si no, la cercanía en un solo tono. */
+/** El dato que decide el veredicto: el primero con el nivel del resultado (el más grave, como lo arma la API). */
+export function datoPrincipal(r: ResultadoDatos): Dato | null {
+  const datos = r.afirmaciones.flatMap((a) => a.datos);
+  return datos.find((d) => d.nivel === r.nivel) ?? datos[0] ?? null;
+}
+
+/** La magnitud que dice el mensaje, si alguno de sus datos es la magnitud. */
+export function magnitudDelMensaje(r: R | null): string | null {
+  if (!r || r.tipo !== "datos") return null;
+  return r.afirmaciones.flatMap((a) => a.datos).find((d) => d.dato === "magnitud")?.valor ?? null;
+}
+
+/**
+ * El resultado según D1 y la sección 11: un veredicto con sello solo si hay datos; si no, un título que dice que no hay
+ * dato que revisar y la cercanía como una línea chica, en un solo tono.
+ */
 export const Resultado = forwardRef<HTMLHeadingElement, { r: R }>(function Resultado({ r }, ref) {
   if (r.tipo === "datos") return <ConDatos r={r} ref={ref} />;
   if (r.tipo === "cercania") {
@@ -17,19 +33,15 @@ export const Resultado = forwardRef<HTMLHeadingElement, { r: R }>(function Resul
           {r.titulo}
         </h2>
         <p className="resultado__resumen">{r.resumen}</p>
-        <Medidor
-          valor={r.medidor.valor}
-          mediaDesde={r.medidor.media_desde}
-          altaDesde={r.medidor.alta_desde}
-          banda={r.nivel}
-        />
-        <p className="resultado__aviso">
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" strokeWidth="2" />
-            <path d="M12 10.5v6M12 7.2v.1" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-          </svg>
-          <span>{r.aviso}</span>
-        </p>
+        <div className="resultado__tema">
+          <Medidor
+            valor={r.medidor.valor}
+            mediaDesde={r.medidor.media_desde}
+            altaDesde={r.medidor.alta_desde}
+            banda={r.nivel}
+          />
+          <p>{r.aviso}</p>
+        </div>
       </section>
     );
   }
@@ -50,6 +62,8 @@ const ConDatos = forwardRef<HTMLHeadingElement, { r: ResultadoDatos }>(function 
   const id = useId();
   const visibles = todas ? r.afirmaciones : r.afirmaciones.slice(0, FRASES_VISIBLES);
   const ocultas = r.afirmaciones.length - visibles.length;
+  const principal = datoPrincipal(r);
+  const magnitud = magnitudDelMensaje(r);
   return (
     <section className={`resultado resultado--datos resultado--${r.nivel} aparece`} aria-live="polite" data-tipo="datos">
       <div className="resultado__cabeza">
@@ -63,6 +77,27 @@ const ConDatos = forwardRef<HTMLHeadingElement, { r: ResultadoDatos }>(function 
           <p className="resultado__resumen">{r.resumen}</p>
         </div>
       </div>
+      {principal && (
+        <div className="comparacion">
+          <div>
+            <h3>{T.verificar.tu_mensaje}</h3>
+            <p>
+              {principal.dato_texto}: <strong>{principal.valor}</strong>
+            </p>
+          </div>
+          <div>
+            <h3>{T.verificar.lo_que_dice_enfen}</h3>
+            <p>
+              <strong>{principal.oficial.dice}</strong>
+            </p>
+          </div>
+        </div>
+      )}
+      {magnitud && (
+        <div className="resultado__regla">
+          <Regla enfen={r.estado.comunicado?.magnitud} mensaje={magnitud} />
+        </div>
+      )}
       {r.aviso && <p className="resultado__aviso resultado__aviso--fuerte">{r.aviso}</p>}
       <button
         type="button"

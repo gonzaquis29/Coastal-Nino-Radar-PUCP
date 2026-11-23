@@ -27,7 +27,7 @@ const queHacer = {
 export const cercania: ResultadoCercania = {
   tipo: "cercania",
   nivel: "cercano",
-  titulo: "Cercanía: Alta",
+  titulo: "No trae un dato que podamos comparar",
   resumen: "Habla de lo mismo que el comunicado vigente del ENFEN.",
   aviso: "Este texto no trae datos que podamos comparar.",
   medidor: { valor: 0.6, media_desde: 0.3, alta_desde: 0.41 },

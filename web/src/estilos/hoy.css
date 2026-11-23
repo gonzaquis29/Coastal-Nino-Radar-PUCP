@@ -1,0 +1,696 @@
+/* Rediseño (docs/app/definicion.md, sección 11): identidad «mareógrafo». Letra condensada de rótulo para estados y
+   niveles, Atkinson Hyperlegible para leer. Inicio «Hoy» en dos columnas desde 1.024 px: tu zona | tu mensaje. */
+
+/* ---------------------------------------------------------------- piezas tipográficas */
+
+.eyebrow {
+  font-family: var(--display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+  margin: 0;
+}
+
+.rotulo {
+  font-family: var(--display);
+  font-stretch: 75%;
+  font-weight: 850;
+  text-transform: uppercase;
+  line-height: 0.98;
+  letter-spacing: -0.005em;
+}
+
+/* Título de Preguntar, con la misma voz que el estado de la zona */
+.titulo-pantalla {
+  font-family: var(--display);
+  font-stretch: 72%;
+  font-weight: 880;
+  text-transform: uppercase;
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  line-height: 0.95;
+  margin-top: 8px;
+}
+
+/* Una palabra del glosario: se lee como texto subrayado con puntos, se toca como botón */
+.palabra {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  font-weight: 700;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: help;
+  text-decoration: underline dotted var(--acento) 2px;
+  text-underline-offset: 0.22em;
+  /* el área de toque llega a 44 px sin mover el texto (U5): relleno que se descuenta con margen negativo */
+  padding: 15px 3px;
+  margin: -15px -3px;
+  min-width: var(--toque);
+}
+
+.palabra:hover {
+  color: var(--acento-texto);
+}
+
+/* ---------------------------------------------------------------- inicio: dos columnas */
+
+.hoy {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.hoy__zona,
+.hoy__mensaje,
+.hoy__avisos {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  padding: 22px 16px 28px;
+}
+
+.hoy__mensaje {
+  background: var(--superficie);
+  border-top: 1px solid var(--borde);
+}
+
+.hoy__avisos {
+  padding-top: 4px;
+}
+
+@media (min-width: 1024px) {
+  .hoy {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    grid-template-areas: "zona mensaje" "avisos mensaje";
+    grid-template-rows: auto 1fr;
+    min-height: calc(100vh - 120px);
+  }
+
+  .hoy__zona {
+    grid-area: zona;
+    padding: 30px 32px 0;
+  }
+
+  .hoy__mensaje {
+    grid-area: mensaje;
+    padding: 30px 32px 40px;
+  }
+
+  .hoy__avisos {
+    grid-area: avisos;
+    padding: 20px 32px 40px;
+  }
+
+  .hoy__mensaje {
+    border-top: 0;
+    border-left: 1px solid var(--borde);
+  }
+
+  /* la regla del resultado ya se ve, con las dos marcas, en la columna de la zona */
+  .resultado__regla {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------- la zona */
+
+.zona {
+  display: grid;
+  gap: 18px;
+}
+
+.zona__cabeza {
+  display: grid;
+  gap: 6px;
+}
+
+.zona__cambiar {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--tinta);
+  letter-spacing: inherit;
+  text-transform: inherit;
+  padding: 0;
+  min-height: var(--toque);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: underline dashed var(--borde-fuerte) 1.5px;
+  text-underline-offset: 0.3em;
+}
+
+.zona__estado {
+  font-family: var(--display);
+  font-stretch: 72%;
+  font-weight: 880;
+  text-transform: uppercase;
+  font-size: clamp(2.2rem, 7vw, 3rem);
+  line-height: 0.95;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+
+.zona__bajada {
+  color: var(--tinta-2);
+  max-width: 52ch;
+}
+
+.zona__bajada a {
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--toque);
+}
+
+.zona__panel {
+  padding: 4px 0;
+}
+
+.zona__medidas {
+  display: grid;
+  gap: 18px;
+}
+
+.zona__medida {
+  display: grid;
+  gap: 8px;
+}
+
+.esqueleto {
+  display: inline-block;
+  width: 70%;
+  height: 0.9em;
+  border-radius: 6px;
+  background: var(--superficie-3);
+}
+
+/* Escalera de estados del ENFEN */
+.escalera {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.escalera li {
+  position: relative;
+  font-family: var(--display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 10px 10px 9px;
+  background: var(--superficie-2);
+  color: var(--tinta-3);
+}
+
+.escalera li:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.escalera li:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.escalera li.actual {
+  background: var(--tinta);
+  color: var(--plano);
+}
+
+.escalera li.actual::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  margin-left: -6px;
+  border: 6px solid transparent;
+  border-bottom: 0;
+  border-top-color: var(--tinta);
+}
+
+/* Regla de magnitud, como un mareógrafo: de abajo (débil) hacia arriba (extraordinaria) */
+.regla {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.regla__cuerpo {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 0 12px;
+}
+
+.regla__barra {
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* las marcas del mareógrafo sobre la barra */
+.regla__barra::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(to bottom, transparent 0 9px, color-mix(in srgb, var(--superficie) 55%, transparent) 9px 10px);
+}
+
+.regla__tramo--0 {
+  background: var(--mag-debil);
+}
+
+.regla__tramo--1 {
+  background: var(--mag-moderada);
+}
+
+.regla__tramo--2 {
+  background: var(--mag-fuerte);
+}
+
+.regla__tramo--3 {
+  background: var(--mag-extraordinaria);
+}
+
+.regla__niveles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-rows: repeat(4, minmax(34px, auto));
+}
+
+@media (min-width: 1024px) {
+  .regla__niveles {
+    grid-template-rows: repeat(4, minmax(40px, auto));
+  }
+}
+
+.regla__niveles li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--borde);
+  font-family: var(--display);
+  font-stretch: 85%;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+
+.regla__niveles li:first-child {
+  border-top: 0;
+}
+
+.regla__niveles li.activo {
+  color: var(--tinta);
+  font-weight: 800;
+}
+
+.regla__niveles li > span:first-child {
+  margin-right: auto;
+}
+
+.marca-regla {
+  font-family: var(--fuente);
+  font-stretch: 100%;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 5px 9px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.marca-regla--enfen {
+  background: var(--tinta);
+  color: var(--plano);
+}
+
+.marca-regla--mensaje {
+  background: var(--superficie);
+  color: var(--tinta);
+  box-shadow: inset 0 0 0 2px var(--tinta);
+}
+
+/* Avisos del Senamhi, a la vista */
+.zona__avisos {
+  display: grid;
+  gap: 8px;
+}
+
+.zona__sin-avisos {
+  color: var(--tinta-2);
+}
+
+.avisos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  border-top: 2px solid var(--tinta);
+}
+
+.avisos li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.avisos__numero {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: var(--tinta-3);
+  white-space: nowrap;
+}
+
+.avisos__texto {
+  display: grid;
+  min-width: 0;
+}
+
+.avisos__texto a {
+  min-height: var(--toque);
+  display: inline-flex;
+  align-items: center;
+  color: var(--tinta);
+}
+
+.avisos__texto small {
+  color: var(--tinta-2);
+}
+
+/* El nivel del Senamhi lleva su color oficial y siempre su nombre */
+.avisos__nivel {
+  font-family: var(--display);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 5px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  background: var(--superficie-2);
+  color: var(--tinta-2);
+  border-left: 6px solid var(--borde-fuerte);
+}
+
+.avisos__nivel--amarillo {
+  border-left-color: var(--senamhi-amarillo);
+}
+
+.avisos__nivel--naranja {
+  border-left-color: var(--senamhi-naranja);
+}
+
+.avisos__nivel--rojo {
+  border-left-color: var(--senamhi-rojo);
+}
+
+.elegir-zona {
+  display: grid;
+  gap: 10px;
+}
+
+.elegir-zona p {
+  color: var(--tinta-2);
+}
+
+/* ---------------------------------------------------------------- el mensaje */
+
+.cuadro {
+  display: grid;
+  gap: 10px;
+}
+
+.cuadro__titulo {
+  font-family: var(--display);
+  font-stretch: 78%;
+  font-weight: 850;
+  text-transform: uppercase;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.cuadro__bajada {
+  color: var(--tinta-2);
+}
+
+.cuadro textarea {
+  border: 2px solid var(--tinta);
+  border-radius: 12px;
+  background: var(--superficie);
+  padding: 12px 14px;
+  font-size: 1.08rem;
+  min-height: 110px;
+  field-sizing: content;
+  max-height: 50vh;
+}
+
+.cuadro textarea:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.cuadro__ayuda {
+  font-size: 0.88rem;
+  color: var(--tinta-2);
+}
+
+.cuadro__ayuda--error {
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+.cuadro__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.cuadro__acciones .boton--grande {
+  flex: 1 1 260px;
+  white-space: nowrap;
+}
+
+.cuadro__fecha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cuadro__fecha input {
+  width: auto;
+}
+
+/* ---------------------------------------------------------------- resultado */
+
+.respuesta {
+  display: grid;
+  gap: 22px;
+  transition: opacity 0.15s ease;
+}
+
+.resultado {
+  display: grid;
+  gap: 14px;
+  padding-top: 18px;
+  border-top: 2px solid var(--tinta);
+}
+
+.resultado__titulo {
+  font-family: var(--display);
+  font-stretch: 72%;
+  font-weight: 880;
+  text-transform: uppercase;
+  font-size: clamp(1.7rem, 5vw, 2.1rem);
+  line-height: 0.98;
+}
+
+.resultado__titulo:focus {
+  outline: none;
+}
+
+.resultado__titulo--chico {
+  font-size: 1.5rem;
+}
+
+.resultado__resumen {
+  color: var(--tinta-2);
+  font-size: 1.02rem;
+}
+
+.resultado__cabeza {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.resultado__cabeza > div {
+  display: grid;
+  gap: 6px;
+}
+
+/* Lo que dice el mensaje frente a lo que dice el ENFEN, lado a lado */
+.comparacion {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.comparacion > div {
+  background: var(--superficie-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+
+.comparacion h3 {
+  font-family: var(--display);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+
+.comparacion strong {
+  font-size: 1.05rem;
+}
+
+/* Sin datos: la cercanía como una línea chica, en un solo tono (U6) */
+.resultado__tema {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--borde);
+  color: var(--tinta-2);
+  font-size: 0.95rem;
+}
+
+.ondas {
+  flex: none;
+  display: inline-flex;
+  gap: 3px;
+}
+
+.ondas i {
+  width: 16px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--medidor-fondo);
+}
+
+.ondas i.on {
+  background: var(--medidor);
+}
+
+/* ---------------------------------------------------------------- glosario */
+
+.glosario {
+  border: 0;
+  padding: 0;
+  margin: auto auto 0;
+  width: min(560px, 100%);
+  max-height: 85vh;
+  background: transparent;
+  color: var(--tinta);
+}
+
+@media (min-width: 768px) {
+  .glosario {
+    margin: auto;
+  }
+}
+
+.glosario::backdrop {
+  background: rgba(4, 16, 22, 0.55);
+}
+
+.glosario__hoja {
+  background: var(--superficie);
+  border-radius: 18px 18px 0 0;
+  padding: 16px 20px 24px;
+  display: grid;
+  gap: 16px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--sombra);
+}
+
+@media (min-width: 768px) {
+  .glosario__hoja {
+    border-radius: 18px;
+  }
+}
+
+.glosario__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.glosario__cabeza h2 {
+  font-family: var(--display);
+  font-stretch: 78%;
+  font-weight: 850;
+  text-transform: uppercase;
+  font-size: 1.4rem;
+}
+
+.glosario__entrada {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+.glosario__entrada.activa {
+  background: var(--acento-suave);
+}
+
+.glosario__entrada h3 {
+  font-family: var(--display);
+  font-stretch: 85%;
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+
+.glosario__entrada h3:focus {
+  outline: none;
+}
+
+.glosario__entrada p {
+  color: var(--tinta-2);
+}
+
+.glosario__nota {
+  font-size: 0.92rem;
+}

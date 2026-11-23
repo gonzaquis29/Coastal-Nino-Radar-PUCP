@@ -26,17 +26,18 @@ AVISO_NO_COINCIDE = "Una máquina leyó la frase y puede fallar. Antes de conclu
 
 DATO = {"magnitud": "Magnitud", "estado": "Estado", "fecha": "Fechas", "certeza": "Seguridad"}
 ESTADO = {"no_activo": "No activo", "vigilancia": "Vigilancia", "alerta": "Alerta"}
+# La regla de magnitud de la interfaz (sección 11), de menor a mayor
+MAGNITUDES = ("Débil", "Moderada", "Fuerte", "Extraordinaria")
 
-# Sin datos comparables: cercanía, nunca un veredicto (D1)
+# Sin datos comparables: cercanía, nunca un veredicto (D1). Sección 11: el título dice que no hay un dato que revisar
+# y la cercanía queda como una línea chica, para que nadie la lea como «coincide».
 CERCANIA = {"cercano": "Alta", "intermedio": "Media", "lejano": "Baja"}
-SIN_DATOS = (
-    "Este texto no trae datos que podamos comparar, como magnitud, estado o fechas. Solo medimos si habla de lo"
-    " mismo que el comunicado vigente. No medimos si es cierto."
-)
+SIN_DATO_TITULO = "No trae un dato que podamos comparar"
+SIN_DATOS = "No dice qué tan fuerte será El Niño, ni su estado, ni sus fechas. Por eso no podemos decir si coincide."
 CERCANIA_FRASE = {
-    "cercano": "Habla de lo mismo que el comunicado vigente del ENFEN.",
-    "intermedio": "Se parece en parte a lo que dice el comunicado vigente del ENFEN.",
-    "lejano": "Habla de otra cosa que el comunicado vigente del ENFEN.",
+    "cercano": "Habla del mismo tema que el comunicado del ENFEN. Eso no lo hace cierto.",
+    "intermedio": "Habla en parte del mismo tema que el comunicado del ENFEN. Eso no lo hace cierto.",
+    "lejano": "Habla de otro tema que el comunicado del ENFEN.",
 }
 INSUFICIENTE = "El texto es muy corto para compararlo. Pega el titular completo o el mensaje."
 # Sección 9: el texto no trata del tema; sin medidor, sin color y sin ícono (U6)
@@ -90,7 +91,13 @@ PROMESAS = ("correcto", "verdadero", "falso", "verdad")
 def textos_del_ciudadano():
     """Todos los textos de Verificar y Preguntar que vienen de la API (para U2, U3 y U6)."""
     salida = [v[2] for v in VEREDICTO_DATO.values()] + list(RESUMEN_DATOS.values()) + [AVISO_NO_COINCIDE]
-    salida += list(CERCANIA_FRASE.values()) + [SIN_DATOS, INSUFICIENTE, FUERA_DE_TEMA, FUERA_DE_TEMA_AYUDA]
+    salida += list(CERCANIA_FRASE.values()) + [
+        SIN_DATO_TITULO,
+        SIN_DATOS,
+        INSUFICIENTE,
+        FUERA_DE_TEMA,
+        FUERA_DE_TEMA_AYUDA,
+    ]
     salida += list(PREGUNTAR.values())
     return salida
 
@@ -103,9 +110,11 @@ INTERFAZ = {
     "comun": {
         "marca": "Radar Niño Costero",
         "lema": "Compara lo que circula sobre El Niño con lo que dice el ENFEN",
-        "nav_verificar": "Verificar",
+        "marca_corta": "Radar",
+        "nav_verificar": "Hoy",
         "nav_preguntar": "Preguntar",
-        "nav_panorama": "Panorama",
+        "nav_panorama": "Cómo se habló",
+        "nav_glosario": "¿Qué es el ENFEN?",
         "nav_metodologia": "Cómo lo hicimos",
         "nav_principal": "Secciones",
         "tema": "Tema",
@@ -122,10 +131,46 @@ INTERFAZ = {
         "comunicado": "Comunicado N.° {numero} del ENFEN, {fecha}",
         "abrir_fuente": "Abrir la fuente oficial",
         "pie": "Hecho con datos públicos del ENFEN, el Senamhi y cuatro medios. No reemplaza los avisos oficiales.",
+        "cerrar": "Cerrar",
+    },
+    # Sección 11: las palabras que no todos conocen; se abren al tocarlas y desde el menú
+    "glosario": {
+        "titulo": "Palabras que usamos",
+        "abrir": "Qué quiere decir {termino}",
+        "enfen_titulo": "¿Qué es el ENFEN?",
+        "enfen": "Es la comisión del Estado peruano que estudia El Niño. Vigila el mar y el aire, y cada pocas semanas"
+        " publica un comunicado oficial. Ahí dice si hay alerta, qué tan fuerte puede ser y hasta cuándo.",
+        "enfen_miembros": "Lo forman el IMARPE, el Senamhi, la Marina, el IGP, la ANA y el Indeci, entre otros.",
+        "enfen_corto": "el grupo del Estado que vigila el mar",
+        "senamhi_titulo": "¿Qué es el Senamhi?",
+        "senamhi": "Es el servicio de meteorología del Perú. Publica avisos de lluvia, calor o viento para cada zona."
+        " El color del aviso dice qué tan grave es el peligro.",
+        "nino_titulo": "¿Qué es El Niño costero?",
+        "nino": "Es cuando el mar frente a Perú y Ecuador se calienta más de lo normal. Trae lluvias fuertes a la"
+        " costa norte y cambia la pesca.",
+        "magnitud_titulo": "¿Qué es la magnitud?",
+        "magnitud": "Dice qué tan fuerte puede ser El Niño. El ENFEN usa cuatro niveles: débil, moderada, fuerte y"
+        " extraordinaria.",
+        "estados_titulo": "¿Qué quieren decir los estados?",
+        "estados": "El ENFEN usa tres estados. No activo: no hay El Niño. Vigilancia: puede llegar en los próximos"
+        " meses. Alerta: ya empezó o está por empezar.",
     },
     "verificar": {
-        "titulo": "¿Coincide con el ENFEN?",
+        "titulo": "Hoy en tu zona",
+        "hoy": "Hoy, {fecha}",
         "zona": "Tu zona",
+        "tu_zona": "Tu zona: {zona}",
+        "estado_titulo": "Estado de El Niño costero",
+        "estado_de": "Estado de",
+        "nino_costero": "El Niño costero",
+        "magnitud_titulo": "Magnitud prevista",
+        "lo_dice": "Lo dice el",
+        "leer_comunicado": "Leer el comunicado",
+        "marca_enfen": "ENFEN",
+        "marca_texto": "Tu mensaje",
+        "mensaje_titulo": "¿Te llegó un mensaje?",
+        "mensaje_ayuda": "Pégalo y lo comparamos con lo último que dijo el ENFEN.",
+        "tu_mensaje": "Tu mensaje",
         "elige_zona": "¿En qué zona estás?",
         "elige_zona_ayuda": "La guardamos en este equipo para la próxima vez.",
         "cambiar_zona": "Cambiar zona",
@@ -135,13 +180,16 @@ INTERFAZ = {
         "aviso_uno": "1 aviso del Senamhi",
         "sin_avisos": "Sin avisos del Senamhi",
         "avisos_titulo": "Avisos del Senamhi para tu zona",
+        "nivel_aviso": "Nivel {nivel}",
+        "avisos_del": "Avisos del",
+        "para_tu_zona": "para tu zona",
         "aviso_hasta": "hasta el {fin}",
-        "cuadro": "Pega aquí el titular o mensaje",
+        "cuadro": "Pega aquí el mensaje o titular",
         "cuadro_ayuda": "Puede ser un titular, un mensaje de WhatsApp o una nota completa.",
-        "boton": "Verificar",
-        "verificando": "Verificando…",
-        "otra_fecha": "¿Es de otra fecha?",
-        "fecha": "Fecha del texto",
+        "boton": "Comparar con el ENFEN",
+        "verificando": "Comparando…",
+        "otra_fecha": "¿El mensaje es antiguo?",
+        "fecha": "¿Qué día llegó?",
         "fecha_hoy": "Usar la fecha de hoy",
         "vacio": "Pega un texto para verificarlo.",
         "ver_por_que": "Ver por qué",
@@ -153,23 +201,23 @@ INTERFAZ = {
         "linea_titulo": "Últimos comunicados del ENFEN",
         "vigente": "vigente",
         "de_aqui": "el dato viene de aquí",
-        "cercania_medidor": "Cercanía con lo que dice hoy el ENFEN",
+        "cercania_medidor": "Qué tanto habla del mismo tema que el ENFEN",
         "baja": "Baja",
         "media": "Media",
         "alta": "Alta",
-        "oficial_titulo": "Lo que dice el ENFEN",
-        "oficial_ayuda": "El párrafo del comunicado que más se parece a tu texto, tal como lo escribió el ENFEN.",
-        "que_hacer": "Qué hacer",
+        "oficial_titulo": "Lo que sí dice el ENFEN",
+        "oficial_ayuda": "Es la parte del comunicado más parecida a tu mensaje, copiada tal cual.",
+        "que_hacer": "Qué hacer en tu zona",
         "que_te_interesa": "¿Qué te interesa?",
         "recomendacion": "Recomendación oficial",
-        "nota_reciente": "Una nota reciente que coincide con el ENFEN",
+        "nota_reciente": "Un medio que dice lo mismo que el ENFEN",
         "sin_que_hacer": "No hay consejos del ENFEN para este tema hoy.",
         "compartir": "Compartir",
         "copiado": "Copiamos el texto y el enlace. Pégalos donde quieras.",
         "compartir_texto": "Lo revisé en Radar Niño Costero: {titulo}. Según el Comunicado N.° {numero} del ENFEN"
         " ({fecha}).",
         "compartir_sin_comunicado": "Lo revisé en Radar Niño Costero: {titulo}.",
-        "nueva": "Verificar otro texto",
+        "nueva": "Comparar otro mensaje",
     },
     "preguntar": {
         "titulo": "Pregunta sobre El Niño costero",
@@ -191,8 +239,8 @@ INTERFAZ = {
         "respuesta": "Respuesta",
     },
     "panorama": {
-        "titulo": "Panorama de 2026",
-        "intro": "Cómo se habló de El Niño en cuatro medios y en YouTube, frente a lo que dijo el ENFEN.",
+        "titulo": "Cómo se habló de El Niño en 2026",
+        "intro": "Lo que publicaron cuatro medios y YouTube, frente a lo que dijo el ENFEN.",
         "hallazgos": "Lo principal",
         "filtros": "Filtros",
         "desde": "Desde",
@@ -280,11 +328,13 @@ INTERFAZ = {
 }
 
 # Las pantallas del ciudadano: U2 y U6 se miden también sobre sus textos
-PANTALLAS_DEL_CIUDADANO = ("comun", "verificar", "preguntar")
+PANTALLAS_DEL_CIUDADANO = ("comun", "glosario", "verificar", "preguntar")
 # Las ayudas que se leen como frase (U3); las etiquetas cortas no tienen sentido para INFLESZ
 AYUDAS = (("verificar", "elige_zona_ayuda"), ("verificar", "cuadro_ayuda"), ("verificar", "oficial_ayuda"),
           ("verificar", "sin_que_hacer"), ("verificar", "copiado"), ("preguntar", "entendido_ayuda"),
-          ("comun", "sin_conexion"), ("comun", "arrancando"))  # fmt: skip
+          ("comun", "sin_conexion"), ("comun", "arrancando"), ("verificar", "mensaje_ayuda"),
+          ("glosario", "enfen"), ("glosario", "senamhi"), ("glosario", "nino"), ("glosario", "magnitud"),
+          ("glosario", "estados"))  # fmt: skip
 
 
 def textos_de_la_interfaz():
@@ -293,7 +343,8 @@ def textos_de_la_interfaz():
 
 def para_la_interfaz():
     """Lo que importa web/: la interfaz y las listas que muestra tal cual."""
-    return {**INTERFAZ, "macroregiones": MACROREGIONES, "intereses": INTERESES, "cercania": CERCANIA}
+    return {**INTERFAZ, "macroregiones": MACROREGIONES, "intereses": INTERESES, "cercania": CERCANIA,
+            "estados": ESTADO, "magnitudes": list(MAGNITUDES)}  # fmt: skip
 
 
 def generar():

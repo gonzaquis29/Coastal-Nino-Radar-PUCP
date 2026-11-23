@@ -3,9 +3,9 @@ import { api } from "../api/cliente";
 import type { Interes, Macroregion, Resultado as R } from "../api/tipos";
 import { AvisoError } from "../componentes/Aviso";
 import { Cita } from "../componentes/Cita";
-import { LineaEstado } from "../componentes/LineaEstado";
+import { AvisosZona, PanelZona } from "../componentes/PanelZona";
 import { QueHacer } from "../componentes/QueHacer";
-import { Resultado } from "../componentes/Resultado";
+import { magnitudDelMensaje, Resultado } from "../componentes/Resultado";
 import { useConsulta, useZona } from "../ganchos";
 import { registrar } from "../registro/registro";
 import { hoy, llenar, T } from "../textos";
@@ -122,14 +122,13 @@ export default function Verificar() {
 
   const r = resultado.datos;
   return (
-    <div className="envoltura verificar">
-      <h1 className="verificar__titulo">{T.verificar.titulo}</h1>
-
+    <div className="hoy">
+      <div className="hoy__zona">
       {zona ? (
-        <LineaEstado estado={estado.datos} zona={zona} cambiarZona={setZona} />
+        <PanelZona estado={estado.datos} zona={zona} cambiarZona={setZona} magnitudMensaje={magnitudDelMensaje(r)} />
       ) : (
-        <div className="elegir-zona tarjeta" ref={zonaRef} role="group" aria-labelledby="titulo-zona">
-          <h2 id="titulo-zona">{T.verificar.elige_zona}</h2>
+        <div className="elegir-zona" ref={zonaRef} role="group" aria-labelledby="titulo-zona">
+          <h1 id="titulo-zona" className="zona__estado">{T.verificar.elige_zona}</h1>
           <p>{T.verificar.elige_zona_ayuda}</p>
           <div className="chips">
             {ZONAS.map(([id, nombre]) => (
@@ -141,8 +140,14 @@ export default function Verificar() {
         </div>
       )}
       {estado.error && <AvisoError tipo={estado.error} reintentar={() => zona && pedirEstado(zona, fecha || hoy())} />}
+      </div>
 
-      <form className="cuadro tarjeta" onSubmit={verificar} noValidate>
+      <div className="hoy__mensaje">
+      <form className="cuadro" onSubmit={verificar} noValidate aria-labelledby="titulo-mensaje">
+        <h2 id="titulo-mensaje" className="cuadro__titulo">
+          {T.verificar.mensaje_titulo}
+        </h2>
+        <p className="cuadro__bajada">{T.verificar.mensaje_ayuda}</p>
         <label htmlFor="texto" className="solo-lectores">
           {T.verificar.cuadro}
         </label>
@@ -248,6 +253,12 @@ export default function Verificar() {
               </p>
             )}
           </div>
+        </div>
+      )}
+      </div>
+      {zona && (
+        <div className="hoy__avisos">
+          <AvisosZona estado={estado.datos} />
         </div>
       )}
     </div>

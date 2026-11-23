@@ -694,3 +694,22 @@ No construyó nada: espera la aprobación.
 96. te refieres que tenemos un servicio muy lento? eso de que parte es / debemos mejroar con urgencia eso, debemos optimizarlo, es pesimo tanto tiempo, o sea yo levanto el proyecto y va a estar ahi demorando tanto?
 
 **Resultado:** la IA midió el arranque por pasos: la mayor parte se iba en volver a calcular los vectores de los párrafos oficiales en cada arranque. Los guardó en disco (`embeddings.con_cache`, en `data/processed/cache/`), y se recalculan solos si cambian el corpus oficial o el modelo. El arranque bajó de 63,2 s a 15,6 s, y P1 a P5 y las pruebas siguen pasando. Lo que queda es importar las librerías.
+97. procede a levantar el proyecto, quiero ver como ha quedado visualmente, a ver si es intuitivo para los usuarios
+
+**Resultado:** la IA levantó la API con la interfaz construida, desviando el registro de uso a una carpeta temporal para que la revisión no contara como uso real. La recorrió en el celular. Un mensaje que contradice al ENFEN («será débil y ya se va») salió con «Cercanía: Alta» bajo «¿Coincide con el ENFEN?».
+98. hay que mejorar mucho, esta terrible para un usuario, muestrame los diseños para ver cual debemos utilizar. Tu mismo revisalo
+
+**Resultado:** la IA listó seis problemas para un ciudadano y armó maquetas de tres opciones: ordenar lo que existe, primero tu zona y un chat. Las revisó en el navegador y recomendó «primero tu zona».
+99. si esta bueno pero me preocupa el diseño, es muy generico, muy simple y repetitivo en varias paginas web hechas con IA. Lo que hay que mejorara tambien es colocar en algun lado que cosa es ENFEN para los que no saben. Mejoremos el uso del espacaio tambien
+
+**Resultado:** la IA rehízo la maqueta con una identidad propia del tema:
+- una regla de magnitud como la de un mareógrafo y la escalera de estados del ENFEN;
+- un glosario (ENFEN, Senamhi, El Niño costero, magnitud);
+- dos columnas en computadora.
+100. esta mucho mejor, procedemos con ello. Mantengamos las buenas practicas
+
+**Resultado:** la IA escribió la sección 11 de `docs/app/definicion.md` (criterios I1 a I5) y construyó el rediseño:
+- tokens nuevos y letras servidas desde la app;
+- el inicio «Hoy», con la zona y el mensaje en dos columnas;
+- la regla con las dos marcas, el glosario, el resultado sin datos con título nuevo, y la cercanía como una línea chica.
+Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en el azul ya validado, porque el naranja significa «difieren» en el Panorama. Midió los criterios: pasan I1 a I5, P1 a P12 y U1 a U6 (sección 11.4). En la medición corrigió el área de toque de dos enlaces y el ancho de los gráficos del Panorama en el celular.

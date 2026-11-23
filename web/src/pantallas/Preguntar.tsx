@@ -56,7 +56,7 @@ export default function Preguntar() {
 
   return (
     <div className="envoltura preguntar">
-      <h1 className="verificar__titulo">{T.preguntar.titulo}</h1>
+      <h1 className="titulo-pantalla">{T.preguntar.titulo}</h1>
 
       {historia.length === 0 && (
         <div className="ejemplos">

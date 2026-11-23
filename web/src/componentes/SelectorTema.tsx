@@ -1,14 +1,14 @@
 import type { Tema } from "../ganchos";
 import { T } from "../textos";
 
-const SIGUIENTE: Record<Tema, Tema> = { sistema: "claro", claro: "oscuro", oscuro: "sistema" };
+const SIGUIENTE: Record<Tema, Tema> = { claro: "oscuro", oscuro: "sistema", sistema: "claro" };
 const NOMBRE: Record<Tema, string> = {
   sistema: T.comun.tema_sistema,
   claro: T.comun.tema_claro,
   oscuro: T.comun.tema_oscuro,
 };
 
-/** Un botón que recorre sistema → claro → oscuro; el nombre accesible dice el tema actual. */
+/** Un botón que recorre claro → oscuro → sistema; el nombre accesible dice el tema actual. */
 export function SelectorTema({ tema, cambiar }: { tema: Tema; cambiar: (t: Tema) => void }) {
   return (
     <button

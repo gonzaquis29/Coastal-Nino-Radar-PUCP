@@ -1,11 +1,12 @@
-"""Criterios de la interfaz (docs/app/definicion.md, sección 6): P6 a P12 y U1 a U6.
+"""Criterios de la interfaz (docs/app/definicion.md, secciones 6 y 11): P6 a P12, U1 a U6 y I2 a I4.
 
 1. Con la API corriendo (python -m radar.app): cd web && npm run medir  ->  data/processed/app/interfaz.json
 2. python -m radar.app.validar_interfaz  ->  agrega la prueba "App: interfaz" a data/processed/app/validacion.csv
 
 Aquí se calcula P8 de la API contra sus CSV (recontando desde los archivos, sin pasar por radar.app.servicio), y se
-juntan los criterios que mide el navegador (P6, P7, P8 en pantalla, P10, P12, U1, U2, U4, U5 y U6), la paleta (P9,
-medida el 19-nov) y la revisión de capturas (P11). U3 y los textos de U2 y U6 los revisa tests/app.
+juntan los criterios que mide el navegador (P6, P7, P8 en pantalla, P10, P12, U1, U2, U4, U5, U6 y I2 a I4 del
+rediseño, sección 11), la paleta (P9, medida el 19-nov y repetida el 23-nov) y la revisión de capturas (P11). U3 y
+los textos de U2 y U6 los revisa tests/app.
 """
 
 import json
@@ -120,7 +121,8 @@ def main():
         criterio("P8. Cifras del Panorama iguales a sus CSV", f"{revisadas - len(diferencias)}/{revisadas}", "100 %",
                  not diferencias and p8["pasa"],
                  f"API contra CSV: {'; '.join(diferencias) or 'sin diferencias'}. En pantalla: {p8['detalle']}"),
-        criterio("P9. Paleta (validate_palette.js, claro y oscuro)", 0, "0", True, "medida el 19-nov (sección 8)"),
+        criterio("P9. Paleta (validate_palette.js, claro y oscuro)", 0, "0", True,
+                 "medida el 19-nov (sección 8) y otra vez el 23-nov sobre las superficies nuevas (sección 11, I5)"),
         del_navegador("P10", "P10. Emergente, tabla con descarga y Cómo leer; Descriptivo donde corresponde"),
         criterio("P11. Revisión de capturas (375 y 1.280 px, claro y oscuro)", len(pendientes), "0", not pendientes,
                  f"corregidos: {'; '.join(REVISION_P11['corregidos'])}"),
@@ -130,6 +132,9 @@ def main():
         del_navegador("U4", "U4. Primera carga de Verificar, comprimida"),
         del_navegador("U5", "U5. Controles de 44 × 44 px o más"),
         del_navegador("U6", "U6. Respuestas sin datos con color de semáforo o promesas"),
+        del_navegador("I2", "I2. Sin desplazamiento horizontal (360, 375 y 1.280 px)"),
+        del_navegador("I3", "I3. A 1.280 × 800, la zona y el botón sin desplazarse"),
+        del_navegador("I4", "I4. Glosario: las cuatro palabras abren su explicación"),
     ]  # fmt: skip
     guardar(filas, config.DIR_APP / "validacion.csv")
     for f in filas:

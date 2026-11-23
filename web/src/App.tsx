@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { GlosarioProvider, useGlosario } from "./componentes/Glosario";
 import { Marca } from "./componentes/Marca";
 import { SelectorTema } from "./componentes/SelectorTema";
 import { useTema } from "./ganchos";
@@ -49,6 +50,16 @@ export function Enlace(props: React.AnchorHTMLAttributes<HTMLAnchorElement> & { 
   );
 }
 
+/** El enlace del menú que abre el glosario en «¿Qué es el ENFEN?». */
+function BotonGlosario() {
+  const abrir = useGlosario();
+  return (
+    <button type="button" className="nav__glosario" aria-haspopup="dialog" onClick={() => abrir("enfen")}>
+      {T.comun.nav_glosario}
+    </button>
+  );
+}
+
 export default function App() {
   const [pantalla, setPantalla] = useState<Pantalla>(() => pantallaDe(window.location.pathname));
   const [tema, setTema] = useTema();
@@ -79,7 +90,7 @@ export default function App() {
   ];
 
   return (
-    <>
+    <GlosarioProvider>
       <a className="saltar" href="#contenido">
         {T.comun.saltar}
       </a>
@@ -88,7 +99,11 @@ export default function App() {
           <Enlace href="/" className="marca" aria-label={T.comun.marca}>
             <Marca />
             <span className="marca__texto">{T.comun.marca}</span>
+            <span className="marca__corta" aria-hidden="true">
+              {T.comun.marca_corta}
+            </span>
           </Enlace>
+          <BotonGlosario />
           <nav className="nav" aria-label={T.comun.nav_principal}>
             {nav.map(([ruta, id, texto]) => (
               <Enlace key={id} href={ruta} aria-current={pantalla === id ? "page" : undefined}>
@@ -115,6 +130,6 @@ export default function App() {
           </Enlace>
         </div>
       </footer>
-    </>
+    </GlosarioProvider>
   );
 }

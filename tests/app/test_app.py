@@ -240,7 +240,7 @@ def test_validar_interfaz_junta_los_criterios_del_navegador(monkeypatch, tmp_pat
     from radar.app import metodologia
     from radar.app import validar_interfaz as v
 
-    ids = ("P6", "P7", "P8", "P10", "P12", "U1", "U2", "U4", "U5", "U6")
+    ids = ("P6", "P7", "P8", "P10", "P12", "U1", "U2", "U4", "U5", "U6", "I2", "I3", "I4")
     navegador = {i: {"valor": 0, "umbral": "0", "pasa": i != "U5", "detalle": "x"} for i in ids}
     (tmp_path / v.ARCHIVO_NAVEGADOR).write_text(json.dumps({"criterios": navegador}), encoding="utf-8")
     guardadas = []
@@ -248,7 +248,7 @@ def test_validar_interfaz_junta_los_criterios_del_navegador(monkeypatch, tmp_pat
     monkeypatch.setattr(v, "p8_api_contra_csv", lambda: (3, []))
     monkeypatch.setattr(v, "guardar", lambda filas, ruta: guardadas.extend(filas))
     v.main()
-    assert len(guardadas) == 12 and {f["prueba"] for f in guardadas} == {v.PRUEBA}
+    assert len(guardadas) == 15 and {f["prueba"] for f in guardadas} == {v.PRUEBA}
     assert [f["criterio"][:3] for f in guardadas if not f["pasa"]] == ["U5."]
     assert next(f for f in guardadas if f["criterio"].startswith("P8"))["valor"] == "3/3"
     assert any(t[1] == v.PRUEBA for t in metodologia.TARJETAS)

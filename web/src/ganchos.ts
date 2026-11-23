@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ErrorApi, type TipoError } from "./api/cliente";
 import type { Macroregion } from "./api/tipos";
 
@@ -41,13 +41,14 @@ export type Tema = "sistema" | "claro" | "oscuro";
 export function useTema(): [Tema, (t: Tema) => void] {
   const [tema, setTema] = useState<Tema>(() => {
     const t = guardado.leer("radar.tema");
-    return t === "claro" || t === "oscuro" ? t : "sistema";
+    if (t === "claro" || t === "oscuro" || t === "sistema") return t;
+    return "claro"; // sección 11: claro por defecto; el oscuro se elige
   });
   useEffect(() => {
     const raiz = document.documentElement;
     if (tema === "sistema") raiz.removeAttribute("data-theme");
     else raiz.setAttribute("data-theme", tema === "claro" ? "light" : "dark");
-    guardado.escribir("radar.tema", tema === "sistema" ? null : tema);
+    guardado.escribir("radar.tema", tema === "claro" ? null : tema);
   }, [tema]);
   return [tema, setTema];
 }
@@ -97,10 +98,14 @@ export function useConsulta<T, A extends unknown[]>(funcion: (senal: AbortSignal
 export function useAncho<E extends HTMLElement>(inicial = 640): [React.RefObject<E | null>, number] {
   const ref = useRef<E | null>(null);
   const [ancho, setAncho] = useState(inicial);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const obs = new ResizeObserver(([e]) => setAncho(Math.max(280, Math.floor(e.contentRect.width))));
+    if (!el) return;
+    // se mide ya al montar: el observador puede tardar (o no llegar en una pestaña oculta) y el gráfico desbordaría (I2)
+    const medir = (w: number) => w > 0 && setAncho(Math.max(280, Math.floor(w)));
+    medir(el.getBoundingClientRect().width);
+    if (typeof ResizeObserver === "undefined") return;
+    const obs = new ResizeObserver(([e]) => medir(e.contentRect.width));
     obs.observe(el);
     return () => obs.disconnect();
   }, []);

@@ -463,3 +463,55 @@ La salida es aprender el tema con toda la fuente, sin etiquetar a mano. Se desca
 - **Lo que esto dice de la sección 9:** en esta muestra más grande (400 cuerpos de septiembre al corte), el filtro de palabras da 1,75 % de «Alta» en cuerpo, por debajo del 2 %. En la sección 9.6 había dado 3 de 100. Es otra muestra, medida después y como comparación, así que no cambia el "no pasa" de F1; se informa.
 - **Por qué no se ajusta:** la prueba ya se miró. Combinar los dos filtros o cambiar τ ahora sería elegir con la prueba, y no queda otra muestra limpia.
 - **Qué lo resolvería** (pendiente, sin definir): etiquetas de "clima y mar" que no dependan de nombrar a El Niño. Por ejemplo, los avisos del Senamhi y los párrafos de impactos del ENFEN como positivos. Pide otra definición y una prueba nueva, que no existe antes del congelamiento.
+
+## 11. Rediseño de la interfaz (aprobado el 23-nov)
+
+### 11.1 Por qué
+Al recorrer la app en el celular, el 23-nov, aparecieron seis problemas para un ciudadano:
+1. Un mensaje que contradice al ENFEN («será débil y ya se va», con la alerta vigente en extraordinaria) dio «Cercanía: Alta» bajo el título «¿Coincide con el ENFEN?». Cualquiera lo lee como «sí coincide».
+2. La situación de la zona, que es lo primero que busca la gente, era una línea chica y densa.
+3. El párrafo oficial y las recomendaciones salían tal cual, escritos para autoridades.
+4. Había bloques que no se entendían («¿Es de otra fecha?»).
+5. El aspecto era de herramienta técnica, con recuadros iguales como cualquier página hecha con IA.
+6. Nadie explicaba qué es el ENFEN.
+
+Se compararon tres opciones en maquetas: ordenar lo que ya existe, primero tu zona y un chat. El equipo eligió «primero tu zona», con una identidad propia del tema.
+
+### 11.2 Qué se construye
+- **Inicio «Hoy».** Primero va el estado de la zona: la escalera de estados del ENFEN (no activo, vigilancia, alerta) y una regla vertical de magnitud (débil, moderada, fuerte, extraordinaria), como la de un mareógrafo. Debajo, los avisos vigentes del Senamhi a la vista y el cuadro para pegar un mensaje.
+  - En pantallas de 1.024 px o más: dos columnas, tu zona a la izquierda y tu mensaje a la derecha.
+  - En el celular: una columna, con la navegación abajo.
+  - Verificar sigue a 2 acciones (U1).
+- **Resultado con datos.** Lleva un sello (✓, ! o ✕), el título y la comparación «Tu mensaje / El ENFEN». Si el dato es la magnitud, la regla marca las dos posiciones.
+- **Resultado sin datos.** El título dice que no trae un dato que revisar. La cercanía queda como una línea chica, en un solo tono, que aclara que hablar del mismo tema no lo hace cierto (D1 y U6 se mantienen).
+- **Glosario.** ENFEN, Senamhi, El Niño costero y magnitud van subrayados y abren una explicación corta. En el menú hay «¿Qué es el ENFEN?».
+- **Identidad.** Fondo gris garúa, tinta azul de altamar y la corriente de Humboldt como acento. La regla usa la escala de magnitud ya validada en P9 (azul, de claro a oscuro), la misma del Panorama. La maqueta la mostraba cálida, pero el naranja ya significa «difieren» en los gráficos A y B. Los títulos van en Archivo condensada y los textos en Atkinson Hyperlegible.
+  - Las fuentes se sirven desde la propia app, porque la CSP no admite nada de fuera.
+  - El modo claro va por defecto; el oscuro tiene sus propios pasos.
+- **Panorama** pasa a llamarse «Cómo se habló», con el mismo sistema visual. Sus textos no cambian de sentido: «Descriptivo» sigue donde lo pide P10.
+- **Lo que no cambia:** la API, el registro de uso, los cálculos y el sentido de los veredictos. Todos los textos siguen en `radar.app.textos`.
+
+### 11.3 Criterios (fijados antes de construir)
+| # | Criterio | Umbral |
+|---|---|---|
+| I1 | Siguen pasando P1 a P12 y U1 a U6. En P7, la cercanía se espera con el título nuevo; en U4 cuentan las fuentes | todos |
+| I2 | Sin desplazamiento horizontal a 360, 375 y 1.280 px | 0 pantallas |
+| I3 | A 1.280 × 800, el estado de la zona y el botón para verificar se ven sin desplazarse | sí |
+| I4 | Glosario: las cuatro palabras abren su explicación, y sus textos pasan U2 y U3 | 4/4 |
+| I5 | La paleta de datos pasa `validate_palette.js` sobre las superficies nuevas, en claro y en oscuro (P9) | 0 fallas |
+
+### 11.4 Resultados (23-nov)
+Medido con `npm run medir`, `python -m radar.app.validar_interfaz` y `python -m radar.app.validar`, con la API recién arrancada.
+
+| # | Resultado | Pasa |
+|---|---|---|
+| I1 | P1 a P12 y U1 a U6 pasan. P7 da 7/7 con el título nuevo; U4 da 228,9 KB con las fuentes (umbral 300 KB); U5 da 100 % en 146 controles | sí |
+| I2 | 0 de 18 pantallas a 360, 375 y 1.280 px | sí |
+| I3 | A 1.280 × 800, el estado termina a 182 px, la escalera a 354 px y el botón a 360 px | sí |
+| I4 | 4/4 (ENFEN, Senamhi, El Niño costero y magnitud); los textos pasan U2 y U3 en `tests/app` | sí |
+| I5 | P9 da 0 fallas. La magnitud en oscuro pasa con la superficie `#0f2029` (con `#11242e` no pasaba) | sí |
+
+Lo que se corrigió durante la medición:
+- El enlace al comunicado y la palabra «Senamhi» medían menos de 44 px de alto (U5): se agrandó su área de toque sin mover el texto.
+- Los gráficos del Panorama se dibujaban con 640 px hasta que el navegador avisaba el ancho, y a 360 y 375 px la página se desplazaba a los lados (I2). Ahora miden su caja al aparecer.
+- La primera medición de P7 usó una API arrancada antes del cambio de título; con la API recién arrancada da 7/7.

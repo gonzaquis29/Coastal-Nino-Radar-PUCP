@@ -23,9 +23,13 @@
 }
 
 .panorama__cabeza h1 {
-  font-size: clamp(1.8rem, 4.5vw, 2.8rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-family: var(--display);
+  font-stretch: 72%;
+  font-weight: 880;
+  text-transform: uppercase;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  line-height: 0.95;
+  letter-spacing: -0.005em;
 }
 
 .panorama__cabeza p {
@@ -56,10 +60,12 @@
 }
 
 .hallazgo__valor {
-  font-size: clamp(2.4rem, 5vw, 3.6rem);
-  font-weight: 800;
+  font-family: var(--display);
+  font-stretch: 75%;
+  font-size: clamp(2.6rem, 5vw, 3.8rem);
+  font-weight: 880;
   line-height: 1;
-  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
 }
 
 .hallazgo__texto {
@@ -205,8 +211,10 @@
 }
 
 .grafico__titulos h2 {
-  font-size: 1.15rem;
-  font-weight: 750;
+  font-family: var(--display);
+  font-stretch: 85%;
+  font-size: 1.3rem;
+  font-weight: 800;
 }
 
 .grafico__descriptivo {

@@ -1,6 +1,6 @@
 // Mide los criterios de la interfaz con la API real corriendo (python -m radar.app) y el Edge instalado, sin
 // descargar navegadores: P6 (axe), P7 (6 textos sintéticos de punta a punta), P8 (cifras en pantalla = API), P10, P12,
-// U1, U2, U4, U5 y U6, y deja capturas a 375 y 1.280 px en claro y oscuro para la revisión de P11.
+// U1, U2, U4, U5, U6 y I2 a I4 del rediseño (sección 11), y deja capturas a 375 y 1.280 px en claro y oscuro para la revisión de P11.
 //
 //   npm run medir                 (RADAR_URL=http://localhost:8000 por defecto)
 //   -> ../data/processed/app/interfaz.json   y   medir/capturas/*.png
@@ -24,7 +24,7 @@ const P7 = [
   { texto: "El ENFEN prevé un Niño costero extraordinario hasta junio de 2027", tipo: "datos", clase: "resultado--coincide", titulo: "Coincide con el ENFEN" },
   { texto: "El ENFEN mantiene la vigilancia de El Niño costero con magnitud débil", tipo: "datos", clase: "resultado--revisar", titulo: "Usa un dato anterior del ENFEN" },
   { texto: "El ENFEN prevé que El Niño costero durará hasta junio de 2028", tipo: "datos", clase: "resultado--no_coincide", titulo: "No coincide con el ENFEN" },
-  { texto: "El mar frente a la costa norte sigue más caliente de lo normal y se esperan lluvias por El Niño costero", tipo: "cercania", titulo: "Cercanía: Alta" },
+  { texto: "El mar frente a la costa norte sigue más caliente de lo normal y se esperan lluvias por El Niño costero", tipo: "cercania", titulo: "No trae un dato que podamos comparar" },
   // sección 9: los textos de otros temas no reciben cercanía (antes, la receta salía "Media" y el fútbol "Alta")
   { texto: "Receta de ceviche con limón, ají y camote", tipo: "fuera_de_tema", titulo: "Este texto no parece hablar de El Niño, del mar ni del clima." },
   { texto: "Nuevo teléfono con cámara de 200 megapíxeles llega a las tiendas", tipo: "fuera_de_tema", titulo: "Este texto no parece hablar de El Niño, del mar ni del clima." },
@@ -53,6 +53,8 @@ async function pagina({ ancho = 1280, tema = "light", zona = "costa_norte" } = {
     acceptDownloads: true,
   });
   if (zona) await contexto.addInitScript((z) => localStorage.setItem("radar.zona", z), zona);
+  // la app abre en claro (sección 11): el oscuro se elige, como lo haría la persona
+  await contexto.addInitScript((t) => localStorage.setItem("radar.tema", t), tema === "dark" ? "oscuro" : "claro");
   // la medición no escribe en el registro de uso real: se responde aquí, sin llegar a la API
   await contexto.route("**/api/eventos", (r) => r.fulfill({ status: 204, body: "" }));
   await contexto.addInitScript(() => {
@@ -66,11 +68,11 @@ async function pagina({ ancho = 1280, tema = "light", zona = "costa_norte" } = {
 async function verificar(p, texto, fecha = FECHA) {
   await p.goto(`${BASE}/`);
   if (fecha) {
-    await p.getByRole("button", { name: "¿Es de otra fecha?" }).click();
+    await p.getByRole("button", { name: "¿El mensaje es antiguo?" }).click();
     await p.locator("input[type=date]").fill(fecha);
   }
   await p.locator("#texto").fill(texto);
-  await p.getByRole("button", { name: "Verificar", exact: true }).click();
+  await p.getByRole("button", { name: "Comparar con el ENFEN", exact: true }).click();
   await p.locator("[data-tipo]").waitFor();
   await p.waitForFunction(() => !document.querySelector(".respuesta.atenuado"));
 }
@@ -192,7 +194,7 @@ async function axe(p) {
   let acciones = 0;
   await p.locator("#texto").fill(P7[0].texto);
   acciones += 1;
-  await p.getByRole("button", { name: "Verificar", exact: true }).click();
+  await p.getByRole("button", { name: "Comparar con el ENFEN", exact: true }).click();
   acciones += 1;
   const visto = await p.locator("[data-tipo]").waitFor({ timeout: 30_000 }).then(() => true, () => false);
   anotar("U1", { valor: visto ? acciones : "sin resultado", umbral: "≤ 2", pasa: visto && acciones <= 2, detalle: "fecha de hoy, zona guardada" });
@@ -269,6 +271,64 @@ async function axe(p) {
     pasa: chicos.length === 0,
     detalle: `${total} controles${chicos.length ? `; ${chicos.slice(0, 12).join("; ")}` : ""}`,
   });
+}
+
+// ---------------------------------------------------------------- I2: sin desplazamiento horizontal (sección 11)
+{
+  const anchas = [];
+  let revisadas = 0;
+  for (const ancho of [360, 375, 1280]) {
+    for (const [nombre, preparar] of Object.entries(ESTADOS)) {
+      const p = await pagina({ ancho, zona: zonaDe(nombre) });
+      await preparar(p);
+      const r = await p.evaluate(() => ({ total: document.documentElement.scrollWidth, ventana: window.innerWidth }));
+      revisadas += 1;
+      if (r.total > r.ventana) anchas.push(`${nombre}@${ancho}: ${r.total} px`);
+      await p.context().close();
+    }
+  }
+  anotar("I2", { valor: anchas.length, umbral: "0", pasa: anchas.length === 0, detalle: `${revisadas} pantallas a 360, 375 y 1.280 px${anchas.length ? `; ${anchas.join("; ")}` : ""}` });
+}
+
+// ---------------------------------------------------------------- I3: a 1.280 × 800, la zona y el botón sin desplazarse
+{
+  const contexto = await navegador.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: "reduce" });
+  await contexto.addInitScript(() => localStorage.setItem("radar.zona", "costa_norte"));
+  await contexto.route("**/api/eventos", (r) => r.fulfill({ status: 204, body: "" }));
+  const p = await contexto.newPage();
+  await p.goto(`${BASE}/`);
+  await p.locator(".escalera").waitFor();
+  const r = await p.evaluate(() => {
+    const abajo = (s) => document.querySelector(s)?.getBoundingClientRect().bottom ?? Infinity;
+    return { estado: abajo(".zona__estado"), escalera: abajo(".escalera"), boton: abajo("form.cuadro button[type=submit]") };
+  });
+  const ok = Math.max(r.estado, r.escalera, r.boton) <= 800;
+  anotar("I3", { valor: ok ? "sí" : "no", umbral: "sí", pasa: ok, detalle: `fondo del estado ${Math.round(r.estado)} px, de la escalera ${Math.round(r.escalera)} px y del botón ${Math.round(r.boton)} px` });
+  await contexto.close();
+}
+
+// ---------------------------------------------------------------- I4: las cuatro palabras abren su explicación
+{
+  const p = await pagina({ ancho: 375 });
+  await p.goto(`${BASE}/`);
+  await p.locator(".escalera").waitFor();
+  const abren = [];
+  const faltan = [];
+  for (const termino of ["enfen", "senamhi", "nino", "magnitud"]) {
+    const boton = p.locator(`button.palabra[data-termino=${termino}]`).first();
+    if (!(await boton.count())) {
+      faltan.push(`${termino}: no está en pantalla`);
+      continue;
+    }
+    await boton.click();
+    const ok = await p.evaluate((t) => document.querySelector("dialog.glosario")?.open
+      && !!document.querySelector(`.glosario__entrada.activa[data-termino=${t}] p`)?.textContent, termino);
+    if (ok) abren.push(termino);
+    else faltan.push(`${termino}: no abre`);
+    await p.getByRole("button", { name: "Cerrar" }).click();
+  }
+  anotar("I4", { valor: `${abren.length}/4`, umbral: "4/4", pasa: abren.length === 4, detalle: faltan.join("; ") || "ENFEN, Senamhi, El Niño costero y magnitud; textos con U2 y U3 en tests/app" });
+  await p.context().close();
 }
 
 // ---------------------------------------------------------------- P8 (pantalla = API), P10 y P12
