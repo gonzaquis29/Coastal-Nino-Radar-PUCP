@@ -15,7 +15,7 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
    - `python -m radar.nlp.discrepancia calcular`: es reanudable y solo agrega las notas que faltan. Quedó en 2.727 notas sobre El Niño y ahora hay 2.785.
    - `python -m radar.analitica.eventos validar --ronda c`, con los comunicados N.° 19 y 20 (sigue descriptivo).
    - Emociones de los comentarios del corte (`python -m radar.youtube.emociones`, unos 40 min), solo descriptivas.
-5. **App** ([app/definicion.md](app/definicion.md), aprobada el 19-nov). La API está hecha y pasa P1 a P5, y la paleta pasa P9. **La interfaz (`web/`) se planifica desde el 22-nov en una sesión aparte** y se construye solo cuando el usuario lo ordene. El gráfico F (YouTube) y el engagement en Metodología ya tienen sus datos (puntos 1 y 3).
+5. **App** ([app/definicion.md](app/definicion.md), aprobada el 19-nov). **Hecha el 22-nov:** la API y la interfaz (`web/`: Verificar, Preguntar, Panorama A a F y Metodología) pasan P1 a P12 y U1 a U6 ([app/definicion.md](app/definicion.md#interfaz-pasos-2-a-4-22-nov)). Si cambian los datos (punto 4), se vuelven a correr `radar.app.validar`, `npm run medir` y `radar.app.validar_interfaz`. Quedan fuera dos hallazgos: un titular de fútbol sale con cercanía Alta (umbrales del NLP) y el agente escribe la fecha en formato ISO (`radar.agente`).
 
 **Borrado de YouTube:** los datos crudos vencen a los 30 días de la descarga (el día 1 fue el 16-nov, así que vence el 16-dic). Se borran con `python -m radar.youtube.borrar`.
 
@@ -35,10 +35,10 @@ Orden según dependencias reales y fechas, revisado con lo aprendido en los pilo
   - recomendador (ronda b: R1 no pasa, así que se usa la cascada de 3 días);
   - agente (ronda c pasa);
   - red de enlaces (R2 no pasa para INDECI y PCM por enlaces SEO);
-  - API de la app.
+  - app: API e interfaz (P1 a P12 y U1 a U6).
   
   El NLI se cerró sin medir.
-- **Sin empezar:** interfaz de la app.
+- **Sin empezar:** nada del alcance; queda el punto 4 (actualizar con las notas del corte).
 
 ## Rutina diaria (cerrada el 22-nov)
 La recolección diaria terminó con el corte. Se registró en [recoleccion/diaria.md](recoleccion/diaria.md): ejecuciones, huecos del 16 y del 22-nov y cómo se recuperaron. Si hubiera que leer algo más: `python -m radar.noticias.historico` y `python -m radar.region.notas`. Un solo proceso a la vez pide páginas (`data/red.lock`).

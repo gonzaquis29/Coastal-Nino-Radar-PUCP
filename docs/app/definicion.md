@@ -213,7 +213,7 @@ Las cifras salen de los CSV al arrancar; aquí no se fijan a mano.
   5. Registro de uso.
   6. Después del 21-nov, F y el modelo de engagement.
 
-## 8. Resultados (19-nov)
+## 8. Resultados (19 y 22-nov)
 
 ### API (paso 1)
 - **Código:** `src/radar/app/` (`api.py`, `servicio.py`, `esquemas.py`, `eventos.py`, `metodologia.py`, `textos.py`, `legibilidad.py`). Se arranca con `python -m radar.app`; necesita el extra `app` (`pip install -e ".[app]"`).
@@ -245,3 +245,50 @@ Se validó con `validate_palette.js` (método del skill de visualización), en c
 | Veredicto | `#0ca30c`, `#fab219`, `#d03b3b` | los mismos | Paleta de estado de referencia, sin cambios; siempre con ícono y frase |
 
 - **Aviso del validador:** el aqua, el amarillo y el magenta quedan por debajo de 3:1 sobre el fondo claro. Por eso esos gráficos llevan etiquetas visibles y vista de tabla, que ya estaban en la sección 4.3.
+
+### Interfaz (pasos 2 a 4, 22-nov)
+- **Código:** `web/` (React 19, Vite 8, TypeScript 5.9, Visx 4, Vitest 5). Se construye con `cd web && npm install && npm run build`, que deja `web/dist/`; la API la sirve en `http://localhost:8000`. `dist/` y `node_modules/` no se versionan.
+- **Textos:** salen solo de `radar.app.textos` (`python -m radar.app.textos` escribe `web/src/generado/textos.json`). Una prueba en `tests/app` revisa que el archivo esté al día.
+- **Pantallas:** Verificar y Preguntar cargan primero; Panorama (A a F) y Metodología se cargan aparte, solo al abrirlas (unos 32 KB comprimidos).
+- **Pantalla F:** la API agrega `/api/panorama/youtube` desde `<corte>_analitica-puntos.csv` (leído con `radar.youtube.almacen`, que se niega a usarlo pasados los 30 días) y `analitica/web-engagement.csv`.
+  - Indicador 1: mediana de la tasa por tipo de canal, en orden fijo (medios, instituciones oficiales y otros canales).
+  - Indicador 2: la respuesta de W2 ("sí", ρ −0,168, IC −0,260 a −0,099).
+  - Los puntos no traen ids ni nombres de canal. Los colores son los de las instituciones (E), ya validados en P9.
+- **Seguridad:**
+  - CSP `default-src 'self'` sin scripts en línea, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` y `no-store` en `/api/`.
+  - Los enlaces externos solo se abren si son `https`, y ningún texto se inserta como HTML.
+  - El registro de uso tiene topes: 30 lotes por minuto por sesión, 600 en total y 50 MB. Si se pasa el tope responde 429, y con el registro lleno responde 204 sin guardar.
+- **Registro de uso (paso 4):** una sesión al azar por pestaña (`sessionStorage`). Los eventos se mandan por lote y con `sendBeacon` al cerrar, y nunca llevan el texto consultado (prueba de Vitest).
+- **Cómo se mide:** con la API corriendo, `cd web && npm run medir` (Edge y axe-core) deja `data/processed/app/interfaz.json`. Luego `python -m radar.app.validar_interfaz` recalcula P8 desde los CSV, sin pasar por `radar.app.servicio`, y guarda la prueba "App: interfaz" en `validacion.csv`, que Metodología muestra.
+  - La medición intercepta `/api/eventos` y anula `sendBeacon`, para no escribir en el registro real. La primera vez sí escribió, y esas filas se sacaron.
+
+| Criterio | Valor | Umbral | Pasa |
+|---|---|---|---|
+| P6. Violaciones graves o críticas de axe (24 pantallas: 375 y 1.280 px, claro y oscuro) | 0 | 0 | Sí |
+| P7. De punta a punta, 6 textos sintéticos | 6/6 | 6/6 | Sí |
+| P8. Cifras del Panorama iguales a sus CSV | 24/24 (y 27 en pantalla) | 100 % | Sí |
+| P9. Paleta | 0 fallas | 0 | Sí (19-nov) |
+| P10. Emergente, tabla con descarga y "Cómo leer"; "Descriptivo" solo en C | 6/6 | 100 % | Sí |
+| P11. Problemas pendientes tras revisar las capturas | 0 | 0 | Sí |
+| P12. Medios o canales ordenados por cercanía; B o F con el medio o ids | 0 | 0 | Sí |
+| U1. Acciones hasta el resultado | 2 | ≤ 2 | Sí |
+| U2. Jerga en Verificar y Preguntar (en pantalla) | 0 | 0 | Sí |
+| U4. Primera carga de Verificar, comprimida | 73,9 KB | ≤ 300 KB | Sí |
+| U5. Controles de 44 × 44 px o más (128) | 100 % | 100 % | Sí |
+| U6. Respuestas sin datos con color de semáforo o promesas | 0 | 0 | Sí |
+
+- **P11, lo que se corrigió al revisar las capturas:**
+  - el detalle de "Ver por qué" se veía abierto porque el CSS pisaba el atributo `hidden`;
+  - el encabezado del Panorama quedaba descentrado;
+  - en F, la etiqueta del 0 se encimaba con la de 0,1 %;
+  - las cifras salían con punto decimal y con decimales desiguales;
+  - las viñetas de los PDF se veían como un cuadro al inicio de algunas citas (se ocultan solo en pantalla, sin cambiar el texto oficial).
+- **P1 a P5 se repitieron** con la interfaz terminada, y P3 revisa ahora también la pantalla F: P1 25/25, P2 0,11 s (máximo 0,19 s) y arranque de 35,2 s, P3 0, P4 84/84, P5 0.
+- **Pruebas:** 27 en `tests/app` y 12 en Vitest (`npm test`), con datos sintéticos.
+- **Hallazgos que quedan fuera de la app:**
+  - "La selección peruana jugará el martes en Lima" sale con cercanía Alta, y una nota del precio del dólar con Media. Son los umbrales de la cercanía (NLP); la app solo los muestra.
+  - La respuesta del agente escribe la fecha en formato ISO ("vigentes el 2026-11-22"). Eso está en `radar.agente`.
+- **Antes de la presentación:**
+  - correr `npm run build`;
+  - no usar la app para pruebas sueltas, para que el registro de uso solo tenga el uso real;
+  - si cambian los datos (punto 4 de pendientes), volver a correr `python -m radar.app.validar`, `npm run medir` y `python -m radar.app.validar_interfaz`.

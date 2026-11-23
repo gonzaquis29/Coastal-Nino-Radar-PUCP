@@ -609,3 +609,12 @@ Todo quedó en la sección 8 del documento.
 73. Sí, construye
 
 **Resultado:** la IA construyó `web/` (Verificar, Preguntar, Panorama A a F y Metodología) y agregó a la API la pantalla F (`/api/panorama/youtube`), las tarjetas de YouTube, engagement, red, analítica web e interfaz en Metodología, y las cabeceras y topes. Los textos salen de `radar.app.textos` a `web/src/generado/textos.json`. Midió con Edge y axe (`npm run medir`) y con `python -m radar.app.validar_interfaz`: pasan los 12 criterios (P6 0 violaciones, P7 6/6, P8 24/24 cifras contra los CSV, U4 73,9 KB, U5 100 %). En la revisión corrigió el detalle que se veía abierto, el encabezado descentrado, la etiqueta del 0 en F, la coma decimal y las viñetas de los PDF. Al medir, el registro de uso recibió eventos de prueba; los sacó del registro real, y la medición ahora los intercepta. Hallazgos que quedan fuera (no se tocaron): un titular de fútbol sale con cercanía Alta por los umbrales del NLP, y el agente muestra la fecha en formato ISO.
+74. procede a validar
+
+**Resultado:** la IA construyó la interfaz y volvió a medir con la API corriendo: pasan P1 a P12 y U1 a U6. Revisó las reglas duras en el código: la API no pide nada a internet, F no trae ids ni nombres, nada se ordena por cercanía, están las cabeceras de seguridad y los eventos inválidos se rechazan con 422. Hizo dos ajustes: P3 revisa también la pantalla F y se limpió el detalle de P8. El registro de uso quedó vacío.
+75. entonces ya estaria listo? que seguiria
+
+**Resultado:** la IA respondió que la interfaz está lista y propuso lo que sigue: documentarla, actualizar los datos con las notas del corte (punto 4 de pendientes) y volver a medir, revisar aparte los dos hallazgos, y preparar la presentación (`npm run build` y el registro de uso limpio).
+76. Sí, documenta
+
+**Resultado:** la IA agregó los resultados de la interfaz a la sección 8 de `docs/app/definicion.md`. Marcó la app como hecha en `docs/pendientes.md` y sumó al README y a `CLAUDE.md` los comandos para construir y medir la interfaz.
