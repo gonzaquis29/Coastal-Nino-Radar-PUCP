@@ -673,3 +673,6 @@ Se actualizaron `docs/analitica/eventos.md`, `docs/nlp/discrepancia.md`, `docs/y
 - vector e5 y regresión logística, con la partición por tiempo (enero a agosto para entrenar, septiembre al corte para probar);
 - cuerpos de 400 y 400 notas, y los criterios C1 a C8.
 No construyó nada: espera la aprobación.
+91. Apruebo (clasificador de tema)
+
+**Resultado:** la IA marcó como aprobada la sección 10 de `docs/app/definicion.md`, con C1 a C8. No construyó nada: espera la orden.

@@ -380,7 +380,7 @@ Se validó con `validate_palette.js` (método del skill de visualización), en c
   - las notas reservadas para la capa 3 entraron en los positivos; ninguna sirvió para elegir las palabras.
 - **P7:** ahora tiene 7 textos. La receta, el teléfono y el fútbol esperan `fuera_de_tema`; ya no hay un caso de cercanía "Baja" dentro del tema.
 
-## 10. Clasificador de tema en Verificar (definición del 23-nov, pendiente de aprobación)
+## 10. Clasificador de tema en Verificar (definición aprobada el 23-nov)
 
 ### 10.1 Por qué
 El filtro de la sección 9 tiene un techo que no depende de la cantidad de datos:
