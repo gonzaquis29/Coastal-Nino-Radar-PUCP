@@ -294,3 +294,57 @@ Se validó con `validate_palette.js` (método del skill de visualización), en c
   - correr `npm run build`;
   - no usar la app para pruebas sueltas, para que el registro de uso solo tenga el uso real;
   - si cambian los datos (punto 4 de pendientes), volver a correr `python -m radar.app.validar`, `npm run medir` y `python -m radar.app.validar_interfaz`.
+
+## 9. Textos de otros temas en Verificar (definición del 23-nov, pendiente de aprobación)
+
+### 9.1 Problema medido
+- **Verificar da cercanía a cualquier texto, sea del tema o no.** "Alta" empieza en el p95 de las notas de otros temas (sección de umbrales en `docs/nlp/discrepancia.md`), así que, por construcción, cerca del 5 % de los textos ajenos salen "Alta" y cerca del 20 % "Media". S3 lo midió (5,8 %) y pasó, pero nadie tradujo esa tasa a lo que ve el ciudadano: la app muestra "Cercanía: Alta" para un texto de fútbol.
+- **Diagnóstico** (23-nov, semilla 20261123; las 300 notas nuevas quedaron en `config/notas_vistas.csv` como `diagnostico-fuera-de-tema`):
+  - en 286 titulares reales sin palabras del tema, 24 salen "Alta" (8,4 %) y 58 "Media" (20 %). Ejemplos: la visita del Papa, las elecciones, el retiro de AFP y el BCR;
+  - con textos sintéticos, 1 de 20 titulares ajenos y los 2 textos largos ajenos salen "Alta". El texto de fútbol (0,46) supera al de huaicos (0,43), así que ningún umbral los separa;
+  - Preguntar no tiene el problema: su regla de dominio (`DOMINIO` en `radar.agente.agente`) rechazó 5 de 5 preguntas ajenas.
+- **Causa:** la cercanía mide cuánto se parece un texto a una noticia sobre el Perú y sus instituciones, no si trata del tema.
+
+### 9.2 Alternativas
+| Opción | Por qué no o por qué sí |
+|---|---|
+| A. **Filtro de tema compartido** antes de la cercanía | **Elegida.** Es simple y transparente, y hace que Verificar y Preguntar decidan igual. |
+| B. Cercanía relativa (oficial frente a otros temas) | Obliga a recalibrar y a repetir S2 y S3; no cabe antes del 27-nov. |
+| C. Clasificador de tema con etiquetas automáticas | Es un modelo nuevo y puede aprender solo a detectar la palabra "Niño". |
+| D. Subir el umbral de "Alta" (p99) | No ordena bien: el texto de fútbol queda sobre el de huaicos. |
+| E. Solo declararlo | Deja el error a la vista del ciudadano. |
+
+### 9.3 Qué se construye
+1. **Un solo vocabulario del tema:** `radar.comun.dominio`, con la expresión `DOMINIO` del agente. `radar.agente.agente` la importa de ahí y no la copia. Correcciones halladas en desarrollo, que se miden en 9.5:
+   - `nino\b` sin `\b` inicial acepta "femenino";
+   - `calid` acepta "calidad";
+   - `costa` acepta "Costa Rica" y "Costa 21".
+2. **«Niño» con otro sentido:** "niño" o "niña" cuentan solo si nombran el fenómeno. Vale la regla de `radar.noticias.rasgos.menciones` ("El Niño", "fenómeno El Niño"), o "niño costero" o "niño global" escritos en cualquier forma. Así, "Niño de 5 años rescatado" y "Día del Niño" no cuentan. Escrito en minúsculas y sin otra palabra del tema ("el niño será fuerte"), el texto queda fuera; se declara, porque Verificar recibe textos de notas, que traen las mayúsculas.
+3. **El filtro en Verificar**, antes de los datos y de la cercanía (el caso de pocas palabras sigue primero):
+   - texto corto (hasta `PALABRAS_CORTO`, 100 palabras): basta una palabra del tema;
+   - texto largo: hacen falta dos palabras distintas del tema o una mención del fenómeno, porque en un texto largo aparecen sueltas "alerta", "evento" o "costa".
+4. **Resultado nuevo `fuera_de_tema`:** sin medidor, sin color y sin ícono (U6). El texto va en `radar.app.textos` y debe pasar U2 y U3 (INFLESZ de 65 o más), por ejemplo: "Este texto no parece hablar de El Niño, del mar ni del clima. Pega un texto sobre esos temas." El registro de uso acepta `fuera_de_tema` en `tipo_resultado`, que es una lista cerrada (P5).
+5. **Qué no cambia:** el Panorama (ya usa solo las notas sobre El Niño), los umbrales de la cercanía y el semáforo de `radar.nlp`.
+
+### 9.4 Muestras (ninguna repite `config/notas_vistas.csv`; cada una se agrega al elegirla)
+- **Desarrollo** (se puede mirar y ajustar): los 400 negativos de S3, los 450 titulares del diagnóstico y los 33 textos sintéticos. En desarrollo, el filtro deja pasar 17 de los 400 negativos de S3 por el titular.
+- **Validación** (se mira una vez):
+  - *negativos nuevos:* 400 notas con la definición de `otros_temas` de `radar.nlp.semaforo` (100 por medio, semilla nueva), en corto. Para 100 de ellas (25 por medio), además el cuerpo, leído en memoria con `Medio.leer` y sin guardarlo, como en S3;
+  - *positivos nuevos:* las 58 notas sobre El Niño del corte que todavía no se usaron, en corto y en cuerpo. Son pocas, así que el intervalo es ancho; se declara.
+  - *sintéticos nuevos*, escritos antes de medir: 10 usos de «niño» con otro sentido, 10 menciones del fenómeno bien escritas y 10 textos del tema que no nombran a El Niño (mar, lluvias, pesca, huaicos). Todos son inventados.
+
+### 9.5 Criterios (fijados antes de construir)
+| | Criterio | Umbral |
+|---|---|---|
+| F1 | Negativos nuevos con "Alta", en corto y en cuerpo por separado | ≤ 2 % |
+| F2 | Positivos nuevos que el filtro deja fuera, en corto | ≤ 10 % |
+| F3 | Positivos nuevos que el filtro deja fuera, en cuerpo | ≤ 5 % |
+| F4 | Usos de «niño» con otro sentido que pasan solo por esa palabra / menciones del fenómeno que no pasan | 0 / 0 |
+| F5 | Textos sintéticos del tema sin "El Niño" que quedan fuera | ≤ 1 de 10 |
+| F6 | Preguntar: con las preguntas ya vistas del agente, toda decisión que cambie se explica por las correcciones de 9.3; A4 sigue en ≥ 0,90 y ≤ 0,05 | 100 % |
+| F7 | La app sigue pasando P1 a P12 y U1 a U6. En P7, la receta de ceviche pasa de "Media" a `fuera_de_tema` | todos |
+
+- Si F1 a F5 pasan, **P13** ("textos de otros temas con «Alta» en Verificar ≤ 2 %") entra a la sección 6 y se mide con cada cambio de la app.
+- Si F2 no pasa, no se baja la exigencia: se declara cuánto deja fuera el filtro y se muestra el resultado `fuera_de_tema` con la frase "si sí trata del tema, pega la nota completa".
+- **Comandos previstos:** `python -m radar.app.validar_tema muestra|validar`, que guarda la prueba "App: tema" en `data/processed/app/validacion.csv`. Después, `python -m radar.app.validar`, `npm run medir` y `python -m radar.app.validar_interfaz`.
+- **Archivos:** `radar.comun.dominio` (nuevo), `radar.agente.agente` (solo la importación), `radar.app` (servicio, textos, eventos y `validar_tema`), `web/` (el resultado `fuera_de_tema` y P7) y sus pruebas.

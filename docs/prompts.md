@@ -630,3 +630,15 @@ Se actualizaron `docs/analitica/eventos.md`, `docs/nlp/discrepancia.md`, `docs/y
 78. sí, arregla los dos bugs
 
 **Resultado:** la IA corrigió dos detalles de `radar.nlp.discrepancia`. `calcular` deja una sola fila por nota en `discrepancia-todas-notas.csv`, porque la nota con error que se reintentaba quedaba repetida. Y `main` (también `validar`) sale con código 2 cuando otro proceso tiene el candado, en vez de caerse con un `TypeError`. Agregó dos pruebas sintéticas. Volvió a correr `calcular` con los datos reales y quedaron 2.785 filas.
+79. no deberiamos mejorar la data? como visualizas lo que hemos realizado, necesitamos mas info? alguna parte hay que mejorarla?
+
+**Resultado:** la IA respondió que no hace falta más data (el corte está cerrado y los criterios de muestra pasan) y que lo que limita es el método. Señaló como lo más visible que Verificar da cercanía "Alta" a textos que no tratan de El Niño.
+80. eso es muy critico, hay que verificar de una vez
+
+**Resultado:** la IA lo midió sin cambiar código. En 286 titulares reales sin palabras del tema, 24 salen "Alta" (8,4 %) y 58 "Media". Con textos sintéticos, el de fútbol (0,46) supera al de huaicos (0,43). Propuso un filtro por palabras.
+81. realmente estas seguro? la idea es que no cometamos estos errores de nuevo, es muy critico
+
+**Resultado:** la IA revisó su propuesta y corrigió tres errores: «niño» con otro sentido pasaba el filtro, la lista nueva duplicaba `DOMINIO` del agente, y la referencia de "otros temas" estaba mal. También aclaró que la tasa venía del diseño (S3 la midió y pasó) y que lo que faltó fue verla como la ve el ciudadano. Mapeó cinco alternativas y recomendó la A, un filtro de tema compartido.
+82. Sí, define A
+
+**Resultado:** la IA escribió la sección 9 de `docs/app/definicion.md`: el problema medido, las alternativas, qué se construye, las muestras y los criterios F1 a F7, más P13 como criterio permanente. En desarrollo encontró tres fallas de `DOMINIO` ("femenino", "calidad" y "Costa Rica"). Registró las 300 notas del diagnóstico en `config/notas_vistas.csv`. No construyó nada: espera la aprobación.
