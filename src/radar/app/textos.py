@@ -51,6 +51,26 @@ INTERESES = {
 }
 MACROREGIONES = {"costa_norte": "Costa norte", "costa_centro": "Costa centro", "lima": "Lima y Callao"}
 
+# Preguntar: la respuesta en palabras simples. El texto del agente (radar.agente) es para su evaluación y no se
+# muestra: trae fechas AAAA-MM-DD, ids y nombres internos. Las llaves se llenan en radar.app.servicio.
+PREGUNTAR = {
+    "estado": "Al {fecha}, el ENFEN dice: {estado}. Lo dijo en su comunicado N.° {numero}, del {emision}.",
+    "estado_sin": "No hay un comunicado del ENFEN para el {fecha}.",
+    "magnitud": "El ENFEN cree que su fuerza puede llegar a {magnitud}.",
+    "avisos": "El Senamhi tiene estos avisos para tu zona ({region}): {avisos}.",
+    "aviso": "el N.° {numero}, de {titulo}, con nivel {nivel}",
+    "sin_avisos": "No hay avisos del Senamhi para tu zona ({region}) ese día.",
+    "buscar": "Esto dicen los textos oficiales al {fecha}:",
+    "buscar_sin": "No hay textos oficiales para el {fecha}.",
+    "recomendar": "Para {interes} en tu zona ({region}), esto dice el ENFEN al {fecha}:",
+    "medir_verde": "Los datos de ese texto coinciden con el comunicado del ENFEN.",
+    "medir_amarillo": "Ese texto usa un dato anterior o que el ENFEN no dice. Mira el texto oficial.",
+    "medir_rojo": "Ese texto tiene un dato distinto al del comunicado del ENFEN. Mira el texto oficial.",
+    "medir_cercania": "Ese texto no trae datos para comparar. Su cercanía con lo que dice el ENFEN es {banda}.",
+    "medir_corto": "Ese texto es muy corto para compararlo.",
+    "mas_cercano": "El texto oficial más cercano:",
+}
+
 # Panorama F (YouTube): tipos de canal y la respuesta de W2 en palabras (docs/analitica/web.md, sección 6)
 TIPOS_CANAL = {"medio": "Medios", "oficial": "Instituciones oficiales", "otros": "Otros canales"}
 CERCANIA_ES_TEMA = "La cercanía mide si un video habla del mismo tema que el ENFEN, no si está de acuerdo con él."
@@ -71,6 +91,7 @@ def textos_del_ciudadano():
     """Todos los textos de Verificar y Preguntar que vienen de la API (para U2, U3 y U6)."""
     salida = [v[2] for v in VEREDICTO_DATO.values()] + list(RESUMEN_DATOS.values()) + [AVISO_NO_COINCIDE]
     salida += list(CERCANIA_FRASE.values()) + [SIN_DATOS, INSUFICIENTE, FUERA_DE_TEMA, FUERA_DE_TEMA_AYUDA]
+    salida += list(PREGUNTAR.values())
     return salida
 
 

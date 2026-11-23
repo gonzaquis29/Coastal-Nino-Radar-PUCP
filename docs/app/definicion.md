@@ -289,7 +289,7 @@ Se validó con `validate_palette.js` (método del skill de visualización), en c
 - **Pruebas:** 27 en `tests/app` y 12 en Vitest (`npm test`), con datos sintéticos.
 - **Hallazgos que quedan fuera de la app:**
   - "La selección peruana jugará el martes en Lima" sale con cercanía Alta, y una nota del precio del dólar con Media. Son los umbrales de la cercanía (NLP); la app solo los muestra.
-  - La respuesta del agente escribe la fecha en formato ISO ("vigentes el 2026-11-22"). Eso está en `radar.agente`.
+  - La respuesta del agente escribía la fecha en formato ISO ("vigentes el 2026-11-22"). **Corregido el 23-nov:** Preguntar ya no muestra el texto del agente, que también traía ids (`enfen-2026-20`, `costa_norte`, `prevencion`) y jerga ("Semáforo: rojo (reglas)"). La respuesta se arma en `radar.app.servicio` con las plantillas `PREGUNTAR` de `radar.app.textos`, que pasan U2 y U3. El agente no cambia. Después, P1 a P12 y U1 a U6 volvieron a pasar (arranque de 63,2 s).
 - **Antes de la presentación:**
   - correr `npm run build`;
   - no usar la app para pruebas sueltas, para que el registro de uso solo tenga el uso real;

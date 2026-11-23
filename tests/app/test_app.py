@@ -268,3 +268,23 @@ def test_validar_tema_proporcion_con_intervalo():
     assert p == 0.05 and inf < 0.05 < sup
     assert v.proporcion(0, 0) == (0.0, (0.0, 0.0))
     assert v.texto(0.0123, (0.01, 0.015)) == "1,23 % (IC 1,00 a 1,50)"
+
+
+def test_preguntar_responde_sin_ids_ni_fechas_aaaa_mm_dd():
+    class Falso(servicio.Servicio):
+        def __init__(self):
+            pass
+
+        def estado(self, fecha, macroregion):
+            return {"comunicado": {"estado": "Alerta", "numero": 20, "fecha_texto": "13 de noviembre de 2026",
+                                   "magnitud": "fuerte"},
+                    "avisos": [{"numero": 477, "titulo": "Lluvias", "nivel": "rojo"}]}  # fmt: skip
+
+    s, p = Falso(), {"fecha": "2026-11-22", "macroregion": "costa_norte", "interes": "prevencion"}
+    textos = [s.texto_de_respuesta({"herramienta": h, "citas": [1], "datos": d}, p)
+              for h, d in (("estado_vigente", None), ("buscar_oficial", None), ("recomendar", None),
+                           ("medir_discrepancia", {"origen": "reglas", "color": "rojo"}),
+                           ("medir_discrepancia", {"origen": "distancia", "banda": "cercano"}))]  # fmt: skip
+    for t in textos:
+        assert not re.search(r"\d{4}-\d{2}-\d{2}|costa_norte|prevencion|enfen-|reglas|distancia|rojo \(", t), t
+    assert "22 de noviembre de 2026" in textos[0] and "N.° 20" in textos[0]

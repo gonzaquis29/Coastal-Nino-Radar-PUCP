@@ -311,12 +311,44 @@ class Servicio:
             citas.append({"cita": c["cita"], "parrafo": c["parrafo"], "fuente": c["fuente"], "comunicado": doc,
                           "url": doc["url"] if doc else self._url_aviso(c["documento"])})  # fmt: skip
         p = r["parametros"]
-        return {"herramienta": r["herramienta"], "texto": r["texto"], "citas": citas,
+        texto = self.texto_de_respuesta(r, p) if r["herramienta"] != agente.FUERA else r["texto"]
+        return {"herramienta": r["herramienta"], "texto": texto, "citas": citas,
                 "entendido": {"fecha": p["fecha"], "fecha_texto": fecha_texto(p["fecha"]),
                               "macroregion": p["macroregion"],
                               "macroregion_texto": tx.MACROREGIONES.get(p["macroregion"], p["macroregion"]),
                               "interes": p["interes"],
                               "interes_texto": tx.INTERESES.get(p["interes"], "")}}  # fmt: skip
+
+    def texto_de_respuesta(self, r, p):
+        """La respuesta del agente en palabras simples (radar.app.textos), con fechas largas y sin ids."""
+        t, fecha = tx.PREGUNTAR, fecha_texto(p["fecha"])
+        region = tx.MACROREGIONES.get(p["macroregion"], p["macroregion"])
+        if r["herramienta"] == "estado_vigente":
+            e = self.estado(p["fecha"], p["macroregion"])
+            c = e["comunicado"]
+            if not c:
+                return t["estado_sin"].format(fecha=fecha)
+            partes = [t["estado"].format(fecha=fecha, estado=c["estado"], numero=c["numero"], emision=c["fecha_texto"])]
+            if c["magnitud"]:
+                partes.append(t["magnitud"].format(magnitud=c["magnitud"]))
+            avisos = "; ".join(t["aviso"].format(numero=a["numero"], titulo=a["titulo"].lower(), nivel=a["nivel"])
+                               for a in e["avisos"])  # fmt: skip
+            partes.append(t["avisos"].format(region=region, avisos=avisos) if avisos
+                          else t["sin_avisos"].format(region=region))  # fmt: skip
+            return " ".join(partes)
+        if r["herramienta"] == "buscar_oficial":
+            return t["buscar" if r["citas"] else "buscar_sin"].format(fecha=fecha)
+        if r["herramienta"] == "recomendar":
+            interes = tx.INTERESES.get(p["interes"], p["interes"]).lower()
+            return t["recomendar"].format(interes=interes, region=region, fecha=fecha)
+        d = r.get("datos") or {}
+        if d.get("origen") == "reglas":
+            texto = t[f"medir_{d['color']}"]
+        elif d.get("origen") == "distancia":
+            texto = t["medir_cercania"].format(banda=tx.CERCANIA[d["banda"]].lower())
+        else:
+            texto = t["medir_corto"]
+        return f"{texto} {t['mas_cercano']}" if r["citas"] else texto
 
     def _url_aviso(self, doc_id):
         aviso = self.corpus.avisos.get(doc_id)

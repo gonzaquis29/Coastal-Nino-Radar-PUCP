@@ -685,3 +685,9 @@ No construyó nada: espera la aprobación.
 - Validación: pasan C1 (0,22 %), C2 (0,50 %), C4 y C8.
 - No pasan C3 (12,8 %) ni C5: rechaza 6 de 10 textos de clima sin «El Niño».
 - La app sigue con el filtro de la sección 9 (`FILTRO_DE_TEMA = "palabras"`).
+94. me preocupa mucho esto (el clasificador no pasó) / debemos mejorarlo si o si verdad? / para nuestro proyecto que tan importante es eso? / perfecto, entonces que queda pendiente?
+
+**Resultado:** la IA aclaró que la app usa el filtro de palabras, que acepta los textos de clima sin «El Niño». Lo que queda es menor: un titular suelto pide la nota completa. Mejorarlo sin una muestra limpia no se podría demostrar. Listó lo pendiente: la fecha ISO del agente, la revisión final, el push, la demo y lo que viene después de la presentación.
+95. si arreglala (la fecha ISO del agente)
+
+**Resultado:** la IA encontró que Preguntar mostraba el texto interno del agente: fechas AAAA-MM-DD, ids (`enfen-2026-20`, `costa_norte`, `prevencion`) y jerga ("Semáforo: rojo (reglas)"). Ahora la respuesta se arma con las plantillas `PREGUNTAR` de `radar.app.textos` (U2 y U3), con fechas largas y nombres legibles, y el agente no cambia. Agregó una prueba, y P1 a P12 y U1 a U6 volvieron a pasar.
