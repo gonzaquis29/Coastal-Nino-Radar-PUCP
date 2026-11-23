@@ -627,3 +627,87 @@ El clasificador de la sección 10 aprendió "menciona El Niño" porque su única
   - con 1.721 positivos de clima y mar, casi todos de Andina y RPP y del verano lluvioso, el modelo no generaliza al mar ni a la pesca.
 - **Lo nuevo que deja medido:** el filtro de palabras tiene más «Alta» en los otros temas con palabras de clima de lo que decían F1 y C1: 2,35 % en corto y 5,5 % en cuerpo (8 de 146). Se declara como límite de Verificar.
 - **Por qué no se ajusta:** la prueba ya se miró. Bajar τ o cambiar los topes ahora sería elegir con la prueba, y no quedan notas de la zona gris etiquetadas sin usar.
+
+## 13. Veto de tema en Verificar con una prueba externa de 2025 (propuesta del 23-nov, sin aprobar)
+
+### 13.1 Qué falla todavía
+- **El filtro de palabras deja pasar otros temas con palabras de clima** (un sismo con «emergencia», una nota política con «alerta»). Con «Alta» quedan el 2,35 % en corto y el 5,5 % en cuerpo (12.6), y F1 en cuerpo no pasa (9.6).
+- **Los dos clasificadores fallaron por la misma razón de fondo:** reemplazaban al filtro y tenían que acertar en todo. Con un τ fijado para rechazar otros temas, perdían clima, mar y El Niño (C3, K4 a K7).
+- **No queda una prueba limpia:** todas las notas etiquetadas de 2026 ya están en `config/notas_vistas.csv`.
+
+### 13.2 Mapa de enfoques
+**Cómo se decide** (la idea nueva es dejar de pedirle al modelo que lo haga todo):
+
+| Opción | Qué hace | Lectura |
+|---|---|---|
+| Reemplazo (secciones 10 y 12) | El clasificador decide solo | Ya falló dos veces. |
+| **A. Veto** | Las palabras siguen decidiendo quién entra; el clasificador solo saca lo que las palabras dejaron pasar y él ve **claramente** ajeno. τ se fija para conservar el 98 % de los positivos que pasan las palabras, no para rechazar el 99 % de los negativos | **Elegida.** En desarrollo (CV de enero a agosto, tabla 13.3) deja pasar la mitad de negativos difíciles con 1 punto menos de positivos. |
+| B. Rescate | El clasificador también deja entrar titulares sin palabras del tema cuando está muy seguro | En desarrollo gana poco: +0,1 puntos en El Niño y +1,6 en clima, a cambio de +0,5 en negativos difíciles (dejando pasar ≤ 0,2 % de otros temas sin palabras). Solo informativo. |
+| C. Tema dudoso | En vez de rechazar, la app muestra la cercanía con un aviso («parece de otro tema») y sin «Alta» | Cambia la interfaz y los textos de `radar.app.textos`, lo que repite U1 a U6. Se deja como opción si A no pasa. |
+
+**Con qué se decide:**
+
+| Opción | Lectura |
+|---|---|
+| **Regresión logística sobre el vector minilm** (el modelo de la sección 12, reentrenado igual, solo cambia τ) | **Elegida**: es el mismo modelo, ya cargado y sin dependencias nuevas. |
+| Vecinos más cercanos (k = 15) con las etiquetas del medio | En desarrollo empata con la logística (tabla 13.3). Podría mostrar «se parece a estas notas», pero pide guardar los vectores de 50.000 titulares. Queda como alternativa. |
+| Una cabeza por subtema (lluvias, calor, mar, El Niño) | El mar tiene muy pocos positivos para su propia cabeza. |
+| Anclaje a la evidencia: «Alta» solo si el texto comparte palabras con su párrafo oficial más cercano | En desarrollo reduce a la mitad la «Alta» de los negativos difíciles (57 a 27), pero también quita la «Alta» al 21 % de las notas del tema. Afecta al semáforo (S2), no solo al tema. |
+| Cercanía contrastiva y foco por oraciones | Obligan a recalibrar el semáforo (secciones 9.2 y 10.1). |
+
+**Con qué se prueba** (sin prueba limpia no hay resultado creíble):
+
+| Opción | Lectura |
+|---|---|
+| **Notas de octubre a diciembre de 2025 de Andina y RPP** | **Elegida, si la apruebas.** Son los mismos medios y las mismas vías del histórico (Andina por número de nota, archivo de RPP por día), así que el formato y las etiquetas son iguales, y quedan fuera del período del proyecto: nadie las vio. Solo Andina y RPP tienen etiquetas. Pide unas 3 a 5 horas de lectura con el ritmo de siempre. |
+| Notas posteriores al corte (21 al 27-nov) | Son pocas para criterios del 2 % (unas 40 de clima y mar) y salen del corte del 20-nov. |
+| Solo sintéticos | Pocos y escritos por nosotros. Se mantienen, pero solo como complemento. |
+| Reutilizar 2026 con `--repetir` | Es lo único que queda si no se aprueba 2025; el resultado se declara como medición repetida. |
+
+### 13.3 Desarrollo (enero a agosto, CV de 5 grupos; ya medido el 23-nov)
+Proporción que pasa el filtro de tema en corto (titular y resumen):
+
+| Regla | El Niño | Clima y mar | Negativos difíciles | `otros_temas` |
+|---|---|---|---|---|
+| Palabras (sección 9) | 93,7 % | 93,8 % | 19,4 % | 7,8 % |
+| **Veto, conserva el 98 %** | 93,1 % | 92,1 % | **9,7 %** | **1,2 %** |
+| Veto con vecinos, conserva el 98 % | 93,0 % | 92,2 % | 9,3 % | 1,1 % |
+| Veto, conserva el 95 % | 92,7 % | 89,5 % | 5,9 % | 0,6 % |
+| Clasificador solo, con el 95 % de recuperación | 96,1 % | 96,9 % | 22,6 % | 6,5 % |
+
+- Estos números son de desarrollo: sirven para elegir, no para dar el resultado.
+- La última fila muestra por qué el reemplazo no funciona: para no perder el tema, deja pasar tantos ajenos como las palabras.
+
+### 13.4 Qué se construye
+1. **`radar.app.tema_clima entrenar --veto`:** el mismo modelo y los mismos datos de la sección 12. τ_veto es el percentil 2 de las probabilidades fuera de grupo (CV de 5 grupos) de los positivos que pasan las palabras sin nombrar el fenómeno. Se guarda en `tema-veto-modelo.joblib`.
+2. **En Verificar:** si nombra el fenómeno, entra; si no pasa las palabras (sección 9), `fuera_de_tema`; si pasa las palabras, entra solo si p ≥ τ_veto. En textos largos, el clasificador mira las primeras 100 palabras, como en 10.2. `FILTRO_DE_TEMA` admite `"veto"` y sigue en `"palabras"` hasta que pase 13.6.
+3. **Prueba externa** (si se aprueba): `python -m radar.noticias.externa leer --desde 2025-10-01 --hasta 2025-12-31`, con Andina y RPP por sus vías del histórico, `radar.comun.http.Cliente` y `@exclusivo`:
+   - escribe aparte (`data/processed/externa/notas-2025.csv`), nunca en `notas.csv`, con el mismo esquema: titular, resumen, etiquetas y rasgos, **sin el cuerpo**;
+   - las notas se marcan en `config/notas_vistas.csv` como `externa-2025` al medir;
+   - si la lectura no termina antes del 25-nov, se mide con lo leído y se declara.
+
+### 13.5 Muestras de prueba
+- **Externa, 2025 (nueva):** todas las de los cuatro grupos con las etiquetas de 12.3 (El Niño, clima y mar, negativos difíciles y `otros_temas`), en corto, contando clima y mar una por plantilla. En cuerpo, hasta 50 por medio de cada grupo, leídas en memoria sin guardarlas.
+- **2026 de septiembre al corte (reutilizada, `--repetir`):** las mismas de 12.4, como segunda vista.
+- **Sintéticos nuevos**, escritos antes de medir y distintos de los de 9.4, 10.3 y 12.4: 10 usos de «niño» con otro sentido, 10 menciones del fenómeno, 20 del tema sin «El Niño» (10 de clima y 10 de mar y pesca) y 10 de otros temas con palabras de clima. Todos inventados.
+
+### 13.6 Criterios (fijados antes de construir; se miden en la prueba externa)
+| | Criterio | Umbral |
+|---|---|---|
+| V1 | Negativos difíciles con «Alta», corto | ≤ 2 % y ≤ 60 % de los de la sección 9 en las mismas notas |
+| V2 | Negativos difíciles con «Alta», cuerpo | ≤ 2 % y no peor que la sección 9 |
+| V3 | `otros_temas` con «Alta», corto / cuerpo | ≤ 1 % / ≤ 2 %, y no peor que la sección 9 |
+| V4 | Clima y mar que quedan fuera, corto (por plantilla) | ≤ sección 9 más 3 puntos |
+| V5 | Clima y mar que quedan fuera, cuerpo | ≤ 5 % |
+| V6 | Sobre El Niño que quedan fuera, corto | ≤ sección 9 más 2 puntos |
+| V7 | Sintéticos: «niño» con otro sentido que pasa / el fenómeno que no pasa / del tema sin «El Niño» fuera / otros temas con palabras de clima que pasan | 0 / 0 / ≤ 2 de 20 / ≤ 3 de 10 |
+| V8 | Lo mismo en 2026 reutilizada (V1 a V6) | informativo |
+| V9 | La app: P1 a P12, U1 a U6 e I1 a I5; P2 (mediana de Verificar ≤ 2 s) | todos |
+| V10 | Preguntar sin cambios | 0 decisiones distintas |
+
+- **Decisión:** si pasan V1 a V7 y V9, `FILTRO_DE_TEMA` pasa a `"veto"`, y P13 («otros temas con palabras de clima con «Alta» en Verificar ≤ 2 %») entra a la sección 6. Si no, sigue el filtro de palabras, se declaran los números y queda la opción C (tema dudoso) sin construir.
+- **Si un grupo de la prueba externa tiene menos de 100 notas**, su criterio pasa a ser informativo y se dice en el resultado. El Niño puede tener pocas en octubre a diciembre de 2025: en ese caso V6 se informa con 2026.
+- **Riesgos declarados:**
+  - 2025 es otro año: si allí se habló distinto del clima, el resultado lo muestra, y eso también es validez externa;
+  - el veto no arregla los titulares sobre El Niño sin palabras del tema (F2, 9 %): eso queda declarado.
+- **Archivos:** `radar.app.tema_clima` (`--veto`), `radar.app.servicio` (el selector), `radar.noticias.externa` (nuevo, solo si se aprueba 2025) y sus pruebas con HTML y notas sintéticas.

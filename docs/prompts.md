@@ -752,3 +752,6 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 113. Construye
 
 **Resultado:** la IA construyó `radar.app.tema_clima`, con las listas de etiquetas en `radar.comun.dominio` y sus pruebas. Fijó la muestra antes de entrenar, leyó 272 cuerpos en memoria, entrenó (los textos oficiales no entraron por la CV) y midió una sola vez. Pasan K1, K3 y K10, y no pasan K2 y K4 a K7: rechaza mejor los otros temas, pero pierde clima y mar. La app sigue con el filtro de palabras, y se declara su «Alta» nueva en otros temas con palabras de clima (2,35 % en corto y 5,5 % en cuerpo). Resultados en la sección 12.6.
+114. veo que aun tenemos problemas, debemos resolverlo, hay que ver ideas innovadoras y creativas
+
+**Resultado:** la IA mapeó enfoques en tres ejes (cómo se decide, con qué modelo y con qué se prueba) y midió en desarrollo, con validación cruzada de enero a agosto, el veto, el rescate, los vecinos más cercanos y el anclaje a la evidencia. Escribió la sección 13 de `docs/app/definicion.md`: el clasificador ya no reemplaza al filtro de palabras, solo veta lo claramente ajeno (en desarrollo, la mitad de negativos difíciles con 1 punto menos de positivos), y se prueba con notas de octubre a diciembre de 2025 de Andina y RPP, que nadie vio. Criterios V1 a V10. Sin aprobar ni construir.
