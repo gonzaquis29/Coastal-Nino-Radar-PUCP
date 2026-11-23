@@ -765,6 +765,15 @@ def sin_huerfanas(filas_dato, notas_hechas):
     return [f for f in filas_dato if (f["medio"], f["id"]) in notas_hechas]
 
 
+def compactar(ruta_notas):
+    """Deja una fila por nota, la última: leer_cuerpos reintenta las notas con error y anexa otra fila."""
+    filas = leer_csv(ruta_notas)
+    ultimas = list(tfidf.leidos(ruta_notas).values())
+    if len(ultimas) < len(filas):
+        escribir_csv(ruta_notas, esquemas.DISCREPANCIA_NOTAS, ultimas)
+    return ultimas
+
+
 @exclusivo("radar.nlp.discrepancia")
 def calcular(parar):
     """Capa 5 de todas las notas sobre El Niño, sin mostrar frases. Se puede cortar y relanzar: salta las notas ya
@@ -786,7 +795,7 @@ def calcular(parar):
 
     with sin_suspension():
         tfidf.leer_cuerpos([(n, "") for n in notas], ruta_notas, esquemas.DISCREPANCIA_NOTAS, fila_de, parar)
-    calculadas = leer_csv(ruta_notas)
+    calculadas = compactar(ruta_notas)
     colores = collections.Counter(f["color"] or f["error"] for f in calculadas)
     return [criterio("Capa 5: todas las notas", "notas calculadas", f"{len(calculadas)}/{len(notas)}", "", True,
                      str(dict(colores)))]  # fmt: skip
@@ -800,6 +809,8 @@ def validar(parar, solo_oficial=False, ronda="b"):
     if solo_oficial:
         return filas
     filas_notas = _leer_muestra(parar, historia, ronda)
+    if isinstance(filas_notas, int):  # candado ocupado: exclusivo ya avisó
+        return filas_notas
     validas = [n for n in filas_notas if not n["error"] and indice_vigente(historia, n["fecha"]) is not None]
     terceros = ("oficial", "tercero")
     filas += [criterio_desplazamiento(validas, historia),
@@ -844,6 +855,8 @@ def main(argv=None):
     except KeyboardInterrupt:
         parar.set()
         return 1
+    if isinstance(filas, int):  # candado ocupado: exclusivo ya avisó
+        return filas
     if filas:
         guardar(filas, config.DIR_NLP / "validacion.csv")
         reporte(filas, [], inicio)

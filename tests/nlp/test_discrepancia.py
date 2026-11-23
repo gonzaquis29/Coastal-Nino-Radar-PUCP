@@ -73,6 +73,31 @@ def test_sin_huerfanas_quita_datos_de_notas_sin_terminar():
     assert d.sin_huerfanas(filas, {("a", "1"), ("b", "1")}) == [filas[0], filas[2]]
 
 
+def test_compactar_deja_la_ultima_fila_de_cada_nota(tmp_path):
+    from radar.comun.archivos import escribir_csv
+    from radar.nlp import esquemas
+
+    ruta = tmp_path / "notas.csv"
+    base = {"fecha": "2026-09-07", "color": "", "afirmaciones": "0", "filas": "0"}
+    filas = [
+        {"medio": "a", "id": "1", "error": "NoExiste", **base},
+        {"medio": "a", "id": "2", "error": "", **base, "color": "verde"},
+        {"medio": "a", "id": "1", "error": "NoExiste", **base},
+    ]
+    escribir_csv(ruta, esquemas.DISCREPANCIA_NOTAS, filas)
+    quedan = d.compactar(ruta)
+    assert [(f["medio"], f["id"]) for f in quedan] == [("a", "1"), ("a", "2")]
+    assert len(d.leer_csv(ruta)) == 2
+
+
+def test_main_sale_limpio_si_el_candado_esta_ocupado(tmp_path, monkeypatch):
+    monkeypatch.setattr(d.config, "DIR_NLP", tmp_path)
+    monkeypatch.setattr(d, "configurar", lambda nombre: tmp_path / "registro.log")
+    monkeypatch.setattr(d, "calcular", lambda parar: 2)  # lo que devuelve exclusivo con el candado tomado
+    assert d.main(["calcular"]) == 2
+    assert not (tmp_path / "validacion.csv").exists()
+
+
 def test_t5_toma_todas_las_sin_ver_salvo_las_vistas_en_la_capa_5():
     notas = [{"medio": "rpp", "id": str(i), "sobre_nino": s} for i, s in enumerate(("1", "1", "1", "0"))]
     vistas = [{"medio": "rpp", "id": "0", "muestra": "capa5-validacion-7nov"},

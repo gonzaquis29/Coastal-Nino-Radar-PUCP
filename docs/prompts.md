@@ -627,3 +627,6 @@ Todo quedó en la sección 8 del documento.
 - App: pasan P1 a P12 y U1 a U6, y no se creó `eventos.csv`. El Panorama muestra "14 de 20" (+52 %).
 
 Se actualizaron `docs/analitica/eventos.md`, `docs/nlp/discrepancia.md`, `docs/youtube/emociones.md`, la sección 8 de `docs/app/definicion.md`, `docs/pendientes.md` y el README.
+78. sí, arregla los dos bugs
+
+**Resultado:** la IA corrigió dos detalles de `radar.nlp.discrepancia`. `calcular` deja una sola fila por nota en `discrepancia-todas-notas.csv`, porque la nota con error que se reintentaba quedaba repetida. Y `main` (también `validar`) sale con código 2 cuando otro proceso tiene el candado, en vez de caerse con un `TypeError`. Agregó dos pruebas sintéticas. Volvió a correr `calcular` con los datos reales y quedaron 2.785 filas.
