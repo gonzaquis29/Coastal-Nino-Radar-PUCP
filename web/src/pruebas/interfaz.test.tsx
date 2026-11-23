@@ -46,6 +46,16 @@ describe("U2 y U6 en Verificar", () => {
     expect(screen.getByRole("meter").getAttribute("aria-valuetext")).toBe("Alta");
   });
 
+  it("fuera del tema: solo la explicación, sin medidor, color ni promesas (sección 9)", () => {
+    const r = { ...cercania, tipo: "fuera_de_tema" as const, nivel: null, titulo: "Este texto no parece hablar de El Niño, del mar ni del clima.",
+      resumen: "Si sí habla de eso, pega la nota completa.", aviso: null, oficial_cercano: null };
+    const { container } = render(<Resultado r={r} />);
+    expect(container.querySelector("[data-tipo=fuera_de_tema]")).not.toBeNull();
+    expect(screen.queryByRole("meter")).toBeNull();
+    for (const c of COLORES_DE_ESTADO) expect(container.innerHTML).not.toContain(c);
+    expect(container.textContent).toContain("pega la nota completa");
+  });
+
   it("con datos: veredicto con ícono y la comparación se abre a pedido (D4)", () => {
     const { container } = render(<Resultado r={conDatos} />);
     expect(container.querySelector(".resultado--revisar .icono-estado--revisar")?.textContent).toBe("!");

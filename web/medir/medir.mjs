@@ -25,8 +25,10 @@ const P7 = [
   { texto: "El ENFEN mantiene la vigilancia de El Niño costero con magnitud débil", tipo: "datos", clase: "resultado--revisar", titulo: "Usa un dato anterior del ENFEN" },
   { texto: "El ENFEN prevé que El Niño costero durará hasta junio de 2028", tipo: "datos", clase: "resultado--no_coincide", titulo: "No coincide con el ENFEN" },
   { texto: "El mar frente a la costa norte sigue más caliente de lo normal y se esperan lluvias por El Niño costero", tipo: "cercania", titulo: "Cercanía: Alta" },
-  { texto: "Receta de ceviche con limón, ají y camote", tipo: "cercania", titulo: "Cercanía: Media" },
-  { texto: "Nuevo teléfono con cámara de 200 megapíxeles llega a las tiendas", tipo: "cercania", titulo: "Cercanía: Baja" },
+  // sección 9: los textos de otros temas no reciben cercanía (antes, la receta salía "Media" y el fútbol "Alta")
+  { texto: "Receta de ceviche con limón, ají y camote", tipo: "fuera_de_tema", titulo: "Este texto no parece hablar de El Niño, del mar ni del clima." },
+  { texto: "Nuevo teléfono con cámara de 200 megapíxeles llega a las tiendas", tipo: "fuera_de_tema", titulo: "Este texto no parece hablar de El Niño, del mar ni del clima." },
+  { texto: "La selección peruana jugará el martes en Lima", tipo: "fuera_de_tema", titulo: "Este texto no parece hablar de El Niño, del mar ni del clima." },
 ];
 const JERGA = ["capa", "distancia", "coseno", "umbral", "auc", "nli", "embedding", "origen", "percentil"];
 const PROMESAS = ["correcto", "verdadero", "falso", "verdad"];
@@ -159,7 +161,7 @@ async function axe(p) {
     const ok = r.tipo === caso.tipo && r.titulo === caso.titulo && (!caso.clase || r.clase.includes(caso.clase));
     if (ok) bien += 1;
     else fallas.push(`${caso.titulo} -> ${r.titulo}`);
-    if (caso.tipo === "cercania") {
+    if (caso.tipo !== "datos") {
       const u6 = await p.evaluate((rgb) => {
         const raiz = document.querySelector(".respuesta");
         const colores = new Set();
@@ -174,12 +176,12 @@ async function axe(p) {
     }
     await p.context().close();
   }
-  anotar("P7", { valor: `${bien}/${P7.length}`, umbral: "6/6", pasa: bien === P7.length, detalle: fallas.join("; ") });
+  anotar("P7", { valor: `${bien}/${P7.length}`, umbral: `${P7.length}/${P7.length}`, pasa: bien === P7.length, detalle: fallas.join("; ") });
   anotar("U6", {
     valor: promesasOColor.length,
     umbral: "0",
     pasa: promesasOColor.length === 0,
-    detalle: `respuestas sin datos revisadas en pantalla: 3${promesasOColor.length ? `; ${promesasOColor.join("; ")}` : ""}`,
+    detalle: `respuestas sin datos revisadas en pantalla: ${P7.filter((c) => c.tipo !== "datos").length}${promesasOColor.length ? `; ${promesasOColor.join("; ")}` : ""}`,
   });
 }
 

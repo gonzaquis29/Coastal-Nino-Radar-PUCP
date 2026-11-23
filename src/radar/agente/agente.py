@@ -27,6 +27,7 @@ from sklearn.linear_model import LogisticRegression
 
 from radar import config
 from radar.agente import herramientas as h
+from radar.comun import dominio
 from radar.comun.archivos import escribir_csv, leer_csv
 from radar.comun.regiones import COSTA_CENTRO, COSTA_NORTE, LIMA_Y_CALLAO, regiones_mencionadas
 from radar.comun.registro import configurar
@@ -58,15 +59,6 @@ MUESTRA = "agente-9nov"
 TITULARES_POR_GRUPO = 100
 PERFIL = {"macroregion": COSTA_NORTE, "interes": "prevencion"}
 
-# El dominio: si no aparece nada de esto, no hay herramienta que responda
-DOMINIO = re.compile(
-    r"\bni[nñ][oa]\b|enfen|senamhi|clima|lluvi|precipitac|calor|temperatura|\bmar\b|pesca|pescador|anchoveta|aviso|"
-    r"alerta|huaico|inundac|oleaje|friaje|sequ[ií]a|caudal|\brios?\b|desborde|verano|meteorol|comunicado|emergencia|"
-    r"prevenci|tsm|fenomeno|costa|"
-    r"vigilancia|calid|pacifico|agricul|llov|llue|inunda|preven|quebrada|oceanic|anomal|nino\b|evento|olas? de|"
-    r"pronostic|huayco|desembarc|embarcac",  # ronda c, ampliado en desarrollo
-    re.I,
-)
 CONTRASTE = re.compile(r"es cierto|es verdad|es correcto|verific|le[ií] que|dicen que|coincide con lo oficial|"
                        r"confiable es esto|[\"“”«»]", re.I)  # fmt: skip
 CITA_ENTRE_COMILLAS = re.compile(r"[\"“«]([^\"”»]{8,})[\"”»]")
@@ -187,7 +179,7 @@ class Enrutador:
     def elegir(self, consulta):
         """(herramienta, origen de la decisión)."""
         llano = sin_tildes(consulta)
-        if not DOMINIO.search(llano):
+        if not dominio.en_pregunta(consulta):  # el vocabulario del tema vive en radar.comun.dominio
             return FUERA, "regla: fuera del dominio"
         if CONTRASTE.search(consulta):
             return "medir_discrepancia", "regla: texto para contrastar"

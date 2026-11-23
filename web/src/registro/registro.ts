@@ -9,7 +9,7 @@ export type Evento =
   | { evento: "vista"; pantalla: Pantalla; anterior?: Pantalla; segundos?: number }
   | {
       evento: "verificar";
-      tipo_resultado: "datos" | "cercania" | "insuficiente";
+      tipo_resultado: "datos" | "cercania" | "insuficiente" | "fuera_de_tema";
       resultado?: "coincide" | "revisar" | "no_coincide" | "cercano" | "intermedio" | "lejano";
       macroregion: string;
       palabras: number;

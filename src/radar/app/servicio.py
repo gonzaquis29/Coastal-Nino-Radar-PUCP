@@ -15,6 +15,7 @@ from radar import config
 from radar.agente import agente, herramientas
 from radar.analitica import recomendador
 from radar.app import textos as tx
+from radar.comun import dominio
 from radar.comun.archivos import leer_csv
 from radar.nlp import afirmaciones as af
 from radar.nlp import discrepancia, semaforo, temporalidad
@@ -234,6 +235,9 @@ class Servicio:
         r, (titular, resumen, cuerpo) = self.medir(texto, fecha)
         # U6: el color y el método no salen de aquí; el nivel solo es un veredicto cuando hay datos
         salida = {"fecha": fecha, "palabras": r["palabras"], "estado": self.estado(fecha, macroregion)}
+        if r["origen"] in ("reglas", "distancia") and not dominio.en_texto(texto, bool(cuerpo)):
+            # Sección 9: un texto de otro tema no recibe cercanía ni veredicto
+            r = {"origen": "fuera_de_tema", "parrafo": None}
         afirmaciones = self._afirmaciones(titular, resumen, cuerpo, fecha) if r["origen"] == "reglas" else []
         if r["origen"] == "reglas":
             categorias = {d["categoria"] for a in afirmaciones for d in a["datos"]}
@@ -252,6 +256,9 @@ class Servicio:
                        "resumen": tx.CERCANIA_FRASE[r["banda"]], "aviso": tx.SIN_DATOS,
                        "medidor": {"valor": r["coseno"], "media_desde": u["lejano"],
                                    "alta_desde": u["cercano"]}}  # fmt: skip
+        elif r["origen"] == "fuera_de_tema":
+            salida |= {"tipo": "fuera_de_tema", "nivel": None, "titulo": tx.FUERA_DE_TEMA,
+                       "resumen": tx.FUERA_DE_TEMA_AYUDA, "aviso": None}  # fmt: skip
         else:
             salida |= {"tipo": "insuficiente", "nivel": None, "titulo": tx.INSUFICIENTE, "resumen": "",
                        "aviso": None}  # fmt: skip

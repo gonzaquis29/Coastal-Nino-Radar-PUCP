@@ -39,6 +39,9 @@ CERCANIA_FRASE = {
     "lejano": "Habla de otra cosa que el comunicado vigente del ENFEN.",
 }
 INSUFICIENTE = "El texto es muy corto para compararlo. Pega el titular completo o el mensaje."
+# Sección 9: el texto no trata del tema; sin medidor, sin color y sin ícono (U6)
+FUERA_DE_TEMA = "Este texto no parece hablar de El Niño, del mar ni del clima."
+FUERA_DE_TEMA_AYUDA = "Si sí habla de eso, pega la nota completa."
 
 INTERESES = {
     "pesca": "Pesca y mar",
@@ -67,7 +70,7 @@ PROMESAS = ("correcto", "verdadero", "falso", "verdad")
 def textos_del_ciudadano():
     """Todos los textos de Verificar y Preguntar que vienen de la API (para U2, U3 y U6)."""
     salida = [v[2] for v in VEREDICTO_DATO.values()] + list(RESUMEN_DATOS.values()) + [AVISO_NO_COINCIDE]
-    salida += list(CERCANIA_FRASE.values()) + [SIN_DATOS, INSUFICIENTE]
+    salida += list(CERCANIA_FRASE.values()) + [SIN_DATOS, INSUFICIENTE, FUERA_DE_TEMA, FUERA_DE_TEMA_AYUDA]
     return salida
 
 

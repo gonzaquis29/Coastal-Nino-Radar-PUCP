@@ -33,11 +33,13 @@ export const Resultado = forwardRef<HTMLHeadingElement, { r: R }>(function Resul
       </section>
     );
   }
+  // Sin datos, sin medidor y sin color (U6): "insuficiente" y "fuera_de_tema" (sección 9) solo explican qué pasó
   return (
-    <section className="resultado resultado--insuficiente aparece" aria-live="polite" data-tipo="insuficiente">
+    <section className="resultado resultado--insuficiente aparece" aria-live="polite" data-tipo={r.tipo}>
       <h2 ref={ref} tabIndex={-1} className="resultado__titulo resultado__titulo--chico">
         {r.titulo}
       </h2>
+      {r.resumen && <p className="resultado__resumen">{r.resumen}</p>}
     </section>
   );
 });

@@ -37,7 +37,7 @@ class Evento(BaseModel):
     pantalla: Pantalla | None = None
     anterior: Pantalla | None = None
     segundos: int | None = Field(default=None, ge=0, le=86_400)
-    tipo_resultado: Literal["datos", "cercania", "insuficiente"] | None = None
+    tipo_resultado: Literal["datos", "cercania", "insuficiente", "fuera_de_tema"] | None = None
     resultado: Literal["coincide", "revisar", "no_coincide", "cercano", "intermedio", "lejano"] | None = None
     macroregion: Literal[tuple(tx.MACROREGIONES)] | None = None
     palabras: int | None = Field(default=None, ge=0, le=100_000)

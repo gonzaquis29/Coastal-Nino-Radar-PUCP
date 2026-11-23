@@ -112,7 +112,12 @@ export interface ResultadoInsuficiente extends ResultadoBase {
   nivel: null;
 }
 
-export type Resultado = ResultadoDatos | ResultadoCercania | ResultadoInsuficiente;
+export interface ResultadoFueraDeTema extends ResultadoBase {
+  tipo: "fuera_de_tema";
+  nivel: null;
+}
+
+export type Resultado = ResultadoDatos | ResultadoCercania | ResultadoInsuficiente | ResultadoFueraDeTema;
 
 export interface Respuesta {
   herramienta: "estado_vigente" | "buscar_oficial" | "medir_discrepancia" | "recomendar" | "fuera";

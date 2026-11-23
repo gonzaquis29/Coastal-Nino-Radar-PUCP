@@ -252,3 +252,19 @@ def test_validar_interfaz_junta_los_criterios_del_navegador(monkeypatch, tmp_pat
     assert [f["criterio"][:3] for f in guardadas if not f["pasa"]] == ["U5."]
     assert next(f for f in guardadas if f["criterio"].startswith("P8"))["valor"] == "3/3"
     assert any(t[1] == v.PRUEBA for t in metodologia.TARJETAS)
+
+
+def test_el_registro_acepta_fuera_de_tema_y_su_texto_es_simple():
+    eventos.Evento(evento="verificar", tipo_resultado="fuera_de_tema")
+    with pytest.raises(ValidationError):
+        eventos.Evento(evento="verificar", tipo_resultado="otro")
+    assert tx.FUERA_DE_TEMA in tx.textos_del_ciudadano() and tx.FUERA_DE_TEMA_AYUDA in tx.textos_del_ciudadano()
+
+
+def test_validar_tema_proporcion_con_intervalo():
+    from radar.app import validar_tema as v
+
+    p, (inf, sup) = v.proporcion(5, 100)
+    assert p == 0.05 and inf < 0.05 < sup
+    assert v.proporcion(0, 0) == (0.0, (0.0, 0.0))
+    assert v.texto(0.0123, (0.01, 0.015)) == "1,23 % (IC 1,00 a 1,50)"
