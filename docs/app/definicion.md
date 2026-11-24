@@ -937,3 +937,65 @@ La primera versión de 15.5 decía que pasaba D8. Era un error: P9 estaba fijado
 En los tres casos el nombre va al lado, y la escala lleva además la posición. El gris de «sin datos» tampoco llega al croma mínimo, pero es neutro a propósito.
 
 **Medido de nuevo sobre el código final:** D1 a D7, P1 a P8, P10 a P12, y las U e I de `npm run medir`, las 13 pruebas de la interfaz y las 20 capturas (con el aviso N.° 476, el único vigente).
+
+## 16. Memoria de la API (propuesta del 24-nov; sin aprobar ni construir)
+
+### 16.1 Dónde se va la memoria (medido el 24-nov, una corrida)
+Memoria residente de un proceso con la app cargada, sin atender por red, después de 64 consultas: **2.061 MB, con un pico de 2.424 MB**.
+
+| Parte | MB (aprox.) |
+|---|---|
+| Python, FastAPI y scikit-learn | 244 |
+| `notas()`: 81.879 notas, y solo se usan las 2.785 sobre El Niño | 249 |
+| Pesos de MiniLM y de e5 (unos 500 cada uno; casi todo es la tabla de palabras, 384 MB) | 1.000 |
+| Dos tokenizadores: mismo vocabulario y mismo modelo, cargados dos veces | 300 cada uno, en parte reutilizado |
+| Memoria de trabajo de `onnxruntime` | 50 a 110 |
+
+**Prueba de viabilidad (24-nov, textos sintéticos, los dos modelos y un tokenizador, sin la app):** con los pesos en un archivo aparte, que `onnxruntime` lee del disco sin copiarlos, la memoria baja de **1.322 a 548 MB** al cargar, y la sesión carga en 0,2 s en vez de 1 s. La salida es **idéntica bit a bit** y la velocidad, la misma. El archivo lo escribe el mismo `onnxruntime`: no hay dependencia nueva ni descarga.
+
+### 16.2 Mapa de enfoques
+| Enfoque | Ganancia | ¿Cambia resultados? | Lectura |
+|---|---|---|---|
+| **A. Pesos leídos del disco** | unos 770 MB | No (16.1) | **Elegido** |
+| **B. Guardar solo las notas sobre El Niño, leyendo el CSV fila por fila** | unos 240 MB | No: los demás usos ya las filtran | **Elegido** |
+| **C. Un solo tokenizador para los dos modelos** | hasta 300 MB | No: mismo vocabulario; los tokens especiales se comparan antes (K1) | **Elegido** |
+| D. Sin la reserva de memoria de `onnxruntime` | 100 MB | No | 2 a 25 % más lento. Solo si A a C no alcanzan |
+| E. Sin reordenar los pesos al cargar | poca | Sí, 10⁻⁶ | 25 % más lento. Descartado |
+| F. Modelos cuantizados | 750 MB | Sí | Repetir S1 a S6 y el agente; A logra lo mismo. Descartado |
+| G. Media precisión (float16) | 500 MB | Sí | Más lento en CPU. Descartado |
+| H. Recortar el vocabulario a las palabras usadas | 350 MB por modelo | Sí, con palabras nuevas | Descartado |
+| I. Un solo modelo para Verificar y Preguntar, o uno más chico | 500 MB | Sí | Repetir la selección. Descartado |
+| J. Precalcular y no usar modelos | todo | Sí | No sirve para textos nuevos. Descartado |
+| K. Descargar e5 cuando no se usa | 500 MB a ratos | No | Cada pregunta tras una pausa espera 2 s; A lo hace innecesario. Descartado |
+| L. Embeddings por un servicio externo | 1 GB | Sí | Costo, red y privacidad. Descartado |
+| M. Quitar scikit-learn de la API | unos 100 MB | Riesgo | Reescribe el clasificador del agente. Solo si hace falta |
+| N. Base de datos (SQLite) para las notas | igual que B | No | Más piezas que B. Descartado |
+
+**Atender varias consultas a la vez queda fuera de esta sección:** con una mediana de Verificar por debajo de 2 s y uso local no hace falta. La memoria es lo primero para una versión pública.
+
+### 16.3 Qué se construye
+1. `motor preparar` escribe además los pesos aparte (unos 470 MB de disco por modelo, en `config.DIR_MOTOR_APP`, sin versionar; con escritura atómica y la huella del ONNX de origen).
+2. `Onnx32` usa esos archivos si están y la huella coincide; si no, el ONNX de siempre (la app nunca deja de funcionar).
+3. Un tokenizador compartido, solo si los dos dan los mismos datos. Se le pone un candado: hoy `lote` cambia su truncamiento mientras tokeniza.
+4. `notas()` lee fila por fila y guarda solo las notas sobre El Niño.
+
+### 16.4 Criterios (fijados antes de construir)
+Nombres K1 a K7.
+
+| | Criterio | Umbral |
+|---|---|---|
+| K1 | Mismos tokens y vectores que el motor actual en todos los párrafos oficiales (los dos modelos), las preguntas de desarrollo y 40 sintéticos nuevos | tokens 100 %; diferencia máxima ≤ 10⁻⁶ |
+| K2 | Verificar igual (salida completa): 300 notas nuevas no vistas y los textos de P1 | 100 % |
+| K3 | Preguntar igual (herramienta y texto): `agente_preguntas_c.csv`, 20 sintéticas nuevas y P1 | 100 % |
+| K4 | Panorama, estado y Metodología iguales (JSON completo, con y sin filtros) | 100 % |
+| K5 | Memoria residente del proceso de la API tras arrancar y 60 consultas (30 de Verificar y 30 de Preguntar), mediana de 3 arranques; y pico | ≤ 1.000 MB y pico ≤ 1.100 MB |
+| K6 | Arranque y primera pregunta, medianas de 3; Verificar, mediana de 30 consultas | ≤ 6,5 s, ≤ 2,5 s y no más de 10 % más lento que antes |
+| K7 | Respaldo (sin los pesos aparte, o con otra huella): sigue y K2 igual en 20 textos. P1 a P5, pruebas y 0 peticiones de red | sí |
+
+- **Decisión:**
+  - si pasan K1 a K7, queda activo;
+  - si falla K1 a K4, se retira la parte (A, B o C) que lo causa;
+  - si falla K5, se agrega D, una sola vez y declarado; si aún no llega, se deja con su cifra y sin decir que pasa;
+  - si falla K6, se retira.
+- **Límite declarado:** las páginas leídas del disco cuentan en la memoria residente solo cuando se tocan, y el sistema las puede soltar. En Linux (versión pública) no se midió.
+- **Riesgo:** toca el motor a 3 días del congelamiento. Si no queda medido el 26-nov, se retira y sigue el motor actual.
