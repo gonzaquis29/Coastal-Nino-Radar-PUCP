@@ -58,6 +58,7 @@ def test_elegir_sin_estables_toma_el_mas_estable_y_lo_declara():
 
 
 def test_coherencia_mayor_para_temas_coherentes():
+    pytest.importorskip("gensim")
     bolsas = bolsas_de_dos_temas()
     buena = t.coherencia([["pesca", "anchoveta", "mar"], ["lluvia", "huaico", "río"]], bolsas)
     mala = t.coherencia([["pesca", "huaico", "mar"], ["lluvia", "anchoveta", "río"]], bolsas)
@@ -112,6 +113,7 @@ def test_muestra_cien_por_medio_sin_vistas(monkeypatch):
     assert elegidas == t.muestra(notas, {("andina", "0")})
 
 
+@pytest.mark.lento
 def test_lda_y_bertopic_corren_en_datos_sinteticos():
     bolsas = bolsas_de_dos_temas(40)
     vocab = ["anchoveta", "huaico", "lluvia", "mar", "pesca", "río"]

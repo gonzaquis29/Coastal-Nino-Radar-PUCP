@@ -472,7 +472,7 @@ def criterio_historia(corpus, refs):
                     "; ".join(malos)[:500])  # fmt: skip
 
 
-TITULAR_ES_EVENTO = set()  # el cuerpo debe dar el fin por sí solo: el titular no entra en lo extraído
+TITULAR_ES_EVENTO: set[str] = set()  # el cuerpo debe dar el fin por sí solo: el titular no entra en lo extraído
 
 
 def validar():

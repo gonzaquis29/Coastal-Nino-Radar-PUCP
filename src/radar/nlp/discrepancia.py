@@ -317,7 +317,7 @@ def _afirmacion(texto="", region="ambigua", magnitudes=(), posibles=(), estado="
 
 
 # (nombre, afirmación, fecha, [(dato, categoría, adelantada)] esperadas): fijados el 7-nov
-CASOS = (
+CASOS: tuple[tuple, ...] = (
     ("magnitud respaldada", _afirmacion(magnitudes=["fuerte"]), "2026-03-10", [("magnitud", "respaldada", False)]),
     ("magnitud de un comunicado anterior", _afirmacion(magnitudes=["débil"]), "2026-03-10",
      [("magnitud", "desactualizada", False)]),
@@ -369,7 +369,7 @@ CASOS = (
      "2026-06-02", [("fecha", "desactualizada", False)]),
 )  # fmt: skip
 
-COLORES = (  # (categorías, color esperado)
+COLORES: tuple[tuple, ...] = (  # (categorías, color esperado)
     (["respaldada"], "verde"),
     (["respaldada", "desactualizada"], "amarillo"),
     (["respaldada", "mas_certeza"], "amarillo"),

@@ -90,7 +90,7 @@ export default function Metodologia() {
               ) : (
                 <>
                   <p className="uso__cifra">
-                    <strong>{numero(d.uso.sesiones)}</strong> {T.metodologia.sesiones.toLowerCase()}
+                    <strong>{numero(d.uso.sesiones)}</strong> {d.uso.sesiones === 1 ? T.metodologia.sesion : T.metodologia.sesiones}
                   </p>
                   <h3>{T.metodologia.embudo}</h3>
                   <ol className="embudo">

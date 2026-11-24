@@ -183,9 +183,9 @@ def prueba_filtro(parar):
             if nombre == "rpp":
                 etiquetadas += [n for n in leidas if any(etiqueta_nino(t) for t in n["etiquetas"].split("|"))]
     solo_titulo = {e.medio: set() for e in estratos}
-    for e in estratos:
-        if not e.visto:
-            solo_titulo[e.medio].add(e.nombre)
+    for estrato in estratos:
+        if not estrato.visto:
+            solo_titulo[estrato.medio].add(estrato.nombre)
     con_candidatas = _perdidos_con_candidatas()
     prueba = "Filtro por título"
     filas = [
