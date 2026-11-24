@@ -831,7 +831,7 @@ Los nombres H1 a H7 no chocan con los criterios A1 a A5 del agente.
 
 **Registro de uso:** al abrir la app en el panel de vista previa para medir, se crearon 2 visitas en `data/processed/app/eventos.csv`. No eran uso real, así que se borró el archivo; `npm run medir` ya bloquea sus eventos.
 
-## 15. Ajustes de diseño de la interfaz (aprobada el 23-nov con la opción A; construida)
+## 15. Ajustes de diseño de la interfaz (aprobada el 23-nov con la opción A; construida; D8 no pasa por P9)
 
 ### 15.1 Qué está mal (revisado el 23-nov en 375 y 1.280 px)
 Lo pidió el usuario con una captura de los avisos del Senamhi. Al revisar todas las pantallas aparecieron más problemas:
@@ -904,7 +904,6 @@ Lo pidió el usuario con una captura de los avisos del Senamhi. Al revisar todas
 
 **Desvíos declarados:**
 - **Gráficos del Panorama:** se quedan sobre `--superficie`, el panel blanco. Sobre el fondo de la página, el tramo más claro de la magnitud (`#86b6ef`) baja a 1,79:1, por debajo del mínimo de 2:1 de P9. Además, las separaciones entre marcas están dibujadas con el color de ese panel. Las tarjetas sin datos sí pasan al fondo único.
-- **Naranja del Senamhi:** pasa de `#f0882a` a `#ec7d22`. Con el anterior, el amarillo y el naranja quedaban en ΔE 14,7 con visión normal, por debajo de 15. Con el nuevo, los dos pares vecinos quedan en ΔE ≥ 15,3. El amarillo oficial sigue fuera de la banda de luminosidad (L 0,84). No se cambia porque es el color oficial, y la escala no depende del color: también se lee por la posición, el número («3 de 4») y el nombre.
 - **Tramo vacío:** se dibuja solo con el contorno (`--borde-fuerte`). Con relleno, quedaba a 1,07:1 sobre el fondo y casi no se veía.
 
 | | Resultado | Umbral | Pasa |
@@ -916,6 +915,25 @@ Lo pidió el usuario con una captura de los avisos del Senamhi. Al revisar todas
 | D5 | 1 px (pasos 25 y 24 a 375 px; 24 a 1.280 px). Antes, 9 px | ≤ 2 px | Sí |
 | D6 | 3 líneas en el título más largo (antes 5) | ≤ 3 | Sí |
 | D7 | 0 sombras en Preguntar y Panorama (antes 4) | 0 | Sí |
-| D8 | P1 a P5 (`validar`), P6 a P12, U1 a U6 e I1 a I5 (`npm run medir` y `validar_interfaz`). P9 se revisó con `validate_palette.js` sobre `#e8edef` y `#0a171d`, con los desvíos de arriba. P11 se revisó con las capturas de `web/medir/capturas-diseno/despues` | todos | Sí |
+| D8 | Pasan P1 a P8, P10 a P12 y las U e I medidas. **No pasa P9** (15.6) | todos | **No** |
 
-**Decisión:** el ajuste queda. Las capturas de antes y después están en `web/medir/capturas-diseno/` (no se versionan). Los resultados están en `data/processed/app/diseno-antes.json` y `diseno-despues.json`.
+**Decisión:** abierta, porque falla D8 (15.6). Las capturas de antes y después están en `web/medir/capturas-diseno/` (no se versionan). Los resultados están en `data/processed/app/diseno-antes.json` y `diseno-despues.json`.
+
+### 15.6 Corrección (24-nov)
+La primera versión de 15.5 decía que pasaba D8. Era un error: P9 estaba fijado en «pasa» en el código, se revisaron 5 de las 20 capturas y las pruebas de D8 se corrieron antes del último cambio de color.
+
+**Corregido:**
+- **Indicador de carga** (`.esqueleto`): un reemplazo le había quitado el relleno; se restauró.
+- **Cuadro de Preguntar en el celular:** al quitar el fondo de `.tarjeta` quedó transparente y el texto se veía por debajo. Ahora es opaco, con el color de la página. Se encontró al revisar las 20 capturas.
+- **Naranja del Senamhi:** vuelve a `#f0882a`. El cambio a `#ec7d22` contradecía la regla 8 y no se había aprobado.
+- **Registro de uso:** I3 de `medir.mjs` no bloqueaba `sendBeacon` y dejaba una visita por corrida. Se bloqueó y se quitaron 2 filas, fechadas dentro de dos corridas (respaldo en `eventos.antes-limpieza-20261124.csv`). Después de medir dos veces, el registro no cambió.
+- **P9** se registra con su resultado real (`FALLAS_P9` en `validar_interfaz`), y Metodología lo muestra al volver a cargar la API.
+
+**P9 no pasa, por tres fallas:**
+1. Escala del Senamhi: amarillo y naranja a ΔE 14,7 (mínimo 15).
+2. Escala del Senamhi: luminosidad del amarillo fuera de banda en claro y oscuro, y la del naranja en oscuro.
+3. Regla de magnitud de Hoy en claro: el tramo débil queda a 1,79:1 del fondo (mínimo 2:1). Viene del rediseño (sección 11), así que I5 tampoco lo cumplía.
+
+En los tres casos el nombre va al lado, y la escala lleva además la posición. El gris de «sin datos» tampoco llega al croma mínimo, pero es neutro a propósito.
+
+**Medido de nuevo sobre el código final:** D1 a D7, P1 a P8, P10 a P12, y las U e I de `npm run medir`, las 13 pruebas de la interfaz y las 20 capturas (con el aviso N.° 476, el único vigente).

@@ -813,3 +813,12 @@ Con el validador de la paleta encontró tres cosas, y las declaró:
 - el tramo vacío lleva solo el contorno.
 
 Pasan D1 a D7 (`web/medir/diseno.mjs`) y D8 (P1 a P12, U1 a U6 e I1 a I5).
+130. explicame de manera simple, para que sirve la app, que estamos resolviendo y como esto es adecuado para una TA del curso. Solo explicamelo simple
+
+**Resultado:** la IA lo explicó, sin cambios en el repositorio.
+131. aun tenemos cosas por mejorar? pendientes? para tener mayor calidad? la estructura de carpetas, codigo, todo aplica buenas practicas? esta optimizado? con buen performance? haz el mapeo y me informas
+
+**Resultado:** la IA mapeó código, pruebas, rendimiento y pendientes, sin cambiar código. Encontró errores propios en el commit de diseño: el indicador de carga sin relleno, la medición que escribía en el registro de uso, P9 y P11 mal declarados y un color sin aprobar. El «pasa D8» del punto 129 era incorrecto.
+132. Sí, corrige eso
+
+**Resultado:** la IA corrigió esos errores y uno más que encontró en las 20 capturas (el cuadro de Preguntar, transparente en el celular). Devolvió el naranja a su valor, quitó 2 filas de la medición del registro de uso y registró P9 como no pasa (sección 15.6). D1 a D7 y el resto de las pruebas pasan sobre el código final.

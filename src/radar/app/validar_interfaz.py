@@ -5,7 +5,7 @@
 
 Aquí se calcula P8 de la API contra sus CSV (recontando desde los archivos, sin pasar por radar.app.servicio), y se
 juntan los criterios que mide el navegador (P6, P7, P8 en pantalla, P10, P12, U1, U2, U4, U5, U6 y I2 a I4 del
-rediseño, sección 11), la paleta (P9, medida el 19-nov y repetida el 23-nov) y la revisión de capturas (P11). U3 y
+rediseño, sección 11), la paleta (P9, medida el 24-nov) y la revisión de capturas (P11). U3 y
 los textos de U2 y U6 los revisa tests/app.
 """
 
@@ -33,10 +33,18 @@ REVISION_P11 = {
         "el encabezado del Panorama quedaba descentrado",
         "en F, la etiqueta del 0 se encimaba con la de 0,1 %",
         "las cifras usaban punto decimal y los porcentajes tenían decimales desiguales",
+        "el cuadro fijo de Preguntar dejaba ver el texto por debajo en el celular (24-nov)",
         "las viñetas de los PDF se veían como un cuadro al inicio de algunas citas",
     ],
     "pendientes": [],
 }
+
+# P9 se mide aparte, con validate_palette.js; aquí se registra su última medición (24-nov, sección 15.5)
+FALLAS_P9 = [
+    "escala del Senamhi: amarillo y naranja a ΔE 14,7 (mínimo 15)",
+    "escala del Senamhi: luminosidad del amarillo fuera de banda en claro y oscuro, y la del naranja en oscuro",
+    "regla de magnitud de Hoy en claro: el tramo débil a 1,79:1 del fondo (mínimo 2:1)",
+]
 
 
 def criterio(nombre, valor, umbral, pasa, detalle=""):
@@ -121,9 +129,8 @@ def main():
         criterio("P8. Cifras del Panorama iguales a sus CSV", f"{revisadas - len(diferencias)}/{revisadas}", "100 %",
                  not diferencias and p8["pasa"],
                  f"API contra CSV: {'; '.join(diferencias) or 'sin diferencias'}. En pantalla: {p8['detalle']}"),
-        criterio("P9. Paleta (validate_palette.js, claro y oscuro)", 0, "0", True,
-                 ("medida el 19-nov (sección 8), el 23-nov sobre las superficies nuevas (sección 11, I5) "
-                 "y otra vez el 23-nov con la escala del Senamhi sobre el fondo de la página (sección 15)")),
+        criterio("P9. Paleta (validate_palette.js, claro y oscuro)", len(FALLAS_P9), "0", not FALLAS_P9,
+                 "; ".join(FALLAS_P9)),
         del_navegador("P10", "P10. Emergente, tabla con descarga y Cómo leer; Descriptivo donde corresponde"),
         criterio("P11. Revisión de capturas (375 y 1.280 px, claro y oscuro)", len(pendientes), "0", not pendientes,
                  f"corregidos: {'; '.join(REVISION_P11['corregidos'])}"),

@@ -295,6 +295,9 @@ async function axe(p) {
   const contexto = await navegador.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: "reduce" });
   await contexto.addInitScript(() => localStorage.setItem("radar.zona", "costa_norte"));
   await contexto.route("**/api/eventos", (r) => r.fulfill({ status: 204, body: "" }));
+  await contexto.addInitScript(() => {
+    navigator.sendBeacon = () => true; // los beacons al cerrar la página no pasan por route
+  });
   const p = await contexto.newPage();
   await p.goto(`${BASE}/`);
   await p.locator(".escalera").waitFor();

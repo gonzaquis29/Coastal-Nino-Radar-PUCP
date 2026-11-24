@@ -431,6 +431,7 @@ textarea {
 
 /* las tarjetas van sobre el mismo fondo de la página, con una línea fina (sección 15) */
 .tarjeta {
+  background: var(--plano); /* opaco: la de Preguntar flota sobre la conversación en el celular */
   border: 1px solid var(--borde);
   border-radius: var(--radio);
 }

@@ -247,11 +247,16 @@ def test_validar_interfaz_junta_los_criterios_del_navegador(monkeypatch, tmp_pat
     monkeypatch.setattr(v.config, "DIR_APP", tmp_path)
     monkeypatch.setattr(v, "p8_api_contra_csv", lambda: (3, []))
     monkeypatch.setattr(v, "guardar", lambda filas, ruta: guardadas.extend(filas))
+    monkeypatch.setattr(v, "FALLAS_P9", [])
     v.main()
     assert len(guardadas) == 15 and {f["prueba"] for f in guardadas} == {v.PRUEBA}
     assert [f["criterio"][:3] for f in guardadas if not f["pasa"]] == ["U5."]
     assert next(f for f in guardadas if f["criterio"].startswith("P8"))["valor"] == "3/3"
     assert any(t[1] == v.PRUEBA for t in metodologia.TARJETAS)
+    guardadas.clear()
+    monkeypatch.setattr(v, "FALLAS_P9", ["falla inventada"])
+    v.main()
+    assert [f["criterio"][:3] for f in guardadas if not f["pasa"]] == ["P9.", "U5."]
 
 
 def test_el_registro_acepta_fuera_de_tema_y_su_texto_es_simple():
