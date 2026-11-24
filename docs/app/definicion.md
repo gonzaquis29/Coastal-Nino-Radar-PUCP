@@ -1018,3 +1018,13 @@ Línea base capturada con el código anterior (c9b324c) y las mismas entradas. C
 **Diagnóstico posterior (no reemplaza a K6):** 8 pares de arranques alternados, con y sin los pesos aparte. Verificar tarda 0,162 s con ellos y 0,168 s sin ellos; la razón mediana es 0,94 (entre 0,92 y 1,25). En K6, las 3 medianas del código anterior iban de 0,126 a 0,171 s: con 3 arranques en momentos distintos, la prueba no distinguía un 10 %. El defecto está en cómo se fijó K6. No compara B y C con el código anterior.
 
 **Tokenizador compartido:** los dos archivos difieren solo en el truncamiento, el relleno (los fija `lote`) y el `lstrip` de `<mask>`. Antes de construir se probaron 20.000 textos al azar con `<mask>`, espacios y otros especiales: 0 diferencias.
+
+### 16.6 K6 pareada (aprobada y fijada el 24-nov, antes de medirla)
+**Se declara:** este criterio se cambia después de ver que K6 no pasaba y de un diagnóstico favorable (16.5). El umbral no cambia; cambia cómo se mide. No se usa ningún dato anterior.
+
+| | Criterio | Umbral |
+|---|---|---|
+| K6b | Verificar con todo el cambio (A, B y C) frente al código anterior (c9b324c): 12 pares nuevos de arranques de la API real, con el orden alternado. De cada arranque, la mediana de 30 consultas; de cada par, la razón; y de los 12, la mediana. No se descarta ningún par | ≤ 1,10 |
+| K7b | P1 a P5 con el cambio (`radar.app.validar`) y la lectura de 320 textos de K2 ya hecha | todos |
+
+- **Decisión:** K6b se mide una sola vez. Si pasan K6b y K7b, se activa en `main`. Si falla alguno, queda retirada y no se vuelve a medir. El arranque y la primera pregunta de K6 ya pasaron y no se repiten.
