@@ -773,3 +773,9 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 120. cuanto va a demorar aprox este otro proceo
 
 **Resultado:** la IA revisó la lectura de cuerpos, que ya había terminado (314 en unos 3 minutos).
+121. entonces con que mas podemos continuar?
+
+**Resultado:** la IA propuso los opcionales antes del congelamiento: comprobar que el repositorio se reproduce desde cero, avisar en Verificar el límite medido, bajar el arranque, la versión pública y subir el commit.
+122. lo de bajar el arranque de la app seria bueno que hagamos eso
+
+**Resultado:** la IA midió el arranque (15,6 s, de los que unos 12 s son importar `sentence-transformers`, `transformers` y `torch`) y probó MiniLM en ONNX float32 con `tokenizers`: mismos vectores (coseno mínimo 0,99999992) y 1,2 s de carga. Escribió la sección 14 de `docs/app/definicion.md`: mapa de 8 enfoques, motor ONNX en la API, criterios A1 a A6 (arranque ≤ 8 s y resultados idénticos). Sin aprobar ni construir.

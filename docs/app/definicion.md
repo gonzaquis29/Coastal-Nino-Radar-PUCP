@@ -735,3 +735,66 @@ El clasificador de la sección 10 aprendió "menciona El Niño" porque su única
 - Se declaran los números de hoy sin el anclaje: negativos difíciles 6,3 % en corto y 16,7 % en cuerpo; `otros_temas` 1,19 % en corto y 4 % en cuerpo.
 - Queda pendiente, para después del congelamiento, la «Alta» del texto largo de otros temas, con muestras nuevas.
 
+## 14. Arranque de la app sin torch (definición del 23-nov; sin aprobar)
+
+### 14.1 Dónde se va el tiempo (medido el 23-nov)
+Hoy la API tarda **15,6 s** en arrancar (P2 pide ≤ 90 s, así que pasa):
+
+| Paso | Segundos | Qué es |
+|---|---|---|
+| Importar la API | 2,8 | sobre todo scikit-learn (1,5 s), que usa el agente |
+| `servicio()` | 11,6 | importar `sentence-transformers` (12,5 s si se importa solo: `transformers` 5,4 s y `torch` 1,8 s) y cargar los modelos (1,1 s) |
+| `panorama()` | 1,1 | leer los resultados precalculados |
+| Primera consulta | 0,1 | — |
+
+- **Del arranque, unos 12 s son importar librerías, no calcular.** Solo en `transformers.utils.import_utils` se van 4,3 s, porque al importarse recorre las 298 distribuciones instaladas.
+- La API usa dos modelos, y solo para embeber la consulta (los vectores oficiales ya están en disco):
+  - MiniLM en el semáforo de Verificar;
+  - e5-small en el clasificador de intención de Preguntar.
+- `radar.nlp.viabilidad` ya tiene un motor ONNX (`Onnx`), pero usa el tokenizador de `transformers`.
+
+**Prueba de viabilidad (23-nov), con MiniLM:**
+- Se embebieron 304 textos: 300 párrafos oficiales y 4 sintéticos.
+- Se usó su `onnx/model.onnx` en float32, que ya está en la caché local, con `onnxruntime` y la librería `tokenizers` sola, sin `torch` ni `transformers`.
+- Frente a `sentence-transformers`, el coseno mínimo es **0,99999992** y la mayor diferencia es 2,5 × 10⁻⁷. Cargar el modelo toma **1,2 s**, y `onnxruntime` con `tokenizers` se importan en 0,2 s.
+
+### 14.2 Mapa de enfoques
+| Enfoque | Ganancia esperada | ¿Cambia resultados? | Lectura |
+|---|---|---|---|
+| **ONNX en float32 con `tokenizers`, sin `torch` ni `transformers` en la API** | de 15,6 a unos 6 s | No: mismos vectores (14.1) | **Elegido** |
+| ONNX cuantizado (ya en la caché para los dos modelos) | algo más | Sí: otros vectores | Obliga a repetir S1 a S6 y la ronda c del agente. Descartado |
+| Cargar los modelos en segundo plano: la página y el Panorama en unos 3 s, y Verificar y Preguntar esperan | percibida, no total | No | Cambia la interfaz (un estado «preparando», textos, U1 a U6). Queda como complemento posible |
+| Entorno mínimo (un `venv` con solo lo de la app) | unos 4 s de los 4,3 de recorrer distribuciones | No | No quita `torch` y obliga a reinstalar todo. Descartado |
+| Parchear la búsqueda de distribuciones de `transformers` | unos 4 s | No | Toca el interior de una librería; frágil. Descartado |
+| Excluir la carpeta del antivirus | ? | No | Cambia la seguridad del sistema. Descartado |
+| Dejar la API siempre encendida | no baja el arranque | No | Ya es así en uso; no resuelve el problema |
+| Modelo más chico o destilado | algo | Sí | Repetir todo. Descartado |
+
+### 14.3 Qué se construye
+1. **Motor de la app** en `radar.nlp`:
+   - ONNX en float32 con el tokenizador de `tokenizers` (`tokenizer.json` del mismo repositorio), el mismo promedio de tokens y la normalización;
+   - contar tokens y partir en tramos con ese mismo tokenizador (`add_special_tokens=False`), como hoy;
+   - `config.MOTOR_APP = "onnx32"`;
+   - el semáforo (`candidatos.Candidato`) y el agente (`embeddings.Modelo("e5")`) lo usan dentro de la API. Los estudios de `radar.nlp` siguen con `torch`.
+2. **Archivos del modelo** (no se versionan; quedan en la caché de Hugging Face):
+   - MiniLM: `onnx/model.onnx`, que ya está;
+   - e5-small: no hay `onnx/model.onnx` en float32 en la caché, solo el cuantizado. Se baja del repositorio oficial `intfloat/multilingual-e5-small` (unos 470 MB); **aprobar esta definición es el permiso para bajarlo**. Si el repositorio no lo trae, se exporta una sola vez en local con `torch.onnx` (`python -m radar.nlp.exportar_onnx`).
+3. **Si falta un archivo ONNX,** la API lo dice en el registro y arranca con `torch` como hoy: nunca deja de funcionar.
+4. La API sigue sin pedir nada a internet (`HF_HUB_OFFLINE=1`).
+
+### 14.4 Criterios (fijados antes de construir)
+| | Criterio | Umbral |
+|---|---|---|
+| A1 | Mismos vectores: coseno mínimo entre ONNX y el motor de hoy, en todos los párrafos oficiales (MiniLM sin prefijo y e5 con el suyo) y en 40 sintéticos nuevos | ≥ 0,9999 (el umbral de E2) |
+| A2 | Verificar igual: misma banda, color y párrafo más cercano en una muestra nueva de 300 notas no vistas (titular y resumen, repartidas entre los 4 medios) y en los 25 casos de P1 | 100 % |
+| A3 | Preguntar igual: misma intención y misma respuesta en las consultas de validación del agente (ronda c) y en 20 sintéticos nuevos | 100 % |
+| A4 | Arranque: mediana de 3 arranques en frío; y la API no carga `torch`, `transformers` ni `sentence_transformers` | ≤ 8 s (hoy 15,6) y 0 módulos |
+| A5 | La app: P1 a P12, U1 a U6 e I1 a I5; P2 (mediana de Verificar ≤ 2 s) | todos |
+| A6 | Arranca sin red (`HF_HUB_OFFLINE=1`), y sin el archivo ONNX vuelve a `torch` | sí / sí |
+
+- **Decisión:** si pasan A1 a A6, el motor ONNX queda por defecto en la API. Si falla A1, A2 o A3, se retira y sigue `torch`. Si solo falla A4 (más de 8 s), se declara el tiempo y se queda si baja de 15,6 s.
+- **Riesgos declarados:**
+  - otra versión de `onnxruntime` podría dar diferencias mínimas; A1 lo controla;
+  - quien instale la app necesita los archivos ONNX en su caché: el README dirá cómo traerlos, y sin ellos la app usa `torch`.
+- **Archivos:** `radar.nlp.viabilidad` (o un módulo nuevo `radar.nlp.motor`), `radar.nlp.candidatos`, `radar.nlp.embeddings`, `radar.config` (`MOTOR_APP`), `radar.app.validar_arranque` (nuevo: A1 a A4 y A6) y sus pruebas con textos sintéticos.
+
