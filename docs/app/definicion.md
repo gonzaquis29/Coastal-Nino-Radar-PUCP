@@ -938,7 +938,7 @@ En los tres casos el nombre va al lado, y la escala lleva además la posición. 
 
 **Medido de nuevo sobre el código final:** D1 a D7, P1 a P8, P10 a P12, y las U e I de `npm run medir`, las 13 pruebas de la interfaz y las 20 capturas (con el aviso N.° 476, el único vigente).
 
-## 16. Memoria de la API (aprobada el 24-nov; construida en una rama y retirada: no pasa K6)
+## 16. Memoria de la API (aprobada el 24-nov; construida y activa: K6 original no pasó, K6 pareada sí)
 
 ### 16.1 Dónde se va la memoria (medido el 24-nov, una corrida)
 Memoria residente de un proceso con la app cargada, sin atender por red, después de 64 consultas: **2.061 MB, con un pico de 2.424 MB**.
@@ -1028,3 +1028,13 @@ Línea base capturada con el código anterior (c9b324c) y las mismas entradas. C
 | K7b | P1 a P5 con el cambio (`radar.app.validar`) y la lectura de 320 textos de K2 ya hecha | todos |
 
 - **Decisión:** K6b se mide una sola vez. Si pasan K6b y K7b, se activa en `main`. Si falla alguno, queda retirada y no se vuelve a medir. El arranque y la primera pregunta de K6 ya pasaron y no se repiten.
+
+### 16.7 Resultado de K6 pareada (24-nov, una sola medición)
+| | Resultado | Umbral | Pasa |
+|---|---|---|---|
+| K6b | ×1,01 (mediana de 12 pares; 0,176 s antes y 0,174 s ahora; razones de 0,89 a 1,15) | ≤ ×1,10 | Sí |
+| K7b | P1 a P5 pasan (P1 25 de 25; Verificar 0,06 s dentro de `validar`; arranque 3,6 s dentro de `validar`) | todos | Sí |
+
+En los 12 pares la memoria fue de 775 a 779 MB, frente a 2.036 a 2.041 MB (pico de 2.394 a 2.401 MB).
+
+**Decisión:** queda activa en `main`. El registro de uso no cambió con las mediciones. **Sin medir:** Linux, y las pruebas de la interfaz (P6 a P12, U e I) no se repitieron porque no cambia ningún texto ni respuesta (K2 a K4).

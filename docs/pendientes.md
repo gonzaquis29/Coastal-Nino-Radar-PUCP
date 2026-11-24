@@ -6,7 +6,7 @@ Lo hecho, con sus decisiones y resultados, está en [historial.md](historial.md)
 Nada obligatorio.
 
 ## Opcional
-- **Versión pública:** habría que bajar la memoria de la API (1,2 a 2 GB) y atender más de una consulta con modelos a la vez.
+- **Versión pública:** la API usa 776 MB (antes 2 GB; sección 16 de [app/definicion.md](app/definicion.md)), sin medir en Linux; faltaría atender más de una consulta con modelos a la vez.
 
 ## Después del congelamiento
 - **Uso real:** `python -m radar.analitica.web uso`, tras la presentación.
