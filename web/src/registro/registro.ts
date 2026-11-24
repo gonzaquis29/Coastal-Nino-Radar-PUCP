@@ -2,7 +2,7 @@
 // consultado. La sesión es un id al azar en sessionStorage, que muere con la pestaña.
 import { esCelular } from "../ganchos";
 
-export type Pantalla = "verificar" | "preguntar" | "panorama" | "metodologia";
+export type Pantalla = "verificar" | "mapa" | "preguntar" | "panorama" | "metodologia";
 type Seccion = "hallazgos" | "linea" | "magnitudes" | "reaccion" | "temas" | "citas" | "youtube";
 
 export type Evento =

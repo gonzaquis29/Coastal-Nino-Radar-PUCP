@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { api } from "../api/cliente";
 import type { Interes, Macroregion, Resultado as R } from "../api/tipos";
+import { Enlace } from "../App";
 import { AvisoError } from "../componentes/Aviso";
 import { Cita } from "../componentes/Cita";
 import { AvisosZona, PanelZona } from "../componentes/PanelZona";
@@ -267,6 +268,10 @@ export default function Verificar() {
       {zona && (
         <div className="hoy__avisos">
           <AvisosZona estado={estado.datos} />
+          <p className="hoy__mapa">
+            <Enlace href="/mapa" className="boton boton--sutil">{T.mapa.enlace_hoy}</Enlace>
+            <small>{T.mapa.enlace_hoy_ayuda}</small>
+          </p>
         </div>
       )}
     </div>

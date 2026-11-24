@@ -23,7 +23,7 @@ LOTES_POR_MINUTO_SESION = 30
 LOTES_POR_MINUTO_TOTAL = 600
 BYTES_MAXIMOS = 50 * 1024 * 1024
 
-Pantalla = Literal["verificar", "preguntar", "panorama", "metodologia"]
+Pantalla = Literal["verificar", "mapa", "preguntar", "panorama", "metodologia"]
 COLUMNAS = ("momento", "sesion", "dispositivo", "evento", "pantalla", "anterior", "segundos", "tipo_resultado",
             "resultado", "macroregion", "palabras", "interes", "tipo", "posicion", "herramienta", "fuera_alcance",
             "seccion", "filtro")  # fmt: skip

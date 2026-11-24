@@ -9,17 +9,20 @@ import { type Pantalla, vista } from "./registro/registro";
 import { T } from "./textos";
 
 // Los gráficos solo se descargan al abrir el Panorama o Metodología (D12, U4)
+const Mapa = lazy(() => import("./pantallas/Mapa"));
 const Panorama = lazy(() => import("./pantallas/Panorama"));
 const Metodologia = lazy(() => import("./pantallas/Metodologia"));
 
 const RUTAS: Record<string, Pantalla> = {
   "/": "verificar",
+  "/mapa": "mapa",
   "/preguntar": "preguntar",
   "/panorama": "panorama",
   "/metodologia": "metodologia",
 };
 const TITULOS: Record<Pantalla, string> = {
   verificar: T.verificar.titulo,
+  mapa: T.mapa.titulo,
   preguntar: T.preguntar.titulo,
   panorama: T.panorama.titulo,
   metodologia: T.metodologia.titulo,
@@ -85,6 +88,7 @@ export default function App() {
 
   const nav: [string, Pantalla, string][] = [
     ["/", "verificar", T.comun.nav_verificar],
+    ["/mapa", "mapa", T.comun.nav_mapa],
     ["/preguntar", "preguntar", T.comun.nav_preguntar],
     ["/panorama", "panorama", T.comun.nav_panorama],
   ];
@@ -118,11 +122,12 @@ export default function App() {
         {pantalla === "verificar" && <Verificar />}
         {pantalla === "preguntar" && <Preguntar />}
         <Suspense fallback={<p className="cargando envoltura">{T.comun.cargando}</p>}>
+          {pantalla === "mapa" && <Mapa />}
           {pantalla === "panorama" && <Panorama />}
           {pantalla === "metodologia" && <Metodologia />}
         </Suspense>
       </main>
-      <footer className="pie">
+      <footer className="pie" hidden={pantalla === "mapa"}>
         <div className="pie__fila">
           <p>{T.comun.pie}</p>
           <Enlace href="/metodologia" aria-current={pantalla === "metodologia" ? "page" : undefined}>

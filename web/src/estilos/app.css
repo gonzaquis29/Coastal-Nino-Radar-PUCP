@@ -209,10 +209,15 @@ a {
     border-radius: 12px;
     color: var(--tinta-2);
     font-family: var(--display);
-    font-size: 0.82rem;
-    letter-spacing: 0.05em;
+    font-size: 0.76rem;
+    font-stretch: 80%;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
-    padding: 0 6px;
+    text-align: center;
+    line-height: 1.1;
+    white-space: normal;
+    min-width: 0;
+    padding: 0 4px;
   }
 
   .nav a:hover {

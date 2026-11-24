@@ -17,16 +17,20 @@ from fastapi.staticfiles import StaticFiles
 from radar import config
 from radar.app import esquemas, eventos, metodologia, servicio
 from radar.app import textos as tx
+from radar.monitoreo import servicio as monitoreo
 
 registro = logging.getLogger(__name__)
 DIST = config.DIR_WEB / "dist"
 # El semáforo y el agente no garantizan ser seguros entre hilos: se atiende una consulta con modelos a la vez
 CANDADO_MODELOS = threading.Lock()
 ESTADO = {"listo": False, "segundos_arranque": None}
-# La interfaz no carga nada de fuera: solo sus propios archivos y llamadas a esta misma API
+# La interfaz solo carga sus propios archivos y esta API. Única excepción: el fondo del mapa (imagen satelital y
+# relieve); sin internet, el mapa sigue mostrando límites y zonas (docs/monitoreo/definicion.md)
+FONDO_MAPA = "https://tiles.maps.eox.at https://s3.amazonaws.com/elevation-tiles-prod/"
 CABECERAS = {
     "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self';"
-    " connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+    f" connect-src 'self' {FONDO_MAPA}; worker-src 'self'; object-src 'none'; base-uri 'none';"
+    " frame-ancestors 'none'; form-action 'self'",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
@@ -116,6 +120,17 @@ def crear(cargar=True):
             registro.warning("El registro de uso llegó a su tamaño máximo: no se guardan más eventos")
             return Response(status_code=204)
         eventos.registrar(lote)
+
+    @app.get("/api/mapa")
+    def mapa():
+        return monitoreo.datos()
+
+    @app.get("/api/mapa/zonas/{clave}")
+    def zona(clave: str):
+        ruta = monitoreo.ruta_zona(clave)
+        if not ruta:
+            raise HTTPException(404, "No hay zona para esa clave")
+        return FileResponse(ruta, media_type="application/json")
 
     @app.get("/api/{resto:path}", include_in_schema=False)
     def no_existe(resto: str):

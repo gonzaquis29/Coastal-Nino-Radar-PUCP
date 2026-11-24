@@ -743,3 +743,18 @@
 .glosario__nota {
   font-size: 0.92rem;
 }
+
+/* Del inicio al mapa de avisos */
+.hoy__mapa {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.hoy__mapa a {
+  text-decoration: none;
+}
+
+.hoy__mapa small {
+  color: var(--tinta-2);
+}

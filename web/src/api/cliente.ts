@@ -1,5 +1,5 @@
 // Cliente de la API: misma dirección que la interfaz, sin cookies, con tope de tiempo y cancelación.
-import type { Estado, Interes, Macroregion, Metodologia, Panorama, Respuesta, Resultado, Seccion } from "./tipos";
+import type { DatosMapa, Estado, Interes, Macroregion, Metodologia, Panorama, Respuesta, Resultado, Seccion } from "./tipos";
 
 export type TipoError = "sin_conexion" | "arrancando" | "error";
 
@@ -60,6 +60,9 @@ export const api = {
   ) => pedir<Respuesta>("/api/preguntar", { method: "POST", body: JSON.stringify(cuerpo) }, senal),
   panorama: <S extends Seccion>(seccion: S, filtros: Filtros = {}, senal?: AbortSignal) =>
     pedir<Panorama[S]>(`/api/panorama/${seccion}${consulta({ ...filtros })}`, {}, senal),
+  mapa: (senal?: AbortSignal) => pedir<DatosMapa | { disponible: false }>("/api/mapa", {}, senal),
+  zona: (clave: string, senal?: AbortSignal) =>
+    pedir<GeoJSON.FeatureCollection>(`/api/mapa/zonas/${encodeURIComponent(clave)}`, {}, senal),
   metodologia: (senal?: AbortSignal) => pedir<Metodologia>("/api/metodologia", {}, senal),
 };
 

@@ -21,6 +21,7 @@ youtube = ["google-api-python-client>=2.150"]
 app = [
     "fastapi>=0.115", "uvicorn>=0.30", "httpx>=0.27", "numpy>=2.0", "scipy>=1.13", "scikit-learn>=1.5",
     "onnxruntime>=1.23", "tokenizers>=0.22", "huggingface_hub>=1.0", "networkx>=3.3", "joblib>=1.4",
+    "shapely>=2.0",  # zonas del mapa (radar.monitoreo)
 ]
 # NLP y redes (modelo de spaCy: python -m spacy download es_core_news_sm; los de transformers, en la caché de
 # Hugging Face). streamlit y psutil son para la prueba de memoria; sentence-transformers, el control de E2

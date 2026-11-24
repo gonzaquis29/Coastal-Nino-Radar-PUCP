@@ -31,6 +31,11 @@ MOTOR_APP = "onnx32"
 DIR_MOTOR_APP = DIR_DATOS / "processed" / "motor-app"  # tokenizadores de `python -m radar.nlp.motor preparar`
 DIR_MODELOS = DIR_DATOS / "processed" / "modelos"  # resultados del modelo de engagement (solo agregados, sin ids)
 DIR_WEB = RAIZ / "web"  # interfaz en React; la API sirve web/dist
+DIR_RAW_ZONAS = DIR_RAW / "zonas"  # polígonos de los avisos ya descargados (sin el nombre de quien los elaboró)
+DIR_MONITOREO = DIR_DATOS / "processed" / "monitoreo"  # lo que muestra el mapa
+DIR_ZONAS = DIR_MONITOREO / "zonas"
+ARCHIVO_MONITOREO = DIR_MONITOREO / "monitoreo.json"
+ARCHIVO_DISTRITOS = DIR_WEB / "public" / "mapa" / "lugares.json"  # el mismo archivo que lee la interfaz
 
 # ---------------------------------------------------------------- fechas del proyecto (README, "Ventana de datos")
 LIMA = dt.timezone(dt.timedelta(hours=-5))  # el Perú no tiene horario de verano
@@ -64,6 +69,8 @@ URL_ENFEN = f"https://{HOST_ENFEN}"
 URL_SENAMHI = f"https://{HOST_SENAMHI}/"
 URL_AVISOS_SENAMHI = URL_SENAMHI + "?p=aviso-meteorologico"
 # Ubigeos: WFS de la IDE del INEI (capas de límites "actualizado al 2023"; validado el 25-oct-2026)
+HOST_GOB = "www.gob.pe"  # notas del INDECI
+HOST_USGS = "earthquake.usgs.gov"  # sismos (API pública)
 HOST_INEI_GIS = "geoespacial.inei.gob.pe"
 URL_WFS_INEI = f"https://{HOST_INEI_GIS}/geoserver/Interoperabilidad/ows"
 

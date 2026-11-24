@@ -133,6 +133,54 @@ export interface Respuesta {
   };
 }
 
+// ---------------------------------------------------------------- Mapa
+
+export interface AvisoMapa {
+  numero: number;
+  peligro: string;
+  titulo: string;
+  texto: string;
+  nivel: "amarillo" | "naranja" | "rojo";
+  emision: string;
+  inicio: string;
+  fin: string;
+  url: string;
+}
+
+export interface NotaMapa {
+  titulo: string;
+  fecha: string;
+  url: string;
+  peligro: string;
+  departamentos: string[];
+  recomendaciones: string[];
+}
+
+export interface Sismo {
+  id: string;
+  magnitud: number;
+  momento: string;
+  lugar: string;
+  lat: number;
+  lon: number;
+  profundidad: number;
+  url: string;
+}
+
+export type FuenteMapa = "avisos" | "zonas" | "notas" | "sismos";
+
+export interface DatosMapa {
+  disponible: true;
+  ahora: string;
+  actualizado: string;
+  avisos: AvisoMapa[];
+  notas: NotaMapa[];
+  sismos: Sismo[];
+  zonas: Record<string, Record<string, { inicio: string; fin: string; distritos: string }>>;
+  macroregiones: Record<string, string>;
+  fuentes: Partial<Record<FuenteMapa, { ok: string; n: number; error: string }>>;
+}
+
 // ---------------------------------------------------------------- Panorama
 
 export interface Hallazgo {

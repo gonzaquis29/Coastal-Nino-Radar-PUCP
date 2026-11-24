@@ -1,0 +1,609 @@
+/* Mapa de avisos: el mapa ocupa la pantalla y los paneles flotan sobre él. Siempre oscuro, porque el fondo es una foto
+   de satélite; usa las letras y los colores del Senamhi del resto de la app. */
+
+.mapa {
+  --m-fondo: rgba(8, 24, 34, 0.86);
+  --m-tinta: #eef4f6;
+  --m-suave: #b3c4cc;
+  --m-borde: rgba(255, 255, 255, 0.13);
+  --m-acento: #8cc8e0;
+  position: relative;
+  height: calc(100dvh - 56px);
+  min-height: 560px;
+  overflow: hidden;
+  background: #0a1a22;
+  color: var(--m-tinta);
+  color-scheme: dark;
+}
+
+.mapa__lienzo {
+  position: absolute !important;
+  inset: 0;
+}
+
+.mapa__vacio {
+  padding: 48px 16px;
+}
+
+.mapa a {
+  color: var(--m-acento);
+}
+
+.mapa :focus-visible {
+  outline-color: var(--m-acento);
+}
+
+.mapa__nombre {
+  font: 700 0.8rem var(--fuente);
+  color: #fff;
+  text-shadow: 0 0 4px #000, 0 1px 3px #000;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.mapa .maplibregl-ctrl.maplibregl-ctrl-attrib {
+  background: rgba(8, 24, 34, 0.8);
+  color: var(--m-suave);
+  font: 0.7rem var(--fuente);
+}
+
+.mapa .maplibregl-ctrl.maplibregl-ctrl-attrib a {
+  color: var(--m-tinta);
+}
+
+.mapa__buscador input,
+.mapa__buscador ul,
+.mapa__filtros button,
+.mapa__leyenda,
+.mapa__dias,
+.mapa__relieve,
+.mapa__panel,
+.mapa__pista {
+  background: var(--m-fondo);
+  border: 1px solid var(--m-borde);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  color: var(--m-tinta);
+}
+
+.mapa__icono {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------------------------------------------------------------- arriba: buscador y peligros */
+
+.mapa__arriba {
+  position: absolute;
+  z-index: 3;
+  top: 16px;
+  left: 20px;
+  right: 480px;
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.mapa__arriba > * > * {
+  pointer-events: auto;
+}
+
+.mapa__buscador {
+  position: relative;
+  max-width: 400px;
+}
+
+.mapa__buscador input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font: inherit;
+}
+
+.mapa__buscador input::placeholder {
+  color: var(--m-suave);
+  opacity: 1;
+}
+
+.mapa__buscador ul {
+  position: absolute;
+  z-index: 5;
+  top: 54px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: 12px;
+  max-height: 340px;
+  overflow: auto;
+  background: #081822;
+}
+
+.mapa__buscador li {
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.mapa__buscador li[aria-selected="true"],
+.mapa__buscador li[role="option"]:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mapa__buscador small {
+  display: block;
+  color: var(--m-suave);
+}
+
+.mapa__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mapa__filtros button {
+  min-height: var(--toque);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 0 11px;
+  border-radius: 11px;
+  font: 700 0.95rem var(--fuente);
+  cursor: pointer;
+}
+
+.mapa__filtros button:hover {
+  background: #17323f;
+}
+
+.mapa__filtros button[aria-pressed="true"] {
+  background: #eef4f6;
+  color: #0b2230;
+}
+
+.mapa__filtros i {
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------------- abajo: leyenda y días */
+
+.mapa__abajo {
+  position: absolute;
+  z-index: 3;
+  left: 20px;
+  right: 600px;
+  bottom: 34px;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.mapa__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 8px 14px;
+  border-radius: 11px;
+  font-size: 0.85rem;
+}
+
+.mapa__leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.mapa__leyenda s {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.mapa__leyenda .mapa__punto {
+  background: #b68cff;
+  border-radius: 50%;
+}
+
+.mapa__dias {
+  display: flex;
+  width: 100%;
+  max-width: 660px;
+  padding: 5px;
+  border-radius: 14px;
+}
+
+.mapa__dias button {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 4px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.mapa__dias button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mapa__dias button[aria-pressed="true"] {
+  background: var(--m-acento);
+  color: #04141b;
+}
+
+.mapa__dias b,
+.mapa__dias span {
+  display: block;
+}
+
+.mapa__dias b {
+  font-family: var(--display);
+  font-stretch: 85%;
+}
+
+.mapa__dias span {
+  font-size: 0.82rem;
+}
+
+.mapa__relieve {
+  position: absolute;
+  z-index: 3;
+  right: 480px;
+  bottom: 34px;
+  min-height: var(--toque);
+  padding: 0 16px;
+  border-radius: 11px;
+  font: 700 0.95rem var(--fuente);
+  cursor: pointer;
+}
+
+.mapa__relieve[aria-pressed="true"] {
+  color: var(--m-acento);
+}
+
+/* ---------------------------------------------------------------- panel */
+
+.mapa__panel {
+  position: absolute;
+  z-index: 4;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: 444px;
+  padding: 26px 26px 30px;
+  border-radius: 18px;
+  overflow-y: auto;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.mapa__panel h1 {
+  font-family: var(--display);
+  font-stretch: 74%;
+  font-weight: 850;
+  font-size: 2.35rem;
+  line-height: 1;
+  margin: 4px 0 8px;
+}
+
+.mapa__panel h2 {
+  font-family: var(--display);
+  font-stretch: 85%;
+  font-weight: 750;
+  font-size: 1.15rem;
+  margin: 26px 0 8px;
+}
+
+.mapa__panel .eyebrow,
+.mapa__tenue,
+.mapa__panel small {
+  color: var(--m-suave);
+}
+
+.mapa__panel small {
+  display: block;
+  font-size: 0.88rem;
+}
+
+.mapa__volver {
+  min-height: var(--toque);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--m-acento);
+  font: 700 0.95rem var(--fuente);
+  cursor: pointer;
+}
+
+.mapa__local {
+  display: grid;
+  gap: 2px;
+  margin-top: 14px;
+  padding: 15px 18px;
+  border-radius: 14px;
+  color: #14100a;
+}
+
+.mapa__local b {
+  font-family: var(--display);
+  font-stretch: 80%;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.mapa__local--0 {
+  background: rgba(255, 255, 255, 0.09);
+  color: inherit;
+}
+
+.mapa__local--2,
+.mapa__nivel--2 {
+  background: #f2c418;
+}
+
+.mapa__local--3,
+.mapa__nivel--3 {
+  background: #f0882a;
+}
+
+.mapa__local--4,
+.mapa__nivel--4 {
+  background: #f5635a;
+}
+
+.mapa__lista,
+.mapa__consejos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mapa__aviso,
+.mapa__consejos li {
+  padding: 13px 0;
+  border-top: 1px solid var(--m-borde);
+}
+
+.mapa__aviso--activo {
+  margin: 0 -12px;
+  padding: 13px 12px;
+  border-radius: 12px;
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.mapa__cabeza {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+  min-height: var(--toque);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mapa__cabeza:hover b {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mapa__titulo {
+  flex: 1;
+  line-height: 1.35;
+}
+
+.mapa__nivel {
+  padding: 1px 10px;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #14100a;
+}
+
+.mapa__acciones,
+.mapa__aviso details {
+  margin-left: 32px;
+  font-size: 0.92rem;
+}
+
+.mapa__acciones a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--toque);
+}
+
+.mapa__aviso summary {
+  color: var(--m-suave);
+  cursor: pointer;
+  min-height: 32px;
+}
+
+.mapa__consejos b {
+  display: block;
+}
+
+.mapa__sismo {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(182, 140, 255, 0.16);
+}
+
+.mapa__sismo strong {
+  font-family: var(--display);
+  font-size: 2.1rem;
+  font-weight: 850;
+  line-height: 1;
+  color: #cfb2ff;
+}
+
+.mapa__nino {
+  margin-top: 20px;
+  padding: 2px 18px 18px;
+  border-radius: 14px;
+  background: rgba(140, 200, 224, 0.13);
+}
+
+.mapa__nino h2 {
+  margin-top: 14px;
+}
+
+.mapa__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mapa__botones .boton {
+  background: var(--m-acento);
+  color: #04141b;
+}
+
+.mapa__botones .boton--sutil {
+  background: none;
+  color: var(--m-tinta);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.mapa__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mapa__tabla th,
+.mapa__tabla td {
+  padding: 8px 10px 8px 0;
+  border-top: 1px solid var(--m-borde);
+  text-align: left;
+  vertical-align: top;
+}
+
+.mapa__tabla th {
+  border: 0;
+  color: var(--m-suave);
+  font-weight: 400;
+}
+
+.mapa__tabla td:first-child {
+  white-space: nowrap;
+}
+
+.mapa__pie {
+  margin-top: 28px;
+  padding-top: 14px;
+  border-top: 1px solid var(--m-borde);
+  color: var(--m-suave);
+  font-size: 0.9rem;
+}
+
+.mapa__pista {
+  position: absolute;
+  z-index: 6;
+  max-width: 250px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.mapa__pista b {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .mapa {
+    height: calc(100dvh - 56px - 60px);
+  }
+
+  .mapa__arriba {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+  }
+
+  .mapa__filtros {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    pointer-events: auto;
+  }
+
+  .mapa__filtros button {
+    flex: none;
+  }
+
+  .mapa__abajo {
+    left: 8px;
+    right: 8px;
+    bottom: calc(36% + 8px);
+  }
+
+  .mapa__leyenda {
+    padding: 4px 10px;
+    gap: 2px 12px;
+    font-size: 0.78rem;
+  }
+
+  .mapa__dias button {
+    min-height: 46px;
+  }
+
+  .mapa__dias b {
+    font-size: 0.82rem;
+  }
+
+  .mapa__dias span {
+    font-size: 0.72rem;
+  }
+
+  .mapa__relieve,
+  .mapa__pista,
+  .mapa .maplibregl-ctrl-bottom-left {
+    display: none;
+  }
+
+  .mapa__panel {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    height: calc(36% - 8px);
+    padding: 18px;
+  }
+
+  .mapa__panel h1 {
+    font-size: 1.8rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 900px) {
+  .mapa {
+    height: calc(100dvh - 56px);
+  }
+}

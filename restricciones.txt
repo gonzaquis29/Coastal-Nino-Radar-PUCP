@@ -21,6 +21,7 @@ ruff==0.6.0
 scikit-learn==1.9.1
 scipy==1.18.1
 sentence-transformers==6.2.0
+shapely==2.2.0
 spacy==3.8.11
 starlette==0.48.0
 tokenizers==0.23.3
