@@ -11,7 +11,7 @@ Nada obligatorio.
 ## Después del congelamiento
 - **Uso real:** `python -m radar.analitica.web uso`, tras la presentación.
 - **YouTube:** los datos crudos vencen a los 30 días; los primeros, el 16-dic (`python -m radar.youtube.borrar`). Después del borrado, el gráfico F queda sin datos.
-- **«Alta» en otros temas:** 2,35 % en textos cortos y 5,5 % en notas completas ([app/definicion.md](app/definicion.md), secciones 12 y 13).
+- **«Alta» en otros temas:** en otros temas con palabras de clima, 2,35 % en textos cortos y 5,5 % en notas completas de 2026 (sección 12), y 6,3 % (21 de 333) y 16,7 % (15 de 90) en la prueba externa de 2025 (sección 13.7 de [app/definicion.md](app/definicion.md)). Tres intentos no pasaron (secciones 10, 12 y 13). Se declara en Metodología.
 - **Código:** dividir las funciones de más de 60 líneas (15 de 1.469).
 
 ## Cómo probar los cambios

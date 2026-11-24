@@ -293,3 +293,8 @@ def test_preguntar_responde_sin_ids_ni_fechas_aaaa_mm_dd():
     for t in textos:
         assert not re.search(r"\d{4}-\d{2}-\d{2}|costa_norte|prevencion|enfen-|reglas|distancia|rojo \(", t), t
     assert "22 de noviembre de 2026" in textos[0] and "N.° 20" in textos[0]
+
+
+def test_limitacion_de_la_alta_se_entiende_y_llega_a_metodologia():
+    assert legibilidad.inflesz(tx.LIMITACION_ALTA) >= 65
+    assert tx.LIMITACION_ALTA in tx.LIMITACIONES

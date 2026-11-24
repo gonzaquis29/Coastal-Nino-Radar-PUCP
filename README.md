@@ -284,8 +284,8 @@ El informe se organiza por las seis fases de Studer et al. (2021), cada una con 
 - [x] Revisar `robots.txt` de esos medios. *Ver "Reglas por sitio".*
 - [x] Verificar fechas de publicación. *Las notas traen `datePublished` separado de `dateModified`.*
 - [x] Revisar estructura de comunicados y avisos. *Usan macro-regiones, no departamentos; más de 400 avisos en 2026.*
-- [ ] Contar comentarios de ~30 videos de YouTube sobre El Niño **con la API oficial**. Decide si la red social usa YouTube o el respaldo de co-mención.
-- [ ] Revisar en Google Trends si hay datos por departamento de la costa norte (en especial Tumbes) para "El Niño".
+- [x] Contar comentarios de videos de YouTube sobre El Niño **con la API oficial**. *Pasa: en el corte, 154 videos con 30 comentarios o más (umbral 100) → la red social usa YouTube. Ver [docs/youtube/definicion.md](docs/youtube/definicion.md).*
+- [x] Revisar en Google Trends si hay datos por departamento de la costa norte (en especial Tumbes) para "El Niño". *G1 pasa en 3 de 4 departamentos; Tumbes tiene pocos datos. G2 no pasa (Tumbes 0,790, umbral 0,80) → su serie es el promedio de dos exportaciones. Ver [docs/youtube/definicion.md](docs/youtube/definicion.md).*
 - [x] Revisar términos de uso de los medios. *Todos prohíben reproducir sin autorización; Infobae prohíbe "tratar" el contenido → excluido. Ver "Alcance de datos".*
 - [x] Descargar los comunicados ENFEN y probar la extracción de fecha, estado y magnitud con reglas. *Pasa (11/11): fecha, estado y magnitud coinciden con la página de descarga, el anuncio del comunicado anterior y las tablas de probabilidad.*
 - [x] Extraer avisos del Senamhi (fecha, tipo, nivel, macro-región) y aplicar el filtro. *No pasa en 2 de 8 criterios: polígono y regla coinciden en 94,8 % y 94,5 % (umbral 95 %). En los 35 desacuerdos falla la regla o es la ambigüedad de Ica, nunca el polígono: se mantiene el polígono y se declara.*
@@ -329,7 +329,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 - Estado al 24-oct-2026: "Alerta de El Niño Costero", comunicado N.° 18-2026 (16-oct), con magnitud extraordinaria prevista para la costa hasta enero de 2027. Confirmar en la fuente antes de citar.
 - YouTube Data API v3 (página oficial de cuotas, 23-oct-2026): 10 000 unidades/día; `commentThreads.list`, `videos.list` y `channels.list` cuestan 1 unidad; `search.list` tiene un límite propio de 100 llamadas/día (hasta 50 resultados cada una).
 - Google Trends: `pytrends` está archivado (confirmado en GitHub) y el API oficial está en alfa cerrado; se usa la exportación CSV de la web. Cada consulta se normaliza a 0-100 por separado, por eso cada departamento se descarga en una sola consulta que cubra todo el período (datos semanales).
-- **No verificado aún:** volumen de comentarios de YouTube, datos de Trends por departamento, memoria del servidor de la API, solo para la versión pública opcional, y norma de NIC.pe sobre `.gob.pe`. Cada punto tiene su prueba en "Pruebas de viabilidad".
+- **No verificado aún:** memoria de la API en Linux (solo para la versión pública opcional; en Windows, 776 MB) y norma de NIC.pe sobre `.gob.pe`.
 
 ## Reglas por sitio (revisado del 22 al 24-oct-2026)
 | Sitio | Regla |

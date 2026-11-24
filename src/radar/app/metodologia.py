@@ -4,6 +4,7 @@ import collections
 
 from radar import config
 from radar.app import eventos
+from radar.app import textos as tx
 from radar.comun.archivos import leer_csv
 
 # (archivo, prueba, título, qué mide en palabras simples). El archivo es la carpeta de su validacion.csv o una ruta
@@ -54,14 +55,6 @@ TARJETAS = (
      "Si se pueden usar con teclado y lector de pantalla, si muestran las mismas cifras que los cálculos, si los"
      " textos se entienden y si cargan rápido en el celular."),
 )  # fmt: skip
-
-LIMITACIONES = (
-    "La app mide cercanía con lo oficial; no dice si un texto es verdadero o falso.",
-    "Solo se comparan las frases con datos (magnitud, estado o fechas); el 74 % de las notas no los trae.",
-    "Una lectura automática puede equivocarse: por eso cada resultado muestra la frase y el dato comparados.",
-    "Las macro-regiones son una agrupación supuesta; Google Trends da interés relativo y Tumbes tiene pocos datos.",
-    "No hubo pruebas con usuarios: la única evidencia de uso es el registro anónimo de esta app.",
-)
 
 
 def _si(valor):
@@ -115,4 +108,4 @@ def uso():
 
 
 def metodologia():
-    return {"tarjetas": tarjetas(), "limitaciones": list(LIMITACIONES), "uso": uso()}
+    return {"tarjetas": tarjetas(), "limitaciones": list(tx.LIMITACIONES), "uso": uso()}

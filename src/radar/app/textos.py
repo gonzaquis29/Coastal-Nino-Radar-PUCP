@@ -87,6 +87,20 @@ JERGA = ("capa", "distancia", "coseno", "umbral", "auc", "nli", "embedding", "or
 # U6: nunca en un resultado sin datos
 PROMESAS = ("correcto", "verdadero", "falso", "verdad")
 
+# Cifras de la prueba externa de 2025 (docs/app/definicion.md, 13.7): 21 de 333 en corto y 15 de 90 en cuerpo
+LIMITACION_ALTA = (
+    "Un texto de otro tema puede salir con «Alta». Pasa más si es largo o usa palabras de emergencias o del clima: en"
+    " una prueba con textos así, fueron 6 de cada 100 cortos y 17 de cada 100 largos."
+)
+LIMITACIONES = (
+    "La app mide cercanía con lo oficial; no dice si un texto es verdadero o falso.",
+    "Solo se comparan las frases con datos (magnitud, estado o fechas); el 74 % de las notas no los trae.",
+    "Una lectura automática puede equivocarse: por eso cada resultado muestra la frase y el dato comparados.",
+    "Las macro-regiones son una agrupación supuesta; Google Trends da interés relativo y Tumbes tiene pocos datos.",
+    "No hubo pruebas con usuarios: la única evidencia de uso es el registro anónimo de esta app.",
+    LIMITACION_ALTA,
+)
+
 
 def textos_del_ciudadano():
     """Todos los textos de Verificar y Preguntar que vienen de la API (para U2, U3 y U6)."""
