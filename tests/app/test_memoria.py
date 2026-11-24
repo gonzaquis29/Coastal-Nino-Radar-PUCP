@@ -31,3 +31,10 @@ def test_k5_usa_el_peor_pico_y_k6_la_lentitud_relativa():
     assert not k5["pasa"] and k6["pasa"]
     k5, k6 = vm.k5_k6(datos(1000, 0.1), datos(1050, 0.12))
     assert k5["pasa"] and not k6["pasa"]
+
+
+def test_k6b_es_la_mediana_de_la_razon_y_pide_todos_los_pares():
+    pares = [(0.1, 0.105)] * 7 + [(0.1, 0.2)] * 5
+    assert vm.k6b(pares)["pasa"] and vm.k6b(pares)["valor"] == "x1.05"
+    assert not vm.k6b(pares[:-1])["pasa"]
+    assert not vm.k6b([(0.1, 0.12)] * 12)["pasa"]

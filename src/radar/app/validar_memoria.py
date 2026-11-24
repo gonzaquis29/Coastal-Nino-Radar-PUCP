@@ -3,6 +3,7 @@
 python -m radar.app.validar_memoria capturar antes     con el código anterior al cambio
 python -m radar.app.validar_memoria capturar despues   con el cambio (K1 a K6)
 python -m radar.app.validar_memoria comparar [--repetir]  ->  data/processed/app/validacion.csv
+python -m radar.app.validar_memoria pareada --anterior CARPETA    K6b (16.6): CARPETA tiene el código anterior
 
 Cada captura guarda las huellas de las respuestas (no su texto), los vectores y lo medido en 3 arranques de la API real,
 en un puerto aparte. No envía eventos: no escribe en el registro de uso. P1 a P5 se miden con radar.app.validar.
@@ -19,6 +20,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+from pathlib import Path
 
 import numpy as np
 import psutil
@@ -43,6 +45,7 @@ PRUEBA = "App: memoria"
 MUESTRA = "memoria-20261124"
 SEMILLA = "memoria-notas-20261124"
 ARRANQUES, CONSULTAS_POR_TIPO = 3, 30
+PARES = 12  # K6b
 
 # Umbrales fijados en la sección 16.4 antes de construir
 DIFERENCIA_MAXIMA = 1e-6  # K1
@@ -189,12 +192,13 @@ def _memoria(proceso):
     return mayor.rss / 1e6, getattr(mayor, "peak_wset", mayor.rss) / 1e6
 
 
-def medir_api():
+def medir_api(codigo=None):
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         puerto = s.getsockname()[1]
     orden = [sys.executable, "-m", "uvicorn", "radar.app.api:app", "--port", str(puerto), "--log-level", "warning"]
-    api = subprocess.Popen(orden, env={**os.environ, "HF_HUB_OFFLINE": "1"})
+    entorno = {**os.environ, "HF_HUB_OFFLINE": "1"} | ({"PYTHONPATH": str(codigo)} if codigo else {})
+    api = subprocess.Popen(orden, env=entorno, cwd=codigo)
     proceso = psutil.Process(api.pid)
     try:
         limite = time.time() + 120
@@ -312,6 +316,43 @@ def k7(despues):
                     all(correctos) and peticiones == 0, f"{RESPALDO} textos; P1 a P5 en radar.app.validar")  # fmt: skip
 
 
+def k6b(pares):
+    """pares: [(segundos de Verificar antes, ahora)]."""
+    razones = [ahora / antes for antes, ahora in pares]
+    razon = statistics.median(razones)
+    antes, ahora = (statistics.median(p[i] for p in pares) for i in (0, 1))
+    return criterio(PRUEBA, "K6b. Verificar frente al código anterior (mediana de la razón por par)", f"x{razon:.2f}",
+                    f"≤ x{LENTITUD_MAXIMA:.2f}", razon <= LENTITUD_MAXIMA and len(pares) == PARES,
+                    f"{len(pares)} pares; antes {antes:.3f} s y ahora {ahora:.3f} s; razones de {min(razones):.2f} a "
+                    f"{max(razones):.2f}")  # fmt: skip
+
+
+def pareada(anterior):
+    """K6b, una sola vez: arranques alternados del código anterior (src de otra carpeta) y del actual."""
+    nombre = "K6b."
+    if any(
+        f["prueba"] == PRUEBA and f["criterio"].startswith(nombre) for f in leer_csv(config.DIR_APP / "validacion.csv")
+    ):
+        raise SystemExit("K6b ya se midió: la sección 16.6 pide una sola vez")
+    carpeta = Path(anterior).resolve() / "src"
+    actual = Path(__file__).resolve().parents[2]
+    if not (carpeta / "radar" / "app" / "api.py").exists() or carpeta == actual:
+        raise SystemExit(f"{carpeta} no tiene el código anterior")
+    pares, avance = [], Avance("K6b", PARES, cada=1)
+    for i in range(PARES):
+        orden = (carpeta, actual) if i % 2 == 0 else (actual, carpeta)
+        medido = {c: medir_api(c) for c in orden}
+        pares.append((medido[carpeta]["verificar"], medido[actual]["verificar"]))
+        log.info(f"par {i + 1}: {medido}")
+        avance.paso()
+    fila = k6b(pares)
+    guardar_json(ruta("pareada", "json"), {"pares": pares})
+    guardar([*(f for f in leer_csv(config.DIR_APP / "validacion.csv") if f["prueba"] == PRUEBA), fila],
+            config.DIR_APP / "validacion.csv")  # fmt: skip
+    print(f"[{'ok' if fila['pasa'] else 'NO'}] {fila['criterio']}: {fila['valor']} (umbral {fila['umbral']}) "
+          f"{fila['detalle']}")  # fmt: skip
+
+
 def registrada():
     return MUESTRA in {f["muestra"] for f in leer_csv(config.ARCHIVO_NOTAS_VISTAS)}
 
@@ -347,15 +388,20 @@ def comparar(repetir=False):
 @exclusivo("radar.app.validar_memoria")
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Memoria de la API (sección 16): K1 a K7.")
-    ap.add_argument("accion", choices=("capturar", "comparar"))
+    ap.add_argument("accion", choices=("capturar", "comparar", "pareada"))
     ap.add_argument("momento", nargs="?", choices=("antes", "despues"))
     ap.add_argument("--repetir", action="store_true", help="volver a medir una prueba ya mirada (se declara)")
+    ap.add_argument("--anterior", help="carpeta del repositorio con el código anterior (pareada)")
     a = ap.parse_args(argv)
     configurar("app-memoria")
     if a.accion == "capturar":
         if not a.momento:
             ap.error("falta antes o despues")
         capturar(a.momento)
+    elif a.accion == "pareada":
+        if not a.anterior:
+            ap.error("falta --anterior")
+        pareada(a.anterior)
     else:
         comparar(a.repetir)
 
