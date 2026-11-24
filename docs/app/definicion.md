@@ -831,7 +831,7 @@ Los nombres H1 a H7 no chocan con los criterios A1 a A5 del agente.
 
 **Registro de uso:** al abrir la app en el panel de vista previa para medir, se crearon 2 visitas en `data/processed/app/eventos.csv`. No eran uso real, así que se borró el archivo; `npm run medir` ya bloquea sus eventos.
 
-## 15. Ajustes de diseño de la interfaz (definición del 23-nov; sin aprobar)
+## 15. Ajustes de diseño de la interfaz (aprobada el 23-nov con la opción A; sin construir)
 
 ### 15.1 Qué está mal (revisado el 23-nov en 375 y 1.280 px)
 Lo pidió el usuario con una captura de los avisos del Senamhi. Al revisar todas las pantallas aparecieron más problemas:
