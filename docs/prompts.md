@@ -822,3 +822,6 @@ Pasan D1 a D7 (`web/medir/diseno.mjs`) y D8 (P1 a P12, U1 a U6 e I1 a I5).
 132. Sí, corrige eso
 
 **Resultado:** la IA corrigió esos errores y uno más que encontró en las 20 capturas (el cuadro de Preguntar, transparente en el celular). Devolvió el naranja a su valor, quitó 2 filas de la medición del registro de uso y registró P9 como no pasa (sección 15.6). D1 a D7 y el resto de las pruebas pasan sobre el código final.
+133. no hay problema, dejalas asi de momento ni las decllares
+
+**Resultado:** la IA dejó la paleta sin cambios, no agregó ninguna declaración y quitó el pendiente. El resultado medido de P9 queda como estaba.

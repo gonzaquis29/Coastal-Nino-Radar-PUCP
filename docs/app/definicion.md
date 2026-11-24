@@ -917,7 +917,7 @@ Lo pidió el usuario con una captura de los avisos del Senamhi. Al revisar todas
 | D7 | 0 sombras en Preguntar y Panorama (antes 4) | 0 | Sí |
 | D8 | Pasan P1 a P8, P10 a P12 y las U e I medidas. **No pasa P9** (15.6) | todos | **No** |
 
-**Decisión:** abierta, porque falla D8 (15.6). Las capturas de antes y después están en `web/medir/capturas-diseno/` (no se versionan). Los resultados están en `data/processed/app/diseno-antes.json` y `diseno-despues.json`.
+**Decisión:** el ajuste queda como está y la paleta no cambia por ahora (24-nov). Las capturas de antes y después están en `web/medir/capturas-diseno/` (no se versionan). Los resultados están en `data/processed/app/diseno-antes.json` y `diseno-despues.json`.
 
 ### 15.6 Corrección (24-nov)
 La primera versión de 15.5 decía que pasaba D8. Era un error: P9 estaba fijado en «pasa» en el código, se revisaron 5 de las 20 capturas y las pruebas de D8 se corrieron antes del último cambio de color.
