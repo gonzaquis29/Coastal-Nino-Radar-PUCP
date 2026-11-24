@@ -5,7 +5,7 @@ Lee `README.md` para el alcance, el pipeline y el plan. Este archivo recoge las 
 ## Restricciones duras
 - **Cero etiquetado manual.** No pidas ni propongas etiquetar datos a mano. Valida con referencias externas (comunicados, controles automáticos, métricas estándar).
 - **Tiempo:** del 24-oct al 27-nov-2026 (congelamiento) entre dos personas; corte de datos el 20-nov; presentación el 1-dic sin desarrollo. Las horas son orientativas. Si algo no cabe, recórtalo en el orden del README.
-- **IA generativa:** registra los prompts de esta colaboración en `docs/prompts.md`. No presentes entregables como obra original sin que el equipo lo declare. Cualquier LLM (nombrar tópicos, redactar respuestas del agente) debe declararse.
+- **IA generativa:** registra los prompts esenciales de esta colaboración (los que definen, construyen o cambian algo) en `docs/prompts.md`. No presentes entregables como obra original sin que el equipo lo declare. Cualquier LLM (nombrar tópicos, redactar respuestas del agente) debe declararse.
 - **Scraping ético:** respeta `robots.txt` y términos de uso, limita la tasa de peticiones y nunca eludas bloqueos. Usa `requests` + `BeautifulSoup` (`lxml` para sitemaps XML); Playwright solo si es imprescindible.
 - **Privacidad:** no guardes nombres de usuario ni identificadores personales; solo texto, fecha e id anónimo.
 - **Derecho de autor:** el cuerpo de las notas se procesa en memoria y nunca se guarda ni se publica; solo titular, enlace, datos derivados y métricas. Infobae y La República están excluidos.
