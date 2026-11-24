@@ -938,7 +938,7 @@ En los tres casos el nombre va al lado, y la escala lleva además la posición. 
 
 **Medido de nuevo sobre el código final:** D1 a D7, P1 a P8, P10 a P12, y las U e I de `npm run medir`, las 13 pruebas de la interfaz y las 20 capturas (con el aviso N.° 476, el único vigente).
 
-## 16. Memoria de la API (propuesta del 24-nov; sin aprobar ni construir)
+## 16. Memoria de la API (aprobada el 24-nov; construida en una rama y retirada: no pasa K6)
 
 ### 16.1 Dónde se va la memoria (medido el 24-nov, una corrida)
 Memoria residente de un proceso con la app cargada, sin atender por red, después de 64 consultas: **2.061 MB, con un pico de 2.424 MB**.
@@ -999,3 +999,22 @@ Nombres K1 a K7.
   - si falla K6, se retira.
 - **Límite declarado:** las páginas leídas del disco cuentan en la memoria residente solo cuando se tocan, y el sistema las puede soltar. En Linux (versión pública) no se midió.
 - **Riesgo:** toca el motor a 3 días del congelamiento. Si no queda medido el 26-nov, se retira y sigue el motor actual.
+
+### 16.5 Resultados (24-nov, una sola medición)
+Línea base capturada con el código anterior (c9b324c) y las mismas entradas. Código en la rama local `memoria-api`.
+
+| | Resultado | Umbral | Pasa |
+|---|---|---|---|
+| K1 | 2.370 de 2.370 tokenizaciones iguales; diferencia de vectores 0 | 100 %; ≤ 10⁻⁶ | Sí |
+| K2 | Verificar: 320 de 320 iguales (salida completa) | 100 % | Sí |
+| K3 | Preguntar: 175 de 175 iguales | 100 % | Sí |
+| K4 | Panorama, estado y Metodología: 35 de 35 (sin la sección de uso real, que cambia sola) | 100 % | Sí |
+| K5 | 776 MB, pico 776 MB (antes 2.041 y 2.402) | ≤ 1.000; ≤ 1.100 | Sí |
+| K6 | Arranque 6,0 s (antes 6,5); primera pregunta 1,52 s (antes 2,53); **Verificar ×1,17** (0,160 s frente a 0,137 s) | ≤ 6,5; ≤ 2,5; ≤ ×1,10 | **No** |
+| K7 | Respaldo sin los pesos y con otra huella: igual en 20 textos; 0 peticiones. P1 a P5 no se corrieron | sí | Incompleto |
+
+**Decisión:** según 16.4, falla K6 y se retira: `main` sigue con el motor anterior.
+
+**Diagnóstico posterior (no reemplaza a K6):** 8 pares de arranques alternados, con y sin los pesos aparte. Verificar tarda 0,162 s con ellos y 0,168 s sin ellos; la razón mediana es 0,94 (entre 0,92 y 1,25). En K6, las 3 medianas del código anterior iban de 0,126 a 0,171 s: con 3 arranques en momentos distintos, la prueba no distinguía un 10 %. El defecto está en cómo se fijó K6. No compara B y C con el código anterior.
+
+**Tokenizador compartido:** los dos archivos difieren solo en el truncamiento, el relleno (los fija `lote`) y el `lstrip` de `<mask>`. Antes de construir se probaron 20.000 textos al azar con `<mask>`, espacios y otros especiales: 0 diferencias.
