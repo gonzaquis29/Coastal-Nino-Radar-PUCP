@@ -10,14 +10,14 @@ Una herramienta que compara lo que circula sobre el Fenómeno El Niño Costero (
 **Por qué este tema.** Hay una temporada de lluvias por delante y la información oficial es técnica y está dispersa. El corpus oficial es pequeño y ordenado (~20 comunicados en 2026), lo que lo hace factible. Una muestra inicial indica que los medios tradicionales tienden a reproducir al ENFEN, mientras que en YouTube circulan títulos claramente exagerados: el contraste interesante está entre ambos.
 
 ## Cómo montar el proyecto
-Requisitos: Python 3.11 o superior y git.
+Requisitos: Python 3.13 (con él se midió y se prueba) y git; Node 22 para la interfaz.
 
 ```bash
 git clone https://github.com/gonzaquis29/Coastal-Nino-Radar-PUCP.git
 cd Coastal-Nino-Radar-PUCP
 python -m venv .venv
 .venv\Scripts\activate            # Windows; en Linux o macOS: source .venv/bin/activate
-pip install -e ".[dev]"           # una sola vez: el paquete radar y las herramientas de prueba
+pip install -e ".[dev,app,youtube]" -c restricciones.txt   # una sola vez (Python 3.13); con ",nlp" para los modelos
 ```
 
 | Para qué | Comando | Cuándo |
@@ -30,10 +30,10 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 | Macro-región de las notas y su validación | `python -m radar.region.notas` | tras cada ejecución del histórico (sin peticiones a los medios) |
 | Lista de lugares (ubigeos del INEI) | `python -m radar.region.lugares` | ya congelada el 27-oct-2026 (no se vuelve a correr) |
 | App: interfaz (construir) y API | `cd web && npm install && npm run build`, luego `python -m radar.app` (http://localhost:8000) | `build` al cambiar `web/`; la API para usar la app |
-| App: motor sin torch (una vez) | con internet, `python -c "from huggingface_hub import hf_hub_download as d; [d(r, 'onnx/model.onnx') for r in ('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2', 'intfloat/multilingual-e5-small')]"` y luego `python -m radar.nlp.motor preparar` | sin esto la app usa torch y arranca en unos 18 s en vez de 5,5 ([sección 14](docs/app/definicion.md)) |
+| App: motor sin torch (una vez) | con internet, `python -c "from huggingface_hub import hf_hub_download as d; [d(r, 'onnx/model.onnx') for r in ('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2', 'intfloat/multilingual-e5-small')]"` y luego `python -m radar.nlp.motor preparar` (pide el extra `nlp`) | sin esto la app usa torch y arranca en unos 18 s en vez de 5,5 ([sección 14](docs/app/definicion.md)) |
 | App: filtro de tema | `python -m radar.app.validar_tema muestra\|validar` | ya medido el 23-nov (se mira una vez; repetir va con `--repetir`) |
 | App: criterios | `python -m radar.app.validar`; con la API corriendo, `cd web && npm run medir` y `python -m radar.app.validar_interfaz` | si cambian los datos o la app |
-| Pruebas | `python -m pytest` y `cd web && npm test` | antes de cada commit |
+| Pruebas | `python -m pytest` y `cd web && npm test`; `python -m pytest -m lento` para BERTopic | antes de cada commit; GitHub las corre en cada subida |
 | Estilo | `ruff format src tests` y `ruff check src tests` | antes de cada commit |
 
 - **Se versiona:** el código (`src/radar/`), la configuración (`src/radar/config.py` y `config/*.csv`), `data/urls/`, `data/oficial/` y `docs/`.
@@ -78,7 +78,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 | Redes sociales | 3 | Red social de audiencias de YouTube (respaldo: co-mención de actores) |
 | Procesamiento de lenguaje natural y preprocesamiento | 4 | Limpieza, lematización y asignación de región |
 | Representación vectorial | 6 | TF-IDF y embeddings |
-| Búsqueda y recuperación | — | Recuperador del agente (ChromaDB, recall@k) |
+| Búsqueda y recuperación | — | Recuperador del agente (índice en memoria, recall@k) |
 | Sentimiento y minería de opinión | 7 | Polaridad de las notas (descriptiva); polaridad y emociones de videos y comentarios |
 | Modelamiento de tópicos | 8 | LDA y BERTopic |
 | Web analytics: conceptos, etapas, métricas | 10-11 | KPIs de engagement, interés en Trends, indicadores de los medios, registro de uso de la app |
@@ -94,7 +94,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 | # | Etapa | Detalle |
 |---|-------|---------|
 | 1 | Recolección | **Oficial:** comunicados ENFEN 2026 (texto del PDF; la página HTML como control) y avisos meteorológicos del Senamhi (tipo, nivel, macro-región por el polígono oficial del aviso, vigencia), partidos en párrafos; ver "Corpus oficial". **Noticias:** 4 medios (ver "Alcance de datos"), descubriendo las notas según "Cobertura histórica" y leyendo el HTML de cada nota (El Tiempo, por su API). El cuerpo se procesa en memoria y no se guarda: solo se conservan titular, resumen, `datePublished`, sección, hipervínculos, citas a fuentes oficiales, comunicados citados, magnitudes, resultados de la capa 5 y vectores; la etapa de NLP vuelve a leer los cuerpos. Definición: [docs/noticias/definicion.md](docs/noticias/definicion.md); el cuerpo se entrega en líneas y sin recomendados, promociones ni créditos ([docs/noticias/texto.md](docs/noticias/texto.md)). Se recolecta además una muestra de notas de otros temas de los mismos medios, solo para el control negativo. **YouTube (API oficial):** título, descripción (incluidos sus enlaces), canal, fecha, métricas (vistas, likes, n.° de comentarios) y comentarios seudonimizados. **Google Trends:** interés semanal por departamento, exportado manualmente en CSV en una sola consulta por departamento para que las semanas sean comparables. Respeta `robots.txt` y limita la tasa de peticiones. |
-| 2 | Preprocesamiento | Limpieza, tokenización, stopwords, lematización en español (spaCy / NLTK). Asignación de macro-región (ver "Alcance de datos"). |
+| 2 | Preprocesamiento | Limpieza, tokenización, stopwords, lematización en español (spaCy). Asignación de macro-región (ver "Alcance de datos"). |
 | 3 | Representación | TF-IDF (línea base) contra embeddings multilingües livianos (MiniLM / e5-small) con similitud coseno. |
 | 4 | Tópicos | LDA contra BERTopic, ajustados sobre todo el corpus y luego agregados por mes y macro-región (ajustar por cada grupo dejaría grupos casi vacíos); sentimiento por tópico. Los tópicos se nombran con sus palabras clave (c-TF-IDF), sin LLM. |
 | 5 | Sentimiento y emociones | Polaridad y emociones con modelos preentrenados en español (pysentimiento); acuerdo con un clasificador zero-shot independiente medido con kappa. **Resultado (7-nov):** en las notas, pysentimiento casi no asigna emociones y la polaridad no pasa el kappa (0,12), así que queda solo como descriptiva ([docs/nlp/topicos.md](docs/nlp/topicos.md)). Las emociones se prueban en los comentarios de YouTube. |
@@ -105,7 +105,7 @@ pip install -e ".[dev]"           # una sola vez: el paquete radar y las herrami
 | 10 | Analítica web | KPIs de engagement en YouTube (vistas, likes, comentarios, tasa de engagement) frente al índice de discrepancia; interés de búsqueda por departamento (Trends) alrededor de cada comunicado (las series de cada departamento se comparan por su forma en el tiempo, no por su nivel, porque cada una se normaliza por separado; para comparar niveles entre departamentos se usa una consulta nacional con desglose por región); registro propio de eventos del dashboard (web usage mining); indicadores secundarios de los medios (volumen, sección, tiempo de reacción tras un comunicado). **Resultado (22-nov;** [docs/analitica/web.md](docs/analitica/web.md)**):** dentro de un mismo canal, los videos más alejados de lo oficial tienen algo más de engagement (ρ −0,17, IC por canal −0,26 a −0,10), y los que contradicen al ENFEN no tienen más. El interés de Trends no sigue de forma medible a la cobertura semanal; los medios citan cada comunicado en 1 a 2,5 días (mediana). |
 | 11 | Modelo de engagement | Modelo propio entrenado con los datos minados: predice la tasa de engagement de un video ((likes + comentarios) / vistas) a partir del índice de discrepancia, emociones, tópicos y rasgos del título (mayúsculas, exclamaciones, emojis), con los suscriptores del canal y los días desde la publicación como controles (las métricas se descargan en una sola fecha, así que los videos antiguos acumularon más tiempo). Se excluyen los videos con menos de 14 días al momento de la descarga, porque su tasa todavía es inestable. Regresión lineal y gradient boosting contra una línea base; importancia de variables. Muestra con varios términos de búsqueda, orden por fecha y tramos de tiempo para reducir el sesgo del ranking de YouTube; likes ocultos como dato faltante. **Resultado (22-nov;** [docs/modelos/engagement.md](docs/modelos/engagement.md)**):** logit de la tasa suavizada y gradient boosting, sin emociones (son solo descriptivas) y con el último video del 8-nov; ordena con Spearman 0,43 dentro de cada tipo de canal, mejora el MAE un 12,6 % frente a la persistencia y el contenido agrega poco (+0,063), con la cercanía a lo oficial como único aporte estable. Desde septiembre la tasa de los medios cae a la mitad (cambio de régimen declarado). |
 | 12 | Recomendador híbrido | **Basado en conocimiento:** reglas con macro-región, aviso vigente del Senamhi y estado del ENFEN filtran qué información corresponde. **Basado en contenido:** similitud de embeddings ordena comunicados, avisos y notas alineadas. Entrada: un contenido (nota o video) y un perfil (macro-región, categoría de interés). |
-| 13 | Agente con herramientas | Decide qué herramienta usar según la consulta: `buscar_oficial` (párrafos de comunicados y avisos con ChromaDB `PersistentClient`, filtrando por fecha vigente), `estado_vigente(fecha, región)`, `medir_discrepancia(texto)` y `recomendar(perfil)`. Sin LLM (decisión del 9-nov): reglas y un clasificador de intención (TF-IDF y e5) eligen la herramienta, y los parámetros se extraen con reglas. La respuesta se arma con plantillas y citas textuales, y un control verifica que cada cita exista literalmente en la fuente. Validado el 9-nov ([docs/agente/definicion.md](docs/agente/definicion.md)). |
+| 13 | Agente con herramientas | Decide qué herramienta usar según la consulta: `buscar_oficial` (párrafos de comunicados y avisos con un índice en memoria, filtrando por fecha vigente), `estado_vigente(fecha, región)`, `medir_discrepancia(texto)` y `recomendar(perfil)`. Sin LLM (decisión del 9-nov): reglas y un clasificador de intención (TF-IDF y e5) eligen la herramienta, y los parámetros se extraen con reglas. La respuesta se arma con plantillas y citas textuales, y un control verifica que cada cita exista literalmente en la fuente. Validado el 9-nov ([docs/agente/definicion.md](docs/agente/definicion.md)). |
 | 14 | Dashboard | API en FastAPI (`radar.app`) que expone el semáforo, el estado vigente, el recomendador, el agente y los resultados precalculados, más una interfaz en React con Vite (`web/`) con las pantallas Hoy (con Verificar), Preguntar y Cómo se habló (Metodología al pie) y el registro de uso desde el navegador (ver "Producto" y "Despliegue"). Decisión del 19-nov, que reemplaza a Streamlit. |
 
 **Opcional (primero en recortarse):** transcripciones de YouTube (la API oficial no las entrega para videos ajenos).
@@ -173,7 +173,7 @@ Cada nombre se usa o se excluye **por medición** contra referencias externas (s
 
 **Avisos del Senamhi.** Entran solo precipitaciones e incremento de temperatura en costa norte y costa centro; quedan fuera friaje, nevadas, selva y sierra sur. Se presentan como "aviso vigente en tu zona", **nunca como causados por El Niño**.
 
-**Corpus oficial.** `python -m radar.oficial.corpus` arma `data/oficial/` (se versiona, ~0,5 MB; la app lo necesita para ChromaDB): 19 comunicados (N.° 13-2025, vigente del 1 al 14-ene, y N.° 01 a 18 de 2026), 125 avisos y 834 párrafos con id estable.
+**Corpus oficial.** `python -m radar.oficial.corpus` arma `data/oficial/` (se versiona, ~0,5 MB; la app lo necesita): 19 comunicados (N.° 13-2025, vigente del 1 al 14-ene, y N.° 01 a 18 de 2026), 125 avisos y 834 párrafos con id estable.
 - **ENFEN:** el PDF manda sobre la página HTML; número, fecha de emisión (la del PDF, no el `lastmod`), estado, magnitud prevista y mencionadas para la costa (Niño 1+2), plazo y tablas de probabilidad. Sin informes técnicos ni notas técnicas.
 - **Senamhi:** precipitaciones e incremento de temperatura (sin llovizna); macro-región y nivel según el polígono oficial del aviso sobre 21 estaciones costeras de referencia (supuesto declarado), con la regla de título y departamentos como respaldo.
 - **Vigencia:** un comunicado rige desde su emisión hasta el día anterior al siguiente (el día de cambio se compara con ambos); un aviso aplica desde su emisión hasta su fin, salvo cancelados. Se consulta con `radar.oficial.vigencia.Corpus` (`estado_vigente`, `avisos_aplicables`, `parrafos_vigentes`).
@@ -345,7 +345,7 @@ Heurísticas fijadas antes de correr las pruebas, para no acomodarlas después.
 
 ## Reglas del proyecto
 - **Cero etiquetado manual.** Toda validación usa una referencia externa.
-- **Ética de scraping:** `robots.txt`, términos de uso, rate limiting, propósito declarado; sin eludir bloqueos. `requests` + `BeautifulSoup` (`lxml` para sitemaps XML); Playwright solo si es imprescindible.
+- **Ética de scraping:** `robots.txt`, términos de uso, rate limiting, propósito declarado; sin eludir bloqueos. `requests` + `lxml`; Playwright solo si es imprescindible.
 - **Privacidad:** seudonimizar; no guardar nombres de usuario ni identificadores personales.
 - **Derecho de autor:** el cuerpo de las notas no se guarda, no se versiona ni se publica; solo titular, enlace, datos derivados y métricas.
 - **IA generativa:** se declara su uso y se conserva un registro de prompts en `docs/prompts.md`. En el producto, un LLM solo se usa dentro del agente para elegir herramientas. Los modelos preentrenados de NLP (embeddings, emociones) se usan como herramientas de minería de texto.
@@ -381,5 +381,6 @@ docs/oficial/    definición y validación del corpus oficial
 docs/noticias/   definición del histórico de noticias, texto limpio del cuerpo y validación de sus pruebas
 docs/region/     definición y validación de la asignación de macro-región
 docs/nlp/        índice de discrepancia: pilotos, decisiones y flujo de NLP por capas
-docs/pendientes.md  pendientes por prioridad
+docs/pendientes.md  lo que falta
+docs/historial.md   lo hecho, con sus decisiones
 ```

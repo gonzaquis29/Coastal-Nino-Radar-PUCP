@@ -6,20 +6,20 @@ Lee `README.md` para el alcance, el pipeline y el plan. Este archivo recoge las 
 - **Cero etiquetado manual.** No pidas ni propongas etiquetar datos a mano. Valida con referencias externas (comunicados, controles automáticos, métricas estándar).
 - **Tiempo:** del 24-oct al 27-nov-2026 (congelamiento) entre dos personas; corte de datos el 20-nov; presentación el 1-dic sin desarrollo. Las horas son orientativas. Si algo no cabe, recórtalo en el orden del README.
 - **IA generativa:** registra los prompts esenciales de esta colaboración (los que definen, construyen o cambian algo) en `docs/prompts.md`. No presentes entregables como obra original sin que el equipo lo declare. Cualquier LLM (nombrar tópicos, redactar respuestas del agente) debe declararse.
-- **Scraping ético:** respeta `robots.txt` y términos de uso, limita la tasa de peticiones y nunca eludas bloqueos. Usa `requests` + `BeautifulSoup` (`lxml` para sitemaps XML); Playwright solo si es imprescindible.
+- **Scraping ético:** respeta `robots.txt` y términos de uso, limita la tasa de peticiones y nunca eludas bloqueos. Usa `requests` + `lxml`; Playwright solo si es imprescindible.
 - **Privacidad:** no guardes nombres de usuario ni identificadores personales; solo texto, fecha e id anónimo.
 - **Derecho de autor:** el cuerpo de las notas se procesa en memoria y nunca se guarda ni se publica; solo titular, enlace, datos derivados y métricas. Infobae y La República están excluidos.
 - **YouTube:** solo la API oficial (nunca scraping de la web); borra o refresca los datos crudos a los 30 días. Sigue las "Reglas por sitio" del README para cada medio.
 
 ## Stack
-`requests`, `BeautifulSoup`, PyMuPDF (PDF de comunicados; `pypdf` solo como control), spaCy/NLTK, `scikit-learn` (TF-IDF), `sentence-transformers` (con `normalize_embeddings=True`), ChromaDB (`PersistentClient`), `gensim`/LDA, BERTopic, pysentimiento, `transformers` (NLI con `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`), `networkx`, `google-api-python-client` (YouTube Data API v3), FastAPI (API de la app, `radar.app`) y React con Vite (interfaz, `web/`; decisión del 19-nov, en lugar de Streamlit).
+`requests`, `lxml`, PyMuPDF (PDF de comunicados; `pypdf` solo como control), spaCy, `scikit-learn` (TF-IDF), `sentence-transformers` (con `normalize_embeddings=True`), `gensim`/LDA, BERTopic, pysentimiento, `transformers` (NLI con `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`), `networkx`, `google-api-python-client` (YouTube Data API v3), FastAPI (API de la app, `radar.app`) y React con Vite (interfaz, `web/`; decisión del 19-nov, en lugar de Streamlit).
 
 ## Código
 - Todo vive en el paquete `src/radar/` (`pip install -e ".[dev]"`; se ejecuta con `python -m radar.<paquete>.<módulo>`): nada de `sys.path.insert` ni scripts sueltos. Cada vertical nueva es un subpaquete (`noticias/`, `youtube/`, `nlp/`, `modelos/`, `app/`) con sus pruebas en `tests/<subpaquete>/`.
 - Valores que pueden cambiar (fechas del proyecto, user-agent, ritmo, reintentos, hosts, rutas) solo en `src/radar/config.py`; listas de referencia (regiones, estaciones) en `config/*.csv`; vocabulario compartido (estados, niveles, temas) en un único módulo; umbrales de reglas como constantes con nombre al inicio del módulo.
 - Peticiones web solo con `radar.comun.http.Cliente` (robots.txt, ritmo, reintentos, hosts caídos). Única excepción: la API de YouTube va por `radar.youtube.api.Api` (google-api-python-client), que lleva el cupo, los reintentos y borra la clave de todo error y registro; archivos con `radar.comun.archivos` (escritura atómica, rutas seguras); columnas de cada CSV en un esquema único.
 - Un documento o una fuente que falla no detiene a los demás; el detalle va al registro (`logging`, `data/registros/`) y el resumen a pantalla.
-- Nombres descriptivos en español sin tildes; comentarios y textos con buena ortografía; comentarios solo donde aportan. `ruff format`, `ruff check` sin errores y `pytest` en verde antes de cada commit.
+- Nombres descriptivos en español sin tildes; comentarios y textos con buena ortografía; comentarios solo donde aportan. `ruff format`, `ruff check` sin errores y `pytest` en verde antes de cada commit (y `pytest -m lento` si se toca `nlp/topicos.py`). Las versiones medidas van en `restricciones.txt`; GitHub corre las pruebas en cada subida.
 
 ## Qué no hacer
 - No presentar el índice de discrepancia como "detector de desinformación" ni señalar medios o canales individuales como engañosos.
