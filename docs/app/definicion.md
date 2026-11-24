@@ -917,7 +917,7 @@ Lo pidió el usuario con una captura de los avisos del Senamhi. Al revisar todas
 | D7 | 0 sombras en Preguntar y Panorama (antes 4) | 0 | Sí |
 | D8 | Pasan P1 a P8, P10 a P12 y las U e I medidas. **No pasa P9** (15.6) | todos | **No** |
 
-**Decisión:** el ajuste queda como está y la paleta no cambia por ahora (24-nov). Las capturas de antes y después están en `web/medir/capturas-diseno/` (no se versionan). Los resultados están en `data/processed/app/diseno-antes.json` y `diseno-despues.json`.
+**Decisión:** el ajuste queda como está y la paleta no cambia por ahora (24-nov). Las capturas de antes y después estaban en `web/medir/capturas-diseno/` (no se versionan; se borraron el 24-nov). Los resultados están en `data/processed/app/diseno-antes.json` y `diseno-despues.json`.
 
 ### 15.6 Corrección (24-nov)
 La primera versión de 15.5 decía que pasaba D8. Era un error: P9 estaba fijado en «pasa» en el código, se revisaron 5 de las 20 capturas y las pruebas de D8 se corrieron antes del último cambio de color.
@@ -926,7 +926,7 @@ La primera versión de 15.5 decía que pasaba D8. Era un error: P9 estaba fijado
 - **Indicador de carga** (`.esqueleto`): un reemplazo le había quitado el relleno; se restauró.
 - **Cuadro de Preguntar en el celular:** al quitar el fondo de `.tarjeta` quedó transparente y el texto se veía por debajo. Ahora es opaco, con el color de la página. Se encontró al revisar las 20 capturas.
 - **Naranja del Senamhi:** vuelve a `#f0882a`. El cambio a `#ec7d22` contradecía la regla 8 y no se había aprobado.
-- **Registro de uso:** I3 de `medir.mjs` no bloqueaba `sendBeacon` y dejaba una visita por corrida. Se bloqueó y se quitaron 2 filas, fechadas dentro de dos corridas (respaldo en `eventos.antes-limpieza-20261124.csv`). Después de medir dos veces, el registro no cambió.
+- **Registro de uso:** I3 de `medir.mjs` no bloqueaba `sendBeacon` y dejaba una visita por corrida. Se bloqueó y se quitaron 2 filas, fechadas dentro de dos corridas (su respaldo se borró el 24-nov). Después de medir dos veces, el registro no cambió.
 - **P9** se registra con su resultado real (`FALLAS_P9` en `validar_interfaz`), y Metodología lo muestra al volver a cargar la API.
 
 **P9 no pasa, por tres fallas:**

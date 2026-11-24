@@ -67,7 +67,7 @@ La lectura tomó 64 min (los embeddings, no la red, marcan el ritmo) y los crite
 | **E4 cuerpos** | **0,912** (0,897-0,925) | pasa | 0,913 |
 | E5 e5 cuantizado | \|ΔAUC\| 0,0063 en E3 y 0,0001 en E4 | pasa | — |
 
-**Repetido tras el recálculo final (17-nov): pasa, y sigue e5.** La lectura de 3.496 notas tomó 73 min y los criterios, 9 min. Los archivos anteriores quedan en `*.antes-del-recalculo.csv`. E1: 0,999 con texto (3 sin texto y 1 que ya no está publicada) y 0,9997 con el cuerpo igual al de `notas.csv`. E2: coseno 1,0 y 0 tramos truncados. E3 (e5): titulares 0,990 y cuerpos 1,000, sin cruce, con 31 positivos. E4 (e5): 0,911 (IC 0,897–0,925); MiniLM da 0,909, así que vuelven a empatar y manda e5. E5: |ΔAUC| 0,0002.
+**Repetido tras el recálculo final (17-nov): pasa, y sigue e5.** La lectura de 3.496 notas tomó 73 min y los criterios, 9 min. Los archivos anteriores se borraron el 24-nov. E1: 0,999 con texto (3 sin texto y 1 que ya no está publicada) y 0,9997 con el cuerpo igual al de `notas.csv`. E2: coseno 1,0 y 0 tramos truncados. E3 (e5): titulares 0,990 y cuerpos 1,000, sin cruce, con 31 positivos. E4 (e5): 0,911 (IC 0,897–0,925); MiniLM da 0,909, así que vuelven a empatar y manda e5. E5: |ΔAUC| 0,0002.
 
 **Elección.** MiniLM y e5 empatan en E4 (0,913 frente a 0,912), así que manda la regla de empate: e5, que en la app cabe cuantizado (0,78 GB) y da lo mismo que en float32 (E5).
 

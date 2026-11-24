@@ -249,3 +249,6 @@ La fase 2 terminó a las 22:37, en 613 min y sin fallas. Durante la corrida no e
 
 **`viabilidad resultados` después de aplicar (19-nov):** el volumen, la calidad y el filtro por título siguen pasando. El control positivo con el respaldo del README (`numero`) baja de 31 a **19 notas de Andina** (umbral 20; 12 comunicados). Es el efecto esperado del arreglo del 8-nov, que quitó las citas de otras entidades. Solo pasa con las extensiones aprobadas: `proximo` 28 (17 comunicados) e `informe` 29. Se declara así; el umbral no cambia. El control positivo limpio del semáforo (31 y 32 notas) se define aparte y pasa.
 
+
+## Respaldos borrados (24-nov)
+Al cerrar el proyecto se borraron `*.anterior.csv`, `*.antes-del-*.csv` y las carpetas `recalculo.29oct-con-ajenos`, `recalculo.31oct-aplicado` y `recalculo.31oct-rescate-aplicado` que se citan arriba. Quedan los archivos vigentes y el `recalculo/` de la última pasada.
