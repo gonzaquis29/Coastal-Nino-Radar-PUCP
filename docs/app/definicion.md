@@ -830,3 +830,65 @@ Los nombres H1 a H7 no chocan con los criterios A1 a A5 del agente.
 **Decisión:** el motor ONNX queda activo en la API. El arranque baja de 17,7 a 5,5 s, y la primera pregunta de 4,1 a 1,9 s, sin cambiar ningún resultado.
 
 **Registro de uso:** al abrir la app en el panel de vista previa para medir, se crearon 2 visitas en `data/processed/app/eventos.csv`. No eran uso real, así que se borró el archivo; `npm run medir` ya bloquea sus eventos.
+
+## 15. Ajustes de diseño de la interfaz (definición del 23-nov; sin aprobar)
+
+### 15.1 Qué está mal (revisado el 23-nov en 375 y 1.280 px)
+Lo pidió el usuario con una captura de los avisos del Senamhi. Al revisar todas las pantallas aparecieron más problemas:
+
+| # | Problema | Dónde | Medido |
+|---|---|---|---|
+| 1 | **Las etiquetas de nivel no miden lo mismo** | avisos del Senamhi (`.avisos__nivel`) | «Nivel naranja» 132 px y «Nivel rojo» 104 px |
+| 2 | **Franja lateral de color en las etiquetas**, un recurso genérico que no dice nada por sí mismo | `.avisos__nivel` | borde izquierdo de 6 px |
+| 3 | **La misma franja lateral en otras partes** | textos citados del ENFEN (`.cita`), respuesta del indicador (`.indicador__respuesta`) y una tarjeta del Panorama | borde izquierdo de 3 px |
+| 4 | **El cuadro del mensaje se puede estirar a mano** (la esquina de abajo a la derecha) | `textarea` (`resize: vertical`) | — |
+| 5 | **Dos fondos distintos en la misma pantalla:** la columna del mensaje es blanca y la página es gris | `.hoy__mensaje` | `#f8fafa` frente a `#e8edef` |
+| 6 | **Hueco grande** debajo del botón en la columna del mensaje (escritorio), que el blanco hace más visible | Hoy, 1.280 px | — |
+| 7 | **Interlineado irregular** en el párrafo de la zona: las palabras del glosario son botones de 55 px de alto (para el tamaño táctil de U5), y estiran la línea | «Lo dice el ENFEN…» | líneas de 24,8 px que pasan a ~38 px |
+| 8 | **Títulos de avisos apretados en el celular:** la etiqueta a la derecha deja poco ancho y el título se parte en 3 o 4 líneas | avisos, 375 px | 4 líneas en el N.° 476 |
+| 9 | **«ENFEN» como chip oscuro** en la escalera de magnitud: otra etiqueta genérica | regla de magnitud | — |
+| 10 | **Tarjetas blancas con sombra** sobre el fondo gris en Preguntar y en «Cómo se habló»; las sugerencias de Preguntar también son cajas blancas | Preguntar, Panorama | — |
+| 11 | **Fechas y región con los controles nativos del navegador** («dd/mm/aaaa»), que no siguen la identidad | filtros del Panorama | — |
+
+### 15.2 Mapa de opciones para el nivel de los avisos
+| Opción | Lectura |
+|---|---|
+| **A. Escala de los 4 niveles del Senamhi** (verde, amarillo, naranja y rojo): se llenan los tramos hasta el nivel del aviso, y abajo va el nombre y «3 de 4» | **Elegida.** Mide lo mismo siempre. Dice dónde está el aviso dentro de la escala, no solo su color. Usa el mismo lenguaje de escalera que el estado y la magnitud de la misma pantalla, y no depende solo del color (lleva nombre y posición) |
+| B. Ficha llena del color oficial, de ancho fijo | Simétrica y clara, pero sigue siendo una «etiqueta» genérica. El texto sobre amarillo y naranja necesita un tono oscuro aparte para leerse |
+| C. Punto de color y nombre, en una columna fija | Discreta, pero un punto chico se pierde. No muestra la gravedad relativa |
+| D. Fondo de toda la fila con el tono del nivel | Llama mucho la atención y pelea con el estado del ENFEN, que es lo principal |
+| E. Ícono de alerta (triángulo) de color | Otro recurso genérico. En el rojo y el naranja se confunden a simple vista |
+
+### 15.3 Reglas del ajuste
+1. **Nivel del Senamhi (1, 2 y 8):** opción A. La escala mide 132 px en todas las filas. En el celular va **debajo del título**, para que este use todo el ancho. El texto («Naranja · 3 de 4») va en `radar.app.textos`.
+2. **Sin franjas laterales decorativas (2 y 3):**
+   - los textos citados del ENFEN llevan comillas grandes al inicio y la fuente debajo, sobre un fondo apenas distinto, sin borde lateral;
+   - la respuesta del indicador del Panorama va como texto destacado, sin borde.
+   La línea de tiempo de Metodología se queda: ahí la línea vertical **es** el eje del tiempo, no un adorno.
+3. **Cuadro del mensaje (4):** `resize: none`. Sigue creciendo solo con el texto (`field-sizing: content`). En los navegadores que no lo soportan, crece con una regla de altura en la interfaz, hasta un máximo, sin manija.
+4. **Un solo fondo (5, 6 y 10):**
+   - la página entera usa el mismo fondo, y la columna del mensaje deja de ser blanca;
+   - las columnas se separan con espacio y una línea fina, como ya hace el borde;
+   - el blanco queda solo para lo que se escribe (el cuadro del mensaje y la pregunta) y para las ventanas (el glosario);
+   - las tarjetas de Preguntar y del Panorama pierden la sombra y usan el mismo fondo con una línea fina.
+5. **Interlineado (7):** las palabras del glosario siguen midiendo 44 × 44 px para el dedo (U5), pero sin estirar la línea: el área táctil crece hacia afuera del texto, no dentro de la línea.
+6. **Magnitud prevista (9):** en vez del chip «ENFEN», el tramo previsto se marca como el estado vigente, con el texto en negrita y una marca «prevista por el ENFEN» al lado, sin caja oscura.
+7. **Filtros del Panorama (11):** se quedan los controles nativos, porque en el celular dan el calendario del sistema y son accesibles. Solo se igualan su borde, alto, radio y tipografía a los del resto.
+8. **Fuera de este ajuste:** la paleta, la tipografía, los textos (salvo el del nivel) y la estructura de las pantallas no cambian.
+
+### 15.4 Criterios (fijados antes de construir)
+| | Criterio | Umbral |
+|---|---|---|
+| D1 | Indicadores de nivel del Senamhi con el mismo ancho, en 360, 375 y 1.280 px, claro y oscuro | diferencia de 0 px |
+| D2 | Elementos con borde lateral de color de 2 px o más, salvo la línea de tiempo de Metodología, en todas las pantallas | 0 |
+| D3 | Cuadros de texto que se pueden estirar a mano (`resize` distinto de `none`) | 0 |
+| D4 | Fondos en Hoy: la columna del mensaje con el mismo color que la página, en claro y en oscuro | igual |
+| D5 | Interlineado del párrafo de la zona: el alto de cada línea con palabras del glosario frente a una línea sin ellas | ≤ 2 px de diferencia |
+| D6 | Títulos de avisos a 375 px: líneas del título más largo de hoy (N.° 476) | ≤ 3 (hoy 4) |
+| D7 | Sombras en tarjetas de Preguntar y del Panorama (`box-shadow` distinto de `none`, sin contar el foco) | 0 |
+| D8 | La app: P1 a P12, U1 a U6 e I1 a I5 (U5 sigue pidiendo 44 × 44 px; P9 revisa la escala de niveles en claro y oscuro; P11 las capturas) | todos |
+
+- **Medición:** D1 a D7 se miden con un script nuevo de `web/medir` en las pantallas de siempre, y las capturas antes y después se guardan para comparar. Ningún criterio usa notas reales.
+- **Decisión:** si pasan D1 a D8, el ajuste queda. Si falla D8, se corrige antes de cerrar.
+- **Archivos:** `web/src/estilos/hoy.css`, `app.css`, `ciudadano.css` y `panorama.css`; `web/src/componentes/PanelZona.tsx` y `Cita.tsx` (o donde se arme cada uno); `radar.app.textos` (el texto del nivel); `web/medir/` (D1 a D7).
+- **Registro de uso:** la medición bloquea `/api/eventos`, como `npm run medir`; no se abre la app en el panel de vista previa sin ese bloqueo.
