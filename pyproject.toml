@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.6"]
+dev = ["pytest>=8.0", "ruff>=0.6", "psutil>=5.9"]  # psutil: memoria de la API (validar_memoria)
 youtube = ["google-api-python-client>=2.150"]
 # httpx: cliente de pruebas de FastAPI. La app corre sin torch; preparar el motor (radar.nlp.motor) pide el extra nlp
 app = [

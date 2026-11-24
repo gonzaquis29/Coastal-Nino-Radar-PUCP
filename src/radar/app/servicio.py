@@ -16,7 +16,7 @@ from radar.agente import agente, herramientas
 from radar.analitica import recomendador
 from radar.app import textos as tx
 from radar.comun import dominio
-from radar.comun.archivos import leer_csv
+from radar.comun.archivos import filas_csv, leer_csv
 from radar.nlp import afirmaciones as af
 from radar.nlp import discrepancia, semaforo, temporalidad
 from radar.oficial import enfen
@@ -108,19 +108,23 @@ def _en_rango(fecha, desde, hasta):
 
 @functools.cache
 def notas():
-    """Las notas con su macro-región y su color de la capa 5 (None si no se calculó). Sin el cuerpo."""
-    regiones = {(r["medio"], r["id"]): r for r in leer_csv(config.DIR_NOTICIAS / "regiones.csv")}
-    colores = {(r["medio"], r["id"]): r for r in leer_csv(config.DIR_NLP / "discrepancia-todas-notas.csv")}
+    """Las notas sobre El Niño (las únicas que usa la app) con su macro-región y su color de la capa 5 (None si no se
+    calculó). Sin el cuerpo. Se lee fila por fila: notas.csv tiene unas 82 mil."""
+    notas_csv = filas_csv(config.DIR_NOTICIAS / "notas.csv")
+    elegidas = {(n["medio"], n["id"]): n for n in notas_csv if n["sobre_nino"] == "1"}
+    regiones, colores = (
+        {(r["medio"], r["id"]): r for r in filas_csv(ruta) if (r["medio"], r["id"]) in elegidas}
+        for ruta in (config.DIR_NOTICIAS / "regiones.csv", config.DIR_NLP / "discrepancia-todas-notas.csv")
+    )
     salida = {}
-    for n in leer_csv(config.DIR_NOTICIAS / "notas.csv"):
-        clave = (n["medio"], n["id"])
+    for clave, n in elegidas.items():
         r = regiones.get(clave, {})
         c = colores.get(clave)
         salida[clave] = {
             "medio": n["medio"], "id": n["id"], "titular": n["titular"], "fecha": n["fecha_publicacion"][:10],
             "url": n["url"], "macroregion": r.get("macroregion_principal", ""),
             "macroregiones": set(filter(None, r.get("macroregiones", "").split("|"))),
-            "sobre_nino": n["sobre_nino"] == "1",
+            "sobre_nino": True,
             "color": (c["color"] or "") if c and not c["error"] else None,
         }  # fmt: skip
     return salida

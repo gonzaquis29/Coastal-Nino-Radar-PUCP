@@ -59,6 +59,48 @@ def test_sin_archivos_o_con_torch_no_hay_motor(monkeypatch, tmp_path):
     assert motor.para_app("org/no-existe") is None
 
 
+def escribir_tokenizador(ruta, **cambios):
+    especiales = [{"content": "<s>", "lstrip": False}, {"content": "<mask>", "lstrip": False}]
+    datos = {"model": {"vocab": VOCAB}, "truncation": None, "padding": None, "added_tokens": especiales} | cambios
+    ruta.write_text(json.dumps({"pad": "<pad>", "pad_id": 0, "tokenizador": json.dumps(datos)}), encoding="utf-8")
+
+
+def test_tokenizador_se_comparte_solo_con_el_mismo_contenido(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "DIR_MOTOR_APP", tmp_path)
+    monkeypatch.setattr(motor, "_compartidos", {})
+    monkeypatch.setattr(motor, "Tokenizador", lambda ruta: object())
+    mascara = [{"content": "<s>", "lstrip": False}, {"content": "<mask>", "lstrip": True}]
+    especial = [{"content": "<s>", "lstrip": True}, {"content": "<mask>", "lstrip": False}]
+    escribir_tokenizador(tmp_path / "a.json")
+    escribir_tokenizador(tmp_path / "b.json", truncation={"max_length": 128}, added_tokens=mascara)
+    escribir_tokenizador(tmp_path / "c.json", model={"vocab": {"otro": 0}})
+    escribir_tokenizador(tmp_path / "d.json", added_tokens=especial)
+    assert motor.tokenizador("a") is motor.tokenizador("b")
+    assert len({id(motor.tokenizador(x)) for x in "acd"}) == 3
+
+
+def test_pesos_aparte_solo_si_estan_completos_y_son_del_mismo_onnx(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "DIR_MOTOR_APP", tmp_path)
+    onnx = tmp_path / "rev1" / "onnx" / "model.onnx"
+    onnx.parent.mkdir(parents=True)
+    onnx.write_bytes(b"12345")
+    monkeypatch.setattr(motor, "_ruta_onnx", lambda repo: str(onnx))
+    carpeta = motor._dir_pesos("org/m")
+    carpeta.mkdir()
+    assert motor._ruta_pesos_aparte("org/m") is None
+    (carpeta / "modelo.onnx").write_bytes(b"m")
+    (carpeta / motor.ARCHIVO_PESOS).write_bytes(b"ppp")
+    assert motor._ruta_pesos_aparte("org/m") is None  # sin la marca: se cortó a medias
+    marca = {"origen": {"revision": "rev1", "bytes": 5}, "bytes_pesos": 3}
+    (carpeta / motor.ARCHIVO_ORIGEN).write_text(json.dumps(marca), encoding="utf-8")
+    assert motor._ruta_pesos_aparte("org/m") == carpeta / "modelo.onnx"
+    (carpeta / motor.ARCHIVO_PESOS).write_bytes(b"pp")
+    assert motor._ruta_pesos_aparte("org/m") is None
+    (carpeta / motor.ARCHIVO_PESOS).write_bytes(b"ppp")
+    onnx.write_bytes(b"123456")  # otro ONNX
+    assert motor._ruta_pesos_aparte("org/m") is None
+
+
 def test_sinteticos_fijados():
     assert len(va.TEXTOS) == 40 and len(va.CONSULTAS) == 20
     assert va.ARRANQUE_MAXIMO == 8.0 and va.COSENO_MINIMO == 0.9999

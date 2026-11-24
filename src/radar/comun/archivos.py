@@ -114,6 +114,13 @@ def leer_csv(ruta):
         return list(csv.DictReader(archivo))
 
 
+def filas_csv(ruta):
+    """Las filas de un CSV, una por una: para archivos grandes de los que se usa una parte."""
+    if ruta.exists():
+        with open(ruta, encoding="utf-8", newline="") as archivo:
+            yield from csv.DictReader(archivo)
+
+
 def leer_json(ruta, defecto=None):
     return json.loads(ruta.read_text(encoding="utf-8")) if ruta.exists() else defecto
 

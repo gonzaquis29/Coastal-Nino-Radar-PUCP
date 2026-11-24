@@ -249,6 +249,7 @@ def datos(monkeypatch, tmp_path):
 def test_notas_sin_campos_de_mas(datos):
     nota = s.notas()[("rpp", "1")]
     assert nota["color"] == "verde" and nota["macroregiones"] == {"lima"} and "resumen" not in nota
+    assert ("rpp", "4") not in s.notas()  # no es sobre El Niño
     assert s.notas()[("rpp", "6")]["color"] is None and s.notas()[("rpp", "6")]["macroregiones"] == set()
 
 

@@ -174,7 +174,7 @@ def h1(onnx, torch_):
                     f"≥ {COSENO_MINIMO}", peor >= COSENO_MINIMO, detalle)  # fmt: skip
 
 
-def muestra_notas():
+def muestra_notas(semilla=SEMILLA):
     vistas = notas_vistas()
     por_medio = {}
     for n in leer_csv(config.DIR_NOTICIAS / "notas.csv"):
@@ -182,7 +182,7 @@ def muestra_notas():
             continue
         if DESDE <= n["fecha_publicacion"][:10] <= HASTA:
             por_medio.setdefault(n["medio"], []).append(n)
-    azar = random.Random(SEMILLA)
+    azar = random.Random(semilla)
     salida = []
     for medio in sorted(por_medio):
         notas = sorted(por_medio[medio], key=lambda n: n["id"])
