@@ -633,10 +633,9 @@
 }
 
 .indicador__respuesta {
-  font-size: 1.02rem;
-  font-weight: 650;
-  border-left: 3px solid var(--acento);
-  padding-left: 10px;
+  font-size: 1.08rem;
+  font-weight: 750;
+  color: var(--tinta);
 }
 
 /* ---- Metodología */

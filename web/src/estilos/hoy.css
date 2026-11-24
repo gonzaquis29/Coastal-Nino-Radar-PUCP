@@ -77,7 +77,6 @@
 }
 
 .hoy__mensaje {
-  background: var(--superficie);
   border-top: 1px solid var(--borde);
 }
 
@@ -165,11 +164,12 @@
   max-width: 52ch;
 }
 
+/* el área táctil crece hacia afuera del texto, sin estirar la línea (sección 15) */
 .zona__bajada a {
   font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--toque);
+  display: inline-block;
+  padding: 10px 0;
+  margin: -10px 0;
 }
 
 .zona__panel {
@@ -191,7 +191,8 @@
   width: 70%;
   height: 0.9em;
   border-radius: 6px;
-  background: var(--superficie-3);
+  /* vacío: solo el contorno, para que se vea sobre el fondo (1,07:1 con relleno) */
+  box-shadow: inset 0 0 0 1px var(--borde-fuerte);
 }
 
 /* Escalera de estados del ENFEN */
@@ -326,6 +327,7 @@
   margin-right: auto;
 }
 
+/* marcas de texto junto al tramo, sin caja (sección 15) */
 .marca-regla {
   font-family: var(--fuente);
   font-stretch: 100%;
@@ -333,20 +335,24 @@
   letter-spacing: 0;
   font-size: 0.8rem;
   font-weight: 700;
-  padding: 5px 9px;
-  border-radius: 6px;
   white-space: nowrap;
+  color: var(--tinta);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.marca-regla--enfen {
-  background: var(--tinta);
-  color: var(--plano);
+.marca-regla::before {
+  content: "";
+  width: 14px;
+  height: 2px;
+  background: currentColor;
 }
 
 .marca-regla--mensaje {
-  background: var(--superficie);
-  color: var(--tinta);
-  box-shadow: inset 0 0 0 2px var(--tinta);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
 
 /* Avisos del Senamhi, a la vista */
@@ -401,31 +407,75 @@
   color: var(--tinta-2);
 }
 
-/* El nivel del Senamhi lleva su color oficial y siempre su nombre */
+/* El nivel del Senamhi, en su escala de 4 (sección 15): mismo ancho en todas las filas, nombre y posición siempre */
 .avisos__nivel {
-  font-family: var(--display);
-  font-size: 0.74rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 5px 8px;
-  border-radius: 5px;
+  width: var(--ancho-nivel);
+}
+
+.nivel-senamhi {
+  display: grid;
+  gap: 5px;
+  width: var(--ancho-nivel);
+}
+
+.nivel-senamhi__escala {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+.nivel-senamhi__tramo {
+  height: 8px;
+  border-radius: 2px;
+  /* vacío: solo el contorno, para que se vea sobre el fondo (1,07:1 con relleno) */
+  box-shadow: inset 0 0 0 1px var(--borde-fuerte);
+}
+
+.nivel-senamhi__tramo--verde {
+  background: var(--senamhi-verde);
+}
+
+.nivel-senamhi__tramo--amarillo {
+  background: var(--senamhi-amarillo);
+}
+
+.nivel-senamhi__tramo--naranja {
+  background: var(--senamhi-naranja);
+}
+
+.nivel-senamhi__tramo--rojo {
+  background: var(--senamhi-rojo);
+}
+
+.nivel-senamhi__nombre,
+.nivel-senamhi--otro {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--tinta);
   white-space: nowrap;
-  background: var(--superficie-2);
-  color: var(--tinta-2);
-  border-left: 6px solid var(--borde-fuerte);
 }
 
-.avisos__nivel--amarillo {
-  border-left-color: var(--senamhi-amarillo);
-}
+/* En el celular, el nivel va debajo del título para que este use todo el ancho */
+@media (max-width: 599px) {
+  .avisos li {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "numero texto" ". nivel";
+    align-items: start;
+  }
 
-.avisos__nivel--naranja {
-  border-left-color: var(--senamhi-naranja);
-}
+  .avisos__numero {
+    grid-area: numero;
+    line-height: var(--toque);
+  }
 
-.avisos__nivel--rojo {
-  border-left-color: var(--senamhi-rojo);
+  .avisos__texto {
+    grid-area: texto;
+  }
+
+  .avisos__nivel {
+    grid-area: nivel;
+    padding-bottom: 4px;
+  }
 }
 
 .elegir-zona {

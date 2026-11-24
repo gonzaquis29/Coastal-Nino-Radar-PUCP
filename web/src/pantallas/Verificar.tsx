@@ -10,6 +10,13 @@ import { useConsulta, useZona } from "../ganchos";
 import { registrar } from "../registro/registro";
 import { hoy, llenar, T } from "../textos";
 
+// Sin `field-sizing: content` (Firefox y Safari), el cuadro crece con el texto hasta el máximo del CSS (sección 15)
+function crecer(el: HTMLTextAreaElement) {
+  if (CSS.supports("field-sizing", "content")) return;
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight + 4}px`;
+}
+
 const LARGO_MAXIMO = 20_000;
 const LARGO_ENLACE = 1500; // lo que viaja en el fragmento # del enlace compartido
 const ZONAS = Object.entries(T.macroregiones) as [Macroregion, string][];
@@ -163,6 +170,7 @@ export default function Verificar() {
           onChange={(e) => {
             setTexto(e.target.value);
             if (vacio) setVacio(false);
+            crecer(e.target);
           }}
         />
         <p id={idAyuda} className={vacio ? "cuadro__ayuda cuadro__ayuda--error" : "cuadro__ayuda"}>

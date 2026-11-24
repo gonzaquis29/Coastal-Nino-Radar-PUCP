@@ -831,7 +831,7 @@ Los nombres H1 a H7 no chocan con los criterios A1 a A5 del agente.
 
 **Registro de uso:** al abrir la app en el panel de vista previa para medir, se crearon 2 visitas en `data/processed/app/eventos.csv`. No eran uso real, así que se borró el archivo; `npm run medir` ya bloquea sus eventos.
 
-## 15. Ajustes de diseño de la interfaz (aprobada el 23-nov con la opción A; sin construir)
+## 15. Ajustes de diseño de la interfaz (aprobada el 23-nov con la opción A; construida)
 
 ### 15.1 Qué está mal (revisado el 23-nov en 375 y 1.280 px)
 Lo pidió el usuario con una captura de los avisos del Senamhi. Al revisar todas las pantallas aparecieron más problemas:
@@ -892,3 +892,30 @@ Lo pidió el usuario con una captura de los avisos del Senamhi. Al revisar todas
 - **Decisión:** si pasan D1 a D8, el ajuste queda. Si falla D8, se corrige antes de cerrar.
 - **Archivos:** `web/src/estilos/hoy.css`, `app.css`, `ciudadano.css` y `panorama.css`; `web/src/componentes/PanelZona.tsx` y `Cita.tsx` (o donde se arme cada uno); `radar.app.textos` (el texto del nivel); `web/medir/` (D1 a D7).
 - **Registro de uso:** la medición bloquea `/api/eventos`, como `npm run medir`; no se abre la app en el panel de vista previa sin ese bloqueo.
+
+### 15.5 Resultados (23-nov)
+**Qué se construyó:**
+- **Nivel:** el componente `NivelSenamhi` (`PanelZona.tsx`) muestra la escala de 4 tramos y «Naranja · 3 de 4». Mide 132 px (`--ancho-nivel`) y en el celular va debajo del título. Sus textos están en `radar.app.textos`, y para lectores de pantalla dice «Nivel naranja: 3 de 4 en la escala del Senamhi».
+- **Sin franjas:** las citas llevan comillas grandes y la respuesta del indicador va en negrita. El chip «ENFEN» pasa a ser una marca de texto, «Prevista por el ENFEN», sin caja.
+- **Cuadro:** `resize: none`. En los navegadores sin `field-sizing`, crece con el texto hasta el máximo (función `crecer` de `Verificar.tsx`).
+- **Un fondo:** la columna del mensaje, las tarjetas, las burbujas de respuesta, las notas y los datos quedan sobre el fondo de la página, con una línea fina y sin sombra.
+- **Enlace «Leer el comunicado»:** el área táctil crece hacia afuera (`padding` con `margin` negativo) y ya no estira la línea.
+- **Filtros:** los nativos tienen el mismo alto, letra y color de acento.
+
+**Desvíos declarados:**
+- **Gráficos del Panorama:** se quedan sobre `--superficie`, el panel blanco. Sobre el fondo de la página, el tramo más claro de la magnitud (`#86b6ef`) baja a 1,79:1, por debajo del mínimo de 2:1 de P9. Además, las separaciones entre marcas están dibujadas con el color de ese panel. Las tarjetas sin datos sí pasan al fondo único.
+- **Naranja del Senamhi:** pasa de `#f0882a` a `#ec7d22`. Con el anterior, el amarillo y el naranja quedaban en ΔE 14,7 con visión normal, por debajo de 15. Con el nuevo, los dos pares vecinos quedan en ΔE ≥ 15,3. El amarillo oficial sigue fuera de la banda de luminosidad (L 0,84). No se cambia porque es el color oficial, y la escala no depende del color: también se lee por la posición, el número («3 de 4») y el nombre.
+- **Tramo vacío:** se dibuja solo con el contorno (`--borde-fuerte`). Con relleno, quedaba a 1,07:1 sobre el fondo y casi no se veía.
+
+| | Resultado | Umbral | Pasa |
+|---|---|---|---|
+| D1 | 0,0 px: 132 px en todas las filas (2 avisos vigentes, 6 combinaciones) | 0 px | Sí |
+| D2 | 0 franjas laterales (antes 44) | 0 | Sí |
+| D3 | 0 cuadros estirables (antes 8) | 0 | Sí |
+| D4 | Mismo fondo en claro y en oscuro (antes distinto) | igual | Sí |
+| D5 | 1 px (pasos 25 y 24 a 375 px; 24 a 1.280 px). Antes, 9 px | ≤ 2 px | Sí |
+| D6 | 3 líneas en el título más largo (antes 5) | ≤ 3 | Sí |
+| D7 | 0 sombras en Preguntar y Panorama (antes 4) | 0 | Sí |
+| D8 | P1 a P5 (`validar`), P6 a P12, U1 a U6 e I1 a I5 (`npm run medir` y `validar_interfaz`). P9 se revisó con `validate_palette.js` sobre `#e8edef` y `#0a171d`, con los desvíos de arriba. P11 se revisó con las capturas de `web/medir/capturas-diseno/despues` | todos | Sí |
+
+**Decisión:** el ajuste queda. Las capturas de antes y después están en `web/medir/capturas-diseno/` (no se versionan). Los resultados están en `data/processed/app/diseno-antes.json` y `diseno-despues.json`.

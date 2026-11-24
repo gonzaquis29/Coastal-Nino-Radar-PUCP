@@ -797,3 +797,19 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 128. Apruebo
 
 **Resultado:** la IA marcó la sección 15 de `docs/app/definicion.md` como aprobada el 23-nov, con la opción A (escala de los 4 niveles del Senamhi). No se construye hasta la orden explícita.
+129. procede
+
+**Resultado:** la IA construyó la sección 15 con la opción A:
+- la escala de 4 tramos del Senamhi, de 132 px, debajo del título en el celular;
+- sin franjas laterales, con comillas en las citas y sin el chip oscuro;
+- el cuadro sin manija;
+- un solo fondo, sin sombras en las tarjetas;
+- el enlace del comunicado sin estirar la línea;
+- los filtros igualados.
+
+Con el validador de la paleta encontró tres cosas, y las declaró:
+- los gráficos del Panorama se quedan sobre el panel blanco, porque el tramo claro de la magnitud no llega a 2:1 sobre el fondo;
+- el naranja del Senamhi pasa a `#ec7d22`, para separarse del amarillo;
+- el tramo vacío lleva solo el contorno.
+
+Pasan D1 a D7 (`web/medir/diseno.mjs`) y D8 (P1 a P12, U1 a U6 e I1 a I5).

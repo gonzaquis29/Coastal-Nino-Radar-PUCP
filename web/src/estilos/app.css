@@ -369,6 +369,22 @@ textarea {
   min-height: var(--toque);
   padding: 8px 12px;
   width: 100%;
+  line-height: 1.4;
+}
+
+/* los filtros nativos (fecha y región) con el mismo alto, borde y letra que el resto */
+input[type="date"],
+select {
+  height: var(--toque);
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 0.95rem;
+  accent-color: var(--acento);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
 }
 
 select {
@@ -376,7 +392,7 @@ select {
 }
 
 textarea {
-  resize: vertical;
+  resize: none;
   line-height: 1.5;
 }
 
@@ -413,11 +429,10 @@ textarea {
 
 /* ---------------------------------------------------------------- piezas */
 
+/* las tarjetas van sobre el mismo fondo de la página, con una línea fina (sección 15) */
 .tarjeta {
-  background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
-  box-shadow: var(--sombra);
 }
 
 .mensaje {
@@ -431,12 +446,25 @@ textarea {
   flex-wrap: wrap;
 }
 
+/* texto citado: comillas grandes al inicio, sin franja lateral */
 .cita {
   margin: 0;
-  padding: 14px 16px 12px 18px;
-  border-left: 3px solid var(--acento);
+  padding: 14px 16px 12px 46px;
   background: var(--superficie-2);
-  border-radius: 0 var(--radio-chico) var(--radio-chico) 0;
+  border-radius: var(--radio-chico);
+  position: relative;
+}
+
+.cita::before {
+  content: "\201C";
+  position: absolute;
+  left: 12px;
+  top: 4px;
+  font-family: var(--display);
+  font-size: 3rem;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--acento);
 }
 
 .cita p {

@@ -122,7 +122,8 @@ def main():
                  not diferencias and p8["pasa"],
                  f"API contra CSV: {'; '.join(diferencias) or 'sin diferencias'}. En pantalla: {p8['detalle']}"),
         criterio("P9. Paleta (validate_palette.js, claro y oscuro)", 0, "0", True,
-                 "medida el 19-nov (sección 8) y otra vez el 23-nov sobre las superficies nuevas (sección 11, I5)"),
+                 ("medida el 19-nov (sección 8), el 23-nov sobre las superficies nuevas (sección 11, I5) "
+                 "y otra vez el 23-nov con la escala del Senamhi sobre el fondo de la página (sección 15)")),
         del_navegador("P10", "P10. Emergente, tabla con descarga y Cómo leer; Descriptivo donde corresponde"),
         criterio("P11. Revisión de capturas (375 y 1.280 px, claro y oscuro)", len(pendientes), "0", not pendientes,
                  f"corregidos: {'; '.join(REVISION_P11['corregidos'])}"),

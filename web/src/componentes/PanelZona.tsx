@@ -109,7 +109,38 @@ export function PanelZona({ estado, zona, cambiarZona, magnitudMensaje }: Props)
   );
 }
 
-const NIVELES_SENAMHI = new Set(["amarillo", "naranja", "rojo"]);
+// La escala del Senamhi tiene 4 niveles; verde es «sin peligro» y no trae aviso (sección 15)
+const ESCALA_SENAMHI = ["verde", "amarillo", "naranja", "rojo"];
+const NOMBRE_NIVEL: Record<string, string> = {
+  amarillo: T.verificar.nivel_amarillo,
+  naranja: T.verificar.nivel_naranja,
+  rojo: T.verificar.nivel_rojo,
+};
+
+/** El nivel de un aviso en la escala de los 4 del Senamhi: los tramos se llenan hasta el nivel, con nombre y posición. */
+function NivelSenamhi({ nivel }: { nivel: string }) {
+  const posicion = ESCALA_SENAMHI.indexOf(nivel) + 1;
+  if (posicion < 2) {
+    return <span className="nivel-senamhi nivel-senamhi--otro">{llenar(T.verificar.nivel_aviso, { nivel })}</span>;
+  }
+  const nombre = NOMBRE_NIVEL[nivel];
+  return (
+    <span
+      className={`nivel-senamhi nivel-senamhi--${nivel}`}
+      role="img"
+      aria-label={llenar(T.verificar.nivel_escala_lectores, { nombre: nombre.toLowerCase(), posicion })}
+    >
+      <span className="nivel-senamhi__escala" aria-hidden="true">
+        {ESCALA_SENAMHI.map((n, i) => (
+          <i key={n} className={i < posicion ? `nivel-senamhi__tramo nivel-senamhi__tramo--${n}` : "nivel-senamhi__tramo"} />
+        ))}
+      </span>
+      <span className="nivel-senamhi__nombre" aria-hidden="true">
+        {llenar(T.verificar.nivel_escala, { nombre, posicion })}
+      </span>
+    </span>
+  );
+}
 
 /** Los avisos vigentes del Senamhi para la zona, a la vista. En el celular van después del mensaje (sección 11). */
 export function AvisosZona({ estado }: { estado: Estado | null }) {
@@ -126,7 +157,6 @@ export function AvisosZona({ estado }: { estado: Estado | null }) {
         <ul className="avisos">
           {vigentes.map((a) => {
             const enlace = enlaceSeguro(a.url);
-            const nivel = NIVELES_SENAMHI.has(a.nivel) ? a.nivel : "otro";
             return (
               <li key={a.numero}>
                 <span className="avisos__numero">N.° {a.numero}</span>
@@ -140,8 +170,8 @@ export function AvisosZona({ estado }: { estado: Estado | null }) {
                   )}
                   <small>{llenar(T.verificar.aviso_hasta, { fin: fechaCorta(a.fin.slice(0, 10)) })}</small>
                 </span>
-                <span className={`avisos__nivel avisos__nivel--${nivel}`}>
-                  {llenar(T.verificar.nivel_aviso, { nivel: a.nivel })}
+                <span className="avisos__nivel">
+                  <NivelSenamhi nivel={a.nivel} />
                 </span>
               </li>
             );
