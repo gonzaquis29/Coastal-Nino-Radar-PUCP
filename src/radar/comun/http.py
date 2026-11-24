@@ -4,6 +4,7 @@ import email.utils
 import logging
 import random
 import re
+import threading
 import time
 from urllib.parse import urlsplit
 
@@ -112,12 +113,14 @@ class Cliente:
         self.ultimo = {}  # host -> momento de la última petición
         self.fallos = {}  # host -> fallos seguidos
         self.robots = {}  # host -> (reglas, sitemaps declarados)
+        self._ritmo, self._robots = threading.Lock(), threading.Lock()  # se puede usar desde varios hilos
 
     def _respetar_ritmo(self, host):
-        falta = config.PAUSA_POR_HOST - (self.reloj() - self.ultimo.get(host, -1e9))
-        if falta > 0:
-            self.dormir(falta)
-        self.ultimo[host] = self.reloj()
+        with self._ritmo:  # entre hilos, las peticiones a un host empiezan una tras otra con la pausa
+            falta = config.PAUSA_POR_HOST - (self.reloj() - self.ultimo.get(host, -1e9))
+            if falta > 0:
+                self.dormir(falta)
+            self.ultimo[host] = self.reloj()
 
     def _segundos_antes_de_reintentar(self, intento, respuesta):
         if respuesta is not None:
@@ -165,6 +168,10 @@ class Cliente:
         return respuesta
 
     def robots_de(self, host):
+        with self._robots:
+            return self._robots_de(host)
+
+    def _robots_de(self, host):
         if host not in self.robots:
             r = self._pedir(f"https://{host}/robots.txt")
             if r.status_code >= 500:

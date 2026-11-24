@@ -29,6 +29,9 @@ DIAS_NOTA_RECIENTE = 3  # la cascada fresca de la ronda b del recomendador
 INTERES_POR_DEFECTO = "prevencion"
 # Filtro de tema de Verificar: "palabras" (sección 9) o "clasificador" (sección 10, solo si pasa C1 a C5)
 FILTRO_DE_TEMA = "palabras"
+# Sección 13: «Alta» anclada al tema (True solo si pasa V1 a V6 y V8)
+ANCLAR_ALTA = False
+TIPO_GENERICO = "recomendacion"
 MESES = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre",
          "noviembre", "diciembre")  # fmt: skip
 CAMPOS_NOTA = ("medio", "id", "titular", "fecha", "url", "macroregion")  # P3: lo único que sale de una nota
@@ -124,6 +127,22 @@ def notas():
 
 
 # ---------------------------------------------------------------- servicio
+
+
+def anclar(r, texto, activo=None):
+    """Sección 13: una «Alta» cuyo párrafo más cercano es una recomendación general del ENFEN necesita alguna palabra
+    específica del tema (o nombrar el fenómeno); si no, se muestra como «Media»."""
+    if not (
+        (ANCLAR_ALTA if activo is None else activo)
+        and r.get("origen") == "distancia"
+        and r.get("banda") == semaforo.CERCANO
+        and r.get("tipo_parrafo") == TIPO_GENERICO
+    ):
+        return r
+    if dominio.nombra_el_fenomeno(texto) or dominio.palabras_especificas(texto):
+        return r
+    color, origen = semaforo.combinar(r["color_reglas"], semaforo.INTERMEDIO, bool(r["umbrales"]["con_color"]))
+    return r | {"banda": semaforo.INTERMEDIO, "color": color, "origen": origen, "anclaje": "recomendacion_general"}
 
 
 class Servicio:
@@ -251,6 +270,7 @@ class Servicio:
         if r["origen"] in ("reglas", "distancia") and not self.en_tema(texto, bool(cuerpo)):
             # Sección 9: un texto de otro tema no recibe cercanía ni veredicto
             r = {"origen": "fuera_de_tema", "parrafo": None}
+        r = anclar(r, texto)
         afirmaciones = self._afirmaciones(titular, resumen, cuerpo, fecha) if r["origen"] == "reglas" else []
         if r["origen"] == "reglas":
             categorias = {d["categoria"] for a in afirmaciones for d in a["datos"]}

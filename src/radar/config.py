@@ -98,6 +98,9 @@ USER_AGENT = (
 )
 TOKEN_ROBOTS = "coastalninoradar-pucp"  # nombre con el que nos buscan los grupos de robots.txt
 PAUSA_POR_HOST = 1.0  # segundos entre peticiones al mismo host
+# Peticiones en curso a la vez por host cuando un proceso lee en paralelo: el ritmo sigue siendo PAUSA_POR_HOST
+# entre el inicio de una y la siguiente; solo se aprovecha el tiempo que el servidor tarda en responder
+HILOS_POR_HOST = 4
 TIEMPO_CONEXION = 15  # segundos
 TIEMPO_LECTURA = 60
 REINTENTOS = 2  # además del primer intento

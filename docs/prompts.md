@@ -761,3 +761,15 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 116. Apruebo con 2025
 
 **Resultado:** la IA marcó la sección 13 de `docs/app/definicion.md` como aprobada el 23-nov, con la prueba externa de 2025. No se construye hasta la orden explícita.
+117. Construye
+
+**Resultado:** la IA construyó la sección 13: `PALABRAS_GENERICAS` en `radar.comun.dominio`, el anclaje en `radar.app.servicio` (apagado por defecto), `radar.noticias.externa` y `radar.app.validar_anclaje`, con sus pruebas. Probó 20 notas por medio, leyó la prueba externa de 2025 y la midió una sola vez. Pasan V1, V4, V6 y V9; V3 no pasa (1,02 % en corto y 4 % en cuerpo), y V2 y V5 quedan informativos por tener menos de 100 notas. La regla no se activa; resultados en la sección 13.7.
+118. como va el proceso? cuanto falta aprox?
+
+**Resultado:** la IA revisó el avance de la lectura externa y estimó lo que faltaba.
+119. como va el proceso, si se ha parado vuelvelo a ejecutar desde donde se quedo / necesito que sea mas rapido / si empiezan a responder puros 500 reduces un poco las peticiones
+
+**Resultado:** la IA vio que la lectura no se había parado y que la limitaba la espera de cada respuesta, no la pausa. Hizo seguro entre hilos a `radar.comun.http.Cliente` y pidió hasta `config.HILOS_POR_HOST` (4) a la vez por medio, con el mismo 1 s entre inicios; si el servidor falla, baja a la mitad y vuelve a subir tras 200 respuestas sin error. Relanzó la lectura desde donde quedó: Andina pasó de 15 a 30 números por minuto y terminó a las 22:18, sin errores.
+120. cuanto va a demorar aprox este otro proceo
+
+**Resultado:** la IA revisó la lectura de cuerpos, que ya había terminado (314 en unos 3 minutos).

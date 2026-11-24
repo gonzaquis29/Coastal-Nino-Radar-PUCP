@@ -41,6 +41,11 @@ ETIQUETAS_OTRO_TEMA = re.compile(
     r"terremoto|politica|mundo|estados unidos|policia|delincuencia|extorsion|seguridad ciudadana|educacion|cultura"
 )
 SEPARADOR_ETIQUETAS = re.compile(r"[,;|]")
+# Palabras del tema que también usan los textos de emergencias, política o sismos (sección 13.3), fijadas antes de
+# medir. Solas no anclan una «Alta» cuyo párrafo más cercano es una recomendación general del ENFEN.
+PALABRAS_GENERICAS = re.compile(
+    r"emergencia|alerta|evento|prevenci|preven|comunicado|costa|vigilancia|aviso|fenomeno|anomal"
+)
 
 
 def en_pregunta(consulta):
@@ -57,6 +62,11 @@ def nombra_el_fenomeno(texto):
 def palabras_del_tema(texto):
     """Las palabras distintas del tema que aparecen (en minúsculas y sin tildes)."""
     return {m.group(0).lower() for m in PALABRAS.finditer(sin_tildes(texto or ""))}
+
+
+def palabras_especificas(texto):
+    """Las palabras del tema que no son genéricas (sección 13.3)."""
+    return {p for p in palabras_del_tema(texto) if not PALABRAS_GENERICAS.fullmatch(p)}
 
 
 def etiquetas(nota):

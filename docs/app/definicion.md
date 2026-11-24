@@ -628,7 +628,7 @@ El clasificador de la sección 10 aprendió "menciona El Niño" porque su única
 - **Lo nuevo que deja medido:** el filtro de palabras tiene más «Alta» en los otros temas con palabras de clima de lo que decían F1 y C1: 2,35 % en corto y 5,5 % en cuerpo (8 de 146). Se declara como límite de Verificar.
 - **Por qué no se ajusta:** la prueba ya se miró. Bajar τ o cambiar los topes ahora sería elegir con la prueba, y no quedan notas de la zona gris etiquetadas sin usar.
 
-## 13. «Alta» anclada al tema en Verificar, con una prueba externa (aprobada el 23-nov con la prueba externa de 2025; sin construir)
+## 13. «Alta» anclada al tema en Verificar, con una prueba externa (aprobada el 23-nov con la prueba externa de 2025; construida, no pasa)
 
 ### 13.1 Qué falla, medido en desarrollo (enero a agosto, 23-nov)
 - **El problema no es tanto quién pasa el filtro como quién recibe «Alta».** De 1.500 negativos difíciles (zona gris con etiquetas solo de otros temas), el 4,93 % recibe «Alta» con el filtro de palabras.
@@ -704,3 +704,34 @@ El clasificador de la sección 10 aprendió "menciona El Niño" porque su única
   - los titulares sobre El Niño sin palabras del tema (F2, 9 %) siguen fuera;
   - 2025 es otro año: si ahí se habla distinto, se verá en V7 frente a V1 a V5.
 - **Archivos:** `radar.comun.dominio` (`PALABRAS_GENERICAS`), `radar.app.servicio` (el anclaje), `radar.app.validar_anclaje` (nuevo: muestra, medición y la prueba "App: Alta anclada"), `radar.noticias.externa` (nuevo, solo si se aprueba 2025) y sus pruebas con HTML y notas sintéticas.
+
+### 13.7 Resultados (23-nov, una sola medición)
+**Prueba externa leída:**
+- 14.701 notas de octubre a diciembre de 2025: 4.878 de Andina y 9.823 de RPP.
+- Sin errores de red al final ni bloqueos; las notas fuera de fechas y los números sin nota quedan en `intentos-2025.csv`.
+- La lectura tomó unas 5 horas, no 3,5 a 4. Desde las 20:43 se pide en paralelo: hasta `config.HILOS_POR_HOST` (4) peticiones en curso por host, con el mismo ritmo de 1 s entre el inicio de una y la siguiente. Si el servidor falla, baja a la mitad.
+
+**Grupos:**
+- En corto: 14 notas sobre El Niño, 206 de clima y mar (una por plantilla), 333 negativos difíciles y 12.210 de `otros_temas`.
+- En cuerpo: 14, 99, 90 y 100 leídos; 11 no se pudieron leer.
+- Hubo muchos menos negativos difíciles que los 1.500 esperados (13.4).
+
+| | Resultado | Umbral | Pasa |
+|---|---|---|---|
+| V1 | Negativos difíciles con «Alta», corto: 1,20 % (IC 0,47 a 3,05), 4 de 333; hoy 21 | ≤ 2 % y ≤ 50 % de hoy | Sí |
+| V2 | Negativos difíciles con «Alta», cuerpo: 7,78 % (IC 3,82 a 15,19), 7 de 90; hoy 15 | ≤ 2 % y no peor que hoy | Informativo (90 de 100 cuerpos); estaría lejos del umbral |
+| V3 | `otros_temas` con «Alta»: corto 1,02 % (IC 0,85 a 1,21), 124 de 12.210 (hoy 145); cuerpo 4,00 % (IC 1,57 a 9,84), 4 de 100 (hoy 4) | ≤ 1 % / ≤ 2 % y no peor que hoy | **No** |
+| V4 | Clima y mar: «Alta» que pasan a «Media», corto 0 de 169 y cuerpo 0 de 86 | ≤ 3 % | Sí |
+| V5 | Sobre El Niño: corto 0 de 7 y cuerpo 0 de 5 | ≤ 3 % | Informativo (14 notas) |
+| V6 | Sintéticos: 1 de 20 de otros temas con «Alta» («Alerta por estafas telefónicas…») / 0 de 20 del tema pasan a «Media» | ≤ 1 / ≤ 1 | Sí |
+| V7 | 2026 reutilizada: V1 1,55 % (39 de 2.522; hoy 59), V3 corto 0,61 % (hoy 92 de 10.408), V4 4 de 310, V5 8 de 876 | informativo | Coincide en el sentido |
+| V8 | No se midió: la regla no se activa | todos | — |
+| V9 | Preguntar sin cambios: 0 diferencias | 0 | Sí |
+
+**Decisión:**
+- **No pasa V3,** así que la regla no se activa: `ANCLAR_ALTA = False` en `radar.app.servicio`.
+- El anclaje baja la «Alta» de los textos cortos de otros temas con palabras de clima. Es mucho en los negativos difíciles (de 21 a 4) y poco en `otros_temas` (de 145 a 124, que queda sobre el 1 %).
+- En el texto completo casi no ayuda: los cuerpos de otros temas siguen con 4 % a 8 % de «Alta». No se midió por qué; mirarlo aquí ya no sería una prueba nueva.
+- Se declaran los números de hoy sin el anclaje: negativos difíciles 6,3 % en corto y 16,7 % en cuerpo; `otros_temas` 1,19 % en corto y 4 % en cuerpo.
+- Queda pendiente, para después del congelamiento, la «Alta» del texto largo de otros temas, con muestras nuevas.
+
