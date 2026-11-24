@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Centro de Monitoreo</title><link rel="stylesheet" href="lib/maplibre-gl.css"><link rel="stylesheet" href="estilo.css"></head>
+<body>
+<div id="mapa" aria-label="Mapa satelital del Perú"></div>
+<header id="barra">
+  <div class="marca"><b>Centro de Monitoreo</b><button id="act"></button></div>
+  <div class="busca"><input id="q" type="search" autocomplete="off" placeholder="Busca tu distrito" aria-label="Busca tu distrito o departamento"><ul id="sug" hidden></ul></div>
+</header>
+<nav id="filtros" aria-label="Peligro"></nav>
+<div id="pieMapa"><div id="leyenda"></div><div id="dias" role="group" aria-label="Día"></div></div>
+<div id="ctl"><button id="volver" hidden>Todo el Perú</button><button id="rel" aria-pressed="true">Relieve 3D</button></div>
+<aside id="panel"></aside>
+<div id="tip" hidden></div>
+<script src="lib/maplibre-gl.js"></script><script src="app.js"></script>
+</body></html>

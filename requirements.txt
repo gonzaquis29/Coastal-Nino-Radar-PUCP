@@ -1,0 +1,14 @@
+requests
+beautifulsoup4
+lxml
+pypdf
+pandas
+numpy
+scikit-learn
+spacy
+sentence-transformers
+chromadb
+streamlit
+matplotlib
+
+shapely
