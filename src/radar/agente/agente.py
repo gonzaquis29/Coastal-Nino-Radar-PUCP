@@ -32,7 +32,7 @@ from radar.comun.archivos import escribir_csv, leer_csv
 from radar.comun.regiones import COSTA_CENTRO, COSTA_NORTE, LIMA_Y_CALLAO, regiones_mencionadas
 from radar.comun.registro import configurar
 from radar.comun.texto import ahora, sin_tildes
-from radar.nlp import embeddings, recuperador, semaforo
+from radar.nlp import embeddings, motor, recuperador, semaforo
 from radar.noticias.validar_texto import marcar_vistas, notas_vistas
 from radar.noticias.viabilidad import _muestra, criterio, guardar, reporte
 
@@ -163,7 +163,8 @@ class Enrutador:
     """Reglas y, para el resto, el clasificador de intención entrenado con el conjunto de desarrollo."""
 
     def __init__(self, ejemplos=None):
-        self.e5 = embeddings.Modelo(MODELO_INTENCION)
+        repo, prefijo, largo = motor.modelos_app()[1]  # e5, con el motor ONNX si está (sección 14 de la app)
+        self.e5 = embeddings.Modelo(MODELO_INTENCION, motor=motor.para_app(repo, prefijo, largo))
         casos = [c for c in casos_congelados(ejemplos or leer_csv(ARCHIVO_DESARROLLO)) if c["herramienta"] != FUERA]
         textos = [normal(c["pregunta"]) for c in casos]
         self.palabras = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True).fit(textos)

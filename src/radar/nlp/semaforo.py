@@ -29,7 +29,7 @@ from radar.comun.energia import sin_suspension
 from radar.comun.registro import configurar
 from radar.comun.texto import ahora
 from radar.nlp import afirmaciones as af
-from radar.nlp import candidatos, discrepancia, embeddings, esquemas, reranker, tfidf, viabilidad
+from radar.nlp import candidatos, discrepancia, embeddings, esquemas, motor, reranker, tfidf, viabilidad
 from radar.noticias.medios import MEDIOS
 from radar.noticias.validar_texto import marcar_vistas, notas_vistas
 from radar.noticias.viabilidad import _en_historico, _muestra, _si, criterio, guardar, reporte
@@ -176,11 +176,11 @@ def criterio_logica():
 class Semaforo:
     """minilm con los párrafos del ENFEN embebidos una vez, la historia de comunicados y los umbrales."""
 
-    def __init__(self, corpus=None, umbrales=None):
+    def __init__(self, corpus=None, umbrales=None, st=None):
         self.corpus = corpus or Corpus()
         self.historia = discrepancia.referencia(self.corpus)
         self.parrafos = [p for p in self.corpus.parrafos if p["fuente"] == "enfen"]
-        st = candidatos.cargar(MODELO)
+        st = st or candidatos.cargar(MODELO)  # sin st, sentence-transformers con torch (los estudios)
         pre_nota, pre_oficial = candidatos.prefijos(MODELO)
         self.modelo = candidatos.Candidato(MODELO, st, pre_nota)
         self.oficial = embeddings.Oficial(candidatos.Candidato(MODELO, st, pre_oficial), self.parrafos)
@@ -241,7 +241,9 @@ class Semaforo:
 
 @functools.cache
 def _semaforo():
-    return Semaforo()
+    """El de la app y el agente: con el motor ONNX si está (sección 14 de docs/app/definicion.md)."""
+    repo, prefijo, largo = motor.modelos_app()[0]
+    return Semaforo(st=motor.para_app(repo, prefijo, largo))
 
 
 def medir_discrepancia(texto, fecha, titular="", resumen=""):

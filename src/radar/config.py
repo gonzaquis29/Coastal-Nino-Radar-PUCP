@@ -26,6 +26,9 @@ DIR_RAW_TRENDS = DIR_RAW / "trends"  # CSV exportados a mano desde la web de Goo
 DIR_TRENDS = DIR_DATOS / "processed" / "trends"
 DIR_APP = DIR_DATOS / "processed" / "app"  # registro de uso de la app (anónimo, sin texto)
 DIR_CACHE_VECTORES = DIR_DATOS / "processed" / "cache"  # vectores de textos oficiales; se recalculan si cambia algo
+# Motor de los modelos dentro de la API (docs/app/definicion.md, sección 14): "onnx32" (sin torch) o "torch"
+MOTOR_APP = "onnx32"
+DIR_MOTOR_APP = DIR_DATOS / "processed" / "motor-app"  # tokenizadores de `python -m radar.nlp.motor preparar`
 DIR_MODELOS = DIR_DATOS / "processed" / "modelos"  # resultados del modelo de engagement (solo agregados, sin ids)
 DIR_WEB = RAIZ / "web"  # interfaz en React; la API sirve web/dist
 

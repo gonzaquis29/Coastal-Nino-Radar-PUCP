@@ -782,3 +782,9 @@ Todos los textos siguen en `radar.app.textos`. La escala de magnitud siguió en 
 123. verifica de nuevo lo que has colocado
 
 **Resultado:** la IA revisó la sección 14 y encontró cinco errores. (1) e5 no se carga al arrancar, sino en la primera pregunta (4,1 s): pasar solo MiniLM a ONNX la empeoraría, porque importaría `torch`, así que los dos modelos tienen que dejarlo. (2) El arranque de referencia era una sola medición: la mediana de 3 es 17,7 s, no 15,6. (3) Los nombres A1 a A6 chocaban con los del agente: ahora son H1 a H7. (4) Faltaba un criterio para la primera pregunta (H5). (5) Faltaba confirmar que el ONNX de e5 existe: está en el repositorio oficial (470 MB). También se midió que la API hace 0 peticiones a internet.
+124. Apruebo / no estoy entendiendo, dices que va a demorar mas? pero el objetivo se supone que es hacerlo mas rapido
+
+**Resultado:** la IA explicó que ninguna opción del plan es más lenta: el caso que empeoraba era una alternativa descartada, y calentar el agente solo adelanta la espera. Tomó la aprobación del plan sin calentar el agente.
+125. apruebalo y dale
+
+**Resultado:** la IA marcó la sección 14 como aprobada y la construyó: bajó el ONNX de e5 (470 MB), creó `radar.nlp.motor` y conectó el semáforo de la app y el agente. Antes de medir encontró que el `tokenizer.json` de e5 no da los mismos tokens que `transformers`, y guardó el tokenizador que arma `transformers` (`python -m radar.nlp.motor preparar`). Midió una sola vez con `radar.app.validar_arranque` y las pruebas de la app: pasan H1 a H7. El arranque baja de 17,7 a 5,5 s y la primera pregunta de 4,1 a 1,9 s, con los mismos resultados. Borró 2 visitas del registro de uso que dejó el panel de vista previa.

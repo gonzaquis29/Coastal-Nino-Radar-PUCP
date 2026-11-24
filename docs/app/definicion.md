@@ -735,7 +735,7 @@ El clasificador de la sección 10 aprendió "menciona El Niño" porque su única
 - Se declaran los números de hoy sin el anclaje: negativos difíciles 6,3 % en corto y 16,7 % en cuerpo; `otros_temas` 1,19 % en corto y 4 % en cuerpo.
 - Queda pendiente, para después del congelamiento, la «Alta» del texto largo de otros temas, con muestras nuevas.
 
-## 14. Arranque de la app sin torch (definición del 23-nov, revisada el mismo día; sin aprobar)
+## 14. Arranque de la app sin torch (aprobada el 23-nov, sin calentar el agente; construida y activa)
 
 ### 14.1 Dónde se va el tiempo (medido el 23-nov)
 **Arranque de hoy:** mediana de **17,7 s** en 3 arranques en frío (17,3, 17,7 y 17,7 s). Antes se habían medido 15,6 y 16,9 s, porque varía con lo que el disco tenga en memoria. P2 pide ≤ 90 s, así que pasa.
@@ -809,3 +809,24 @@ Los nombres H1 a H7 no chocan con los criterios A1 a A5 del agente.
   - quien instale la app necesita los dos archivos ONNX en su caché: el README dirá cómo traerlos, y sin ellos la app usa `torch`;
   - e5 aún no se probó en ONNX: si su `onnx/model.onnx` no reproduce a `torch` (H1), solo MiniLM no sirve (14.2), y se retira todo.
 - **Archivos:** `radar.nlp.viabilidad` (o un módulo nuevo `radar.nlp.motor`), `radar.nlp.candidatos`, `radar.nlp.embeddings`, `radar.config` (`MOTOR_APP`), `radar.app.validar_arranque` (nuevo: H1 a H5 y H7) y sus pruebas con textos sintéticos.
+
+### 14.5 Resultados (23-nov, una sola medición)
+**Qué se construyó:**
+- `radar.nlp.motor` (`Onnx32` y `Tokenizador`), `config.MOTOR_APP = "onnx32"` y `config.DIR_MOTOR_APP`.
+- El semáforo de la app (`semaforo._semaforo`) y el enrutador del agente usan el motor. Los estudios que arman su propio `Semaforo()` siguen con `torch`.
+- `radar.app.validar_arranque` mide H1 a H5 y H7.
+- **Hallazgo antes de medir:** con e5, el `tokenizer.json` del repositorio no da los mismos tokens que `transformers` 5.21. Difiere en los espacios repetidos (11 de 391 textos de desarrollo, coseno 0,9899). Por eso `python -m radar.nlp.motor preparar` guarda una vez el tokenizador tal como lo arma `transformers`; con eso, los tokens coinciden en 1.153 de 1.153 textos en los dos modelos.
+
+| | Resultado | Umbral | Pasa |
+|---|---|---|---|
+| H1 | Coseno mínimo 0,9999998: 954 párrafos oficiales, 191 preguntas de desarrollo (con las de fuera de dominio; la definición decía 171) y 40 sintéticos | ≥ 0,9999 | Sí |
+| H2 | Verificar: 320 de 320 iguales (300 notas nuevas y 20 textos de P1); la salida completa también, y el coseno mostrado no cambia | 100 % | Sí |
+| H3 | Preguntar: 175 de 175 iguales (150 de la ronda c, 20 sintéticas nuevas y 5 de P1) | 100 % | Sí |
+| H4 | Arranque: mediana de 5,5 s (5,7, 5,4 y 5,5); sin `torch`, `transformers` ni `sentence_transformers` | ≤ 8 s y 0 | Sí |
+| H5 | Primera pregunta: mediana de 1,88 s (2,00, 1,81 y 1,88) | ≤ 4,1 s | Sí |
+| H6 | P1 a P5 (arranque 2,7 s dentro de `validar`), P6 a P12, U1 a U6 e I1 a I5 pasan | todos | Sí |
+| H7 | 0 peticiones a Hugging Face en los 3 arranques; sin el tokenizador, `para_app` devuelve `None` y se usa `torch` | 0 / sí | Sí |
+
+**Decisión:** el motor ONNX queda activo en la API. El arranque baja de 17,7 a 5,5 s, y la primera pregunta de 4,1 a 1,9 s, sin cambiar ningún resultado.
+
+**Registro de uso:** al abrir la app en el panel de vista previa para medir, se crearon 2 visitas en `data/processed/app/eventos.csv`. No eran uso real, así que se borró el archivo; `npm run medir` ya bloquea sus eventos.
